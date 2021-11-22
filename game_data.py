@@ -12,6 +12,7 @@ class MapData:
     x = 0
     current_map = None
     map_kill = False
+    last_char = ""
 
 # def test():
 #     class A:

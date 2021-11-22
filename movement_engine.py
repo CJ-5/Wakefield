@@ -6,6 +6,7 @@ from pynput import keyboard
 from threading import Thread
 import time
 import gc
+import timeit
 
 init()
 
@@ -56,14 +57,16 @@ def coord_set(map_in, x_m, y_m):  # Main Movement Engine
             os.system("cls")
             game_data.MapData.x += x_m
             game_data.MapData.y += y_m
-            map_in.map_array[internal_coordinates[1]][internal_coordinates[0]] = ""  # Clear old position
+            map_in.map_array[internal_coordinates[1]][internal_coordinates[0]] = game_data.MapData.last_char
             map_in.map_array[::-1][game_data.MapData.y][game_data.MapData.x] = "x"  # Enter new position
             show_map(map_in)
+            # Fix this BS
+            game_data.MapData.last_char = future_char
 
 
 def show_map(map_in):
     # Print the map
-    print("{:^40}".format(map_in.map_name))
+    print("{:^50}".format(map_in.map_name))
     print(f"{Fore.RED}{'/':^{game_data.Data.map_spacing}}{Fore.RESET}" * len(map_in.map_array[0]))
     for y in map_in.map_array:
         cur_row = ""  # Reset the line print out
@@ -89,14 +92,16 @@ def show_map(map_in):
 
 def on_release(key):
     if key == keyboard.Key.up:
-        Thread(target=coord_set, args=(game_data.MapData.current_map, 0, 1)).start()
+        coord_set(game_data.MapData.current_map, 0, 1)
+        # Thread(target=coord_set, args=(game_data.MapData.current_map, 0, 1)).start()
     elif key == keyboard.Key.down:
-        Thread(target=coord_set, args=(game_data.MapData.current_map, 0, -1)).start()
+        coord_set(game_data.MapData.current_map, 0, -1)
     elif key == keyboard.Key.right:
-        Thread(target=coord_set, args=(game_data.MapData.current_map, 1, 0)).start()
+        coord_set(game_data.MapData.current_map, 1, 0)
     elif key == keyboard.Key.left:
-        Thread(target=coord_set, args=(game_data.MapData.current_map, -1, 0)).start()
+        coord_set(game_data.MapData.current_map, -1, 0)
     elif key == keyboard.Key.esc:
+        game_data.MapData.map_kill = True
         return False  # Test Code, allows code exit mid run
 
 
@@ -109,7 +114,7 @@ def kb_listener():
                         game_data.MapData.map_kill = False
                         listener.stop()
                         return False  # Kill Watcher Thread
-                    time.sleep(0.0001)  # Probably the most important statement in the entire program
+                    time.sleep(0.1)  # Probably the most important statement in the entire program
             Thread(target=watcher).start()  # MULTI-THREADING!!!
             listener.join()
             print("Listener Ended")
