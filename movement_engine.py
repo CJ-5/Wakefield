@@ -9,6 +9,7 @@ import gc
 import timeit
 
 init()
+Data = game_data.StaticData()
 
 
 # Note: Create map then use reverse operation for coordinate reading otherwise everything will be confusing
@@ -47,7 +48,7 @@ def coord_set(map_in, x_m, y_m):  # Main Movement Engine
     new_y = game_data.MapData.y + y_m
     if not (new_x > len(map_in.map_array[0]) - 1 or new_x < 0 or new_y > len(map_in.map_array) - 1 or new_y < 0):
         future_char = get_coord_char(map_in, new_x, new_y)
-        if not game_data.Data.movement_blacklist.__contains__(future_char):
+        if not Data.movement_blacklist.__contains__(future_char):
             internal_coordinates = []
             for yi, y in enumerate(map_in.map_array):
                 for xi, x in enumerate(y):
@@ -67,24 +68,24 @@ def coord_set(map_in, x_m, y_m):  # Main Movement Engine
 def show_map(map_in):
     # Print the map
     print("{:^50}".format(map_in.map_name))
-    print(f"{Fore.RED}{'/':^{game_data.Data.map_spacing}}{Fore.RESET}" * len(map_in.map_array[0]))
+    print(f"{Fore.RED}{'/':^{Data.map_spacing}}{Fore.RESET}" * len(map_in.map_array[0]))
     for y in map_in.map_array:
         cur_row = ""  # Reset the line print out
         for x in y:
             # Get Current Character and add it to the formatted line
             cur_char = x
             if cur_char == "":
-                cur_char = f"{0:<{game_data.Data.map_spacing}}"
+                cur_char = f"{0:<{Data.map_spacing}}"
             elif cur_char == "X":
-                cur_char = f"{Fore.YELLOW}{cur_char:<{game_data.Data.map_spacing}}{Fore.RESET}"
+                cur_char = f"{Fore.YELLOW}{cur_char:<{Data.map_spacing}}{Fore.RESET}"
             elif cur_char == "x":
-                cur_char = f"{Fore.CYAN}{cur_char:<{game_data.Data.map_spacing}}{Fore.RESET}"
+                cur_char = f"{Fore.CYAN}{cur_char:<{Data.map_spacing}}{Fore.RESET}"
             elif cur_char == "-":
-                cur_char = f"{Fore.LIGHTGREEN_EX}{cur_char:<{game_data.Data.map_spacing}}{Fore.RESET}"
+                cur_char = f"{Fore.LIGHTGREEN_EX}{cur_char:<{Data.map_spacing}}{Fore.RESET}"
 
             cur_row += cur_char
         print(cur_row)
-    print(f"{Fore.RED}{'/':^{game_data.Data.map_spacing}}{Fore.RESET}" * len(map_in.map_array[0]))
+    print(f"{Fore.RED}{'/':^{Data.map_spacing}}{Fore.RESET}" * len(map_in.map_array[0]))
     print(f"Your current position is {get_coord(map_in)} "
           f"(Represented by the {Fore.GREEN + 'x' + Style.RESET_ALL})")
     gc.collect()

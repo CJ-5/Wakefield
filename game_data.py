@@ -1,10 +1,24 @@
 from colorama import Fore, Back, Style
 import sys
+from dataclasses import dataclass
+import lib
 
 
-class Data:
-    movement_blacklist = ["X"]  # The spots the player is not allowed to move onto
-    map_spacing = 2
+class PlayerData:
+    # Dynamic Data, DO NOT SLOT
+    Health = 100
+    Inventory = {}
+
+
+class StaticData:
+    __slots__ = ("movement_blacklist", "map_spacing", "game_items")
+
+    def __init__(self):
+        self.movement_blacklist = ["X"]  # The spots the player is not allowed to move onto
+        self.map_spacing = 2
+        self.game_items = [
+
+        ]
 
 
 class MapData:
@@ -13,6 +27,16 @@ class MapData:
     current_map = None
     map_kill = False
     last_char = ""
+
+
+class HelpPage:
+    __slots__ = ('cmd_list', 'ind_def')
+
+    # cmd_list: Command List
+    # ind_def: Individual Definitions
+    def __init__(self):
+        self.ind_def = {"use": "Usage (use [item]): Uses the specified item (if it is valid for the situation)",
+                        "inventory / inv": "Usage (inventory) | (inv): Displays your current inventory"}
 
 # def test():
 #     class A:
@@ -24,7 +48,7 @@ class MapData:
 
 class MainMap:  # Main starting area Map
     # Blank Row ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-    __slots__ = ('map_name', 'map_array', 'map_desc')  # Total Memory Optimization stuff
+    __slots__ = ('map_name', 'map_array', 'map_desc', 'valid_moves')  # Total Memory Optimization stuff
 
     def __init__(self):
         self.map_desc = "The main area of Wakefield!"

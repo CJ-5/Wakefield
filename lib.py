@@ -65,7 +65,7 @@ def print_logo():
     # Print the Logo
     logo_instance = Logo()
     for logo_char in logo_instance.logo_a:
-        if logo_char == 10: # Check for new line
+        if logo_char == 10:  # Check for new line
             print(f"{chr(logo_char):<10}", end='')  # Spacing so text is not left-aligned
         else:
             print(chr(logo_char), end='')
@@ -80,6 +80,15 @@ def print_logo():
 @dataclass()
 class MQ:
     messages: list
+
+
+@dataclass()
+class InvItem:
+    name: str
+    item_id: int
+    type: str = "consumable"  # The type of the item [weapon / consumable / clothing]
+    damage: int = 0  # Damage items deals (does not apply to non-weapon type items)
+    desc: str = ""  # Description of item
 
 
 def ck(text: str, color: str = None):
