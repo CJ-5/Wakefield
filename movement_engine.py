@@ -1,3 +1,4 @@
+import sys
 import game_data
 from colorama import init
 from colorama import Fore, Back, Style
@@ -5,10 +6,8 @@ import os
 from pynput import keyboard
 from threading import Thread
 import time
-import gc
-import timeit
-
 import lib
+
 
 init()
 global Data
@@ -36,7 +35,7 @@ def init_coord():
     game_data.MapData.x = init_coordinates[0]
 
 
-def enemy_move_calc(map_in):  # Get and move all enemy position
+def enemy_move_calc(map_in):  # This was such a simple task, why did I add a enemy movement system?
     pass
 
 
@@ -93,8 +92,7 @@ def show_map(map_in):
 
             cur_row += cur_char
         map_out += f"{cur_row}{Fore.RED}/{Fore.RESET}\n"
-    print("Out")
-    print(map_out)
+    print(map_out, end='')  # Reduces the flashing of the console
     print(f"{Fore.RED}{'/':^{Data.map_spacing}}{Fore.RESET}" * len(map_in.map_array[0]))
     print(f"Your current position is {get_coord(map_in)} "
           f"(Represented by the {Fore.GREEN + 'x' + Style.RESET_ALL})")
@@ -119,6 +117,10 @@ def on_press(key):
     try:
         if key == keyboard.Key.enter:
             lib.process_command()
+        elif key == keyboard.Key.backspace:
+            # Remove last character of both printed message, and the current command string
+            game_data.MapData.current_command = game_data.MapData.current_command[:-1]
+            sys.stdout.write('\b \b')
         else:
             print(key.char, end='')
             game_data.MapData.current_command += key.char
@@ -137,7 +139,8 @@ def kb_listener():
                         return False  # Kill Watcher Thread
                     time.sleep(0.1)  # Probably the most important statement in the entire program
             Thread(target=watcher).start()  # MULTI-THREADING!!!
-            listener.start()
+            listener.join()
+
             print("Listener Ended")
     Thread(target=listener_start).start()
 

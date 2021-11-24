@@ -68,9 +68,4 @@ movement_engine.init_coord()
 # time.sleep(2)
 #
 # lib.gprint("Why don't you give that a try now?")
-# Map Control Init Code
-# game_data.MapData.current_map = game_data.MainMap()
-# movement_engine.init_coord()
-# movement_engine.kb_listener()
-
-
+movement_engine.kb_listener()
