@@ -68,4 +68,7 @@ movement_engine.init_coord()
 # time.sleep(2)
 #
 # lib.gprint("Why don't you give that a try now?")
-movement_engine.kb_listener()
+game_data.PlayerData.Inventory_Accessible = True
+lib.add_item(0)
+lib.add_item(0)
+lib.display_inv()

@@ -6,9 +6,11 @@ import lib
 
 class PlayerData:
     # Dynamic Data, DO NOT SLOT
-    Health = 100
-    Inventory_Space = 25
-    Inventory_Accessible = False
+    Inventory_Displayed = False  # Is the inventory currently displayed on screen
+    cur_inv_display_size = None  # The amount of characters that the current inventory display takes up
+    Health = 100  # Players current health
+    Inventory_Space = 26  # Players current max inventory size
+    Inventory_Accessible = False  # Is the players inventory currently accessible
     Inventory = []  # Players current inventory populated with InvItem Objects
 
 
@@ -17,9 +19,10 @@ class StaticData:
 
     def __init__(self):
         self.movement_blacklist = ["X"]  # The spots the player is not allowed to move onto
-        self.map_spacing = 2
-        self.game_items = [
-            lib.InvItem("", 0)
+        self.map_spacing = 2  # The amount of spacing between each character on the map
+        self.game_items = [  # The in game item data
+            lib.InvItem("Ol' Reliable Broad Sword", 0, 1, 1, 3, "weapon", (3, 6), "Its your sword a bit rusty but"
+                                                                                  "has always been reliable")
         ]
 
 

@@ -5,6 +5,7 @@ from colorama import init
 from dataclasses import dataclass
 from colorama import Fore, Back, Style
 import game_data
+import sys
 
 
 class Logo:
@@ -93,7 +94,7 @@ class InvItem:
     max_qty: int = None
     item_size: int = 1
     type: str = "consumable"  # The type of the item [weapon / consumable / clothing]
-    damage: int = None  # Damage items deals (does not apply to non-weapon type items)
+    damage: tuple = (0, 0)  # Damage range items deals (does not apply to non-weapon type items)
     desc: str = None  # Description of item
 
 
@@ -109,13 +110,18 @@ def add_item(item_id: int):
             ind = 0
             for idx, inv_item in enumerate(game_data.PlayerData.Inventory):
                 if inv_item.item_id == item_data.item_id:
-                    game_data.PlayerData.Inventory[idx].qty += 1
-                    ind = idx
                     dupe = True
+                    if not game_data.PlayerData.Inventory[idx].qty + 1 > inv_item.max_qty:
+                        # Makes sure to not add items that cant have multiple instances in the inventory
+                        game_data.PlayerData.Inventory[idx].qty += 1
+                        ind = idx
+
+                    break
 
             if dupe is False:
+                print(f"{dupe} not dupe")
                 game_data.PlayerData.Inventory.append(item_data)
-            print(game_data.PlayerData.Inventory[ind])
+                # print(game_data.PlayerData.Inventory[ind])
 
         elif size_calc < 0:
             print("Could not add item(s) to your inventory due to lack of space")
@@ -134,6 +140,84 @@ def item_info(item_id: int, item_name: str = None):
                 return n
     elif item_name is None:  # Directly index the item by the index (equivalent to the id) (Faster)
         return movement_engine.Data.game_items[item_id]
+
+
+def display_inv():
+    item_spacing = 25
+    # Display the inventory
+    if game_data.PlayerData.Inventory_Displayed is True:
+        # Refresh the inventory as it is already displayed
+        # sys.stdout.write("\b \b" * game_data.PlayerData.cur_inv_display_size)  # Remove old inv display
+        pass
+    else:
+        # Blank Row: print(f"{'*':^20}{'*':^20}{'*':^20}|{'*':^20}{'*':^20}{'*':^20}")
+        element_num = 1  # Rotates between 2 and 1 to indicate which side it is printing
+
+        # check inventory slots is a odd number
+        inv_odd = False
+        row1 = 0
+        row2 = 0
+        if game_data.PlayerData.Inventory_Space % 2 == 1:
+            print("inv odd")
+            # Inventory is odd
+            inv_odd = True
+        else:
+            # Inventory is not odd
+            print("inv even")
+            r = len(game_data.PlayerData.Inventory) // 2
+            row1 = r
+            row2 = r
+
+        print(f"{'':<10}", end='')
+        print(f"{'Item Name':^{item_spacing}}{'Item QTY':^{item_spacing}}{'Item ID':^{item_spacing}}"
+              f"{'Item Name':^{item_spacing}}{'Item QTY':^{item_spacing}}{'Item ID':^{item_spacing}}\n")
+        for i in range(game_data.PlayerData.Inventory_Space):
+            print(f"{'':<10}", end='')
+            # if i <= len(game_data.PlayerData.Inventory) - 1:
+            #     print(f"{game_data.PlayerData.Inventory[i].name:^{item_spacing}}"
+            #           f"{game_data.PlayerData.Inventory[i].qty:^{item_spacing}}"
+            #           f"{game_data.PlayerData.Inventory[i].item_id:^{item_spacing}}", end='')
+            # else:
+            #     print(f"{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}", end='')
+            #
+            # if element_num == 1:  # if it is still printing first row elements
+            #     print("|", end='')
+            #     element_num += 1
+            # else:
+            #     print("\n", end='')
+            #     element_num -= 1
+            if i > len(game_data.PlayerData.Inventory) - 1:
+                # Item is out of total inventory index
+                # Print Blank Row
+                print(f"{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}", end='')
+                if element_num == 2:
+                    print("\n", end='')
+                    element_num = 1
+                else:
+                    element_num = 2
+            elif element_num == 1:
+                # Check to see if requested item exists if so print
+                print(f"{game_data.PlayerData.Inventory[i].name:^{item_spacing}}"
+                      f"{game_data.PlayerData.Inventory[i].qty:^{item_spacing}}"
+                      f"{game_data.PlayerData.Inventory[i].item_id:^{item_spacing}}", end='')
+                element_num = 2  # Set to second column
+                
+            elif element_num == 2:
+                # Print second row, check to see if requested item exists if so print
+                # Attempt to index item that is out of index of the first row
+                if not row1 + i > len(game_data.PlayerData.Inventory) - 1:
+                    print(f"{game_data.PlayerData.Inventory[row1 + i].name:^{item_spacing}}"
+                          f"{game_data.PlayerData.Inventory[row1 + i].qty:^{item_spacing}}"
+                          f"{game_data.PlayerData.Inventory[row1 + i].item_id:^{item_spacing}}", end='')
+                else:
+                    print(f"{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}", end='')
+                element_num = 1  # Set to first column
+                print("\n", end='')
+
+
+def move(y, x):
+    # Console Caret Movement Script
+    print("\033[%d;%dH" % (y, x))
 
 
 @dataclass()
