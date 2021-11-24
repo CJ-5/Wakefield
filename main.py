@@ -2,13 +2,15 @@
 try:
     import time
     import os
-    import lib
     from colorama import init
     from colorama import Fore, Back, Style
     import configparser
+    import lib
+    import game_data
     import movement_engine
     import sys
-    import game_data
+    import timeit
+
 except ModuleNotFoundError:
     File_Set = dict()
     File_Set['lib'] = os.path.isfile("./lib.py")
@@ -42,21 +44,33 @@ except ModuleNotFoundError:
     else:
         exit(0)
 
-init()
 
+# Initialization Script
+init()
+movement_engine.Data = game_data.StaticData()
 config_obj = configparser.ConfigParser()
 config_obj.read("C:/Users/carte/Documents/GitHub/Python_Adventure_Game/config.ini")
 
-lib.print_logo()
-lib.gprint(lib.MQ([lib.ck("Welcome to the game, I couldn't be bothered to name it so its called "),
-                   lib.ck("'Adventure Game'", "green"), lib.ck(".")]))
-lib.gprint("Here is some info to help you get started")
-
-lib.gprint(lib.MQ([
-    lib.ck("- At anytime during the game if you want to see a list of all available actions simply type"),
-    lib.ck(" 'help'", "yellow"), lib.ck(" or "), lib.ck("?", "red")]))
-
-# Map Control Init Code
+# Initialize main map
 game_data.MapData.current_map = game_data.MainMap()
 movement_engine.init_coord()
-movement_engine.kb_listener()
+
+# Basic Controls tutorial
+# lib.print_logo()
+# lib.gprint(lib.MQ([lib.ck("Welcome to the game, I couldn't be bothered to name it so its called "),
+#                    lib.ck("'Adventure Game'", "green"), lib.ck(".")]))
+# lib.gprint("Here is some info to help you get started")
+#
+# lib.gprint(lib.MQ([
+#     lib.ck("- At anytime during the game if you want to see a list of all available actions simply type"),
+#     lib.ck(" 'help'", "yellow"), lib.ck(" or "), lib.ck("?", "yellow")]))
+#
+# time.sleep(2)
+#
+# lib.gprint("Why don't you give that a try now?")
+# Map Control Init Code
+# game_data.MapData.current_map = game_data.MainMap()
+# movement_engine.init_coord()
+# movement_engine.kb_listener()
+
+

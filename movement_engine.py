@@ -8,8 +8,10 @@ import time
 import gc
 import timeit
 
+import lib
+
 init()
-Data = game_data.StaticData()
+global Data
 
 
 # Note: Create map then use reverse operation for coordinate reading otherwise everything will be confusing
@@ -32,6 +34,10 @@ def init_coord():
     init_coordinates = get_coord(game_data.MapData.current_map)
     game_data.MapData.y = init_coordinates[1]
     game_data.MapData.x = init_coordinates[0]
+
+
+def enemy_move_calc(map_in):  # Get and move all enemy position
+    pass
 
 
 def coord_set(map_in, x_m, y_m):  # Main Movement Engine
@@ -67,15 +73,17 @@ def coord_set(map_in, x_m, y_m):  # Main Movement Engine
 
 def show_map(map_in):
     # Print the map
+
     print("{:^50}".format(map_in.map_name))
     print(f"{Fore.RED}{'/':^{Data.map_spacing}}{Fore.RESET}" * len(map_in.map_array[0]))
+    map_out = ""
     for y in map_in.map_array:
         cur_row = ""  # Reset the line print out
         for x in y:
             # Get Current Character and add it to the formatted line
             cur_char = x
             if cur_char == "":
-                cur_char = f"{0:<{Data.map_spacing}}"
+                cur_char = f"{' ':<{Data.map_spacing}}"
             elif cur_char == "X":
                 cur_char = f"{Fore.YELLOW}{cur_char:<{Data.map_spacing}}{Fore.RESET}"
             elif cur_char == "x":
@@ -84,11 +92,12 @@ def show_map(map_in):
                 cur_char = f"{Fore.LIGHTGREEN_EX}{cur_char:<{Data.map_spacing}}{Fore.RESET}"
 
             cur_row += cur_char
-        print(cur_row)
+        map_out += f"{cur_row}{Fore.RED}/{Fore.RESET}\n"
+    print("Out")
+    print(map_out)
     print(f"{Fore.RED}{'/':^{Data.map_spacing}}{Fore.RESET}" * len(map_in.map_array[0]))
     print(f"Your current position is {get_coord(map_in)} "
           f"(Represented by the {Fore.GREEN + 'x' + Style.RESET_ALL})")
-    gc.collect()
 
 
 def on_release(key):
@@ -106,9 +115,20 @@ def on_release(key):
         return False  # Test Code, allows code exit mid run
 
 
+def on_press(key):
+    try:
+        if key == keyboard.Key.enter:
+            lib.process_command()
+        else:
+            print(key.char, end='')
+            game_data.MapData.current_command += key.char
+    except AttributeError:
+        pass  # Entered key was a special key
+
+
 def kb_listener():
     def listener_start():
-        with keyboard.Listener(on_release=on_release) as listener:
+        with keyboard.Listener(on_release=on_release, on_press=on_press) as listener:
             def watcher():
                 while True:
                     if game_data.MapData.map_kill is True:
@@ -117,6 +137,14 @@ def kb_listener():
                         return False  # Kill Watcher Thread
                     time.sleep(0.1)  # Probably the most important statement in the entire program
             Thread(target=watcher).start()  # MULTI-THREADING!!!
-            listener.join()
+            listener.start()
             print("Listener Ended")
     Thread(target=listener_start).start()
+
+
+def demo_prompt():
+    # Raw Keyboard input for commands
+    def listener_start():
+        with keyboard.Listener(on_press=on_press) as Listener:
+            Listener.start()
+    Thread(target=listener_start()).start()
