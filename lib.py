@@ -95,6 +95,8 @@ class InvItem:
     item_size: int = 1
     type: str = "consumable"  # The type of the item [weapon / consumable / clothing]
     damage: tuple = (0, 0)  # Damage range items deals (does not apply to non-weapon type items)
+    health_regen: int = 0
+    stamina_regen: int = 0
     desc: str = None  # Description of item
 
 
@@ -110,16 +112,14 @@ def add_item(item_id: int):
             ind = 0
             for idx, inv_item in enumerate(game_data.PlayerData.Inventory):
                 if inv_item.item_id == item_data.item_id:
-                    dupe = True
                     if not game_data.PlayerData.Inventory[idx].qty + 1 > inv_item.max_qty:
                         # Makes sure to not add items that cant have multiple instances in the inventory
+                        dupe = True
                         game_data.PlayerData.Inventory[idx].qty += 1
                         ind = idx
-
-                    break
+                        break
 
             if dupe is False:
-                print(f"{dupe} not dupe")
                 game_data.PlayerData.Inventory.append(item_data)
                 # print(game_data.PlayerData.Inventory[ind])
 
@@ -143,6 +143,7 @@ def item_info(item_id: int, item_name: str = None):
 
 
 def display_inv():
+    # This was fun to write
     item_spacing = 25
     # Display the inventory
     if game_data.PlayerData.Inventory_Displayed is True:
@@ -150,43 +151,24 @@ def display_inv():
         # sys.stdout.write("\b \b" * game_data.PlayerData.cur_inv_display_size)  # Remove old inv display
         pass
     else:
-        # Blank Row: print(f"{'*':^20}{'*':^20}{'*':^20}|{'*':^20}{'*':^20}{'*':^20}")
-        element_num = 1  # Rotates between 2 and 1 to indicate which side it is printing
 
-        # check inventory slots is a odd number
-        inv_odd = False
-        row1 = 0
-        row2 = 0
+        element_num = 1  # Which side of the array is printing
+        key_num = 0  # The current item to print in the first column
+        sub_key_num = 0  # The current item to print in the second column
+        inv_size = len(game_data.PlayerData.Inventory) - 1
+        row1 = game_data.PlayerData.Inventory_Space // 2
+
         if game_data.PlayerData.Inventory_Space % 2 == 1:
-            print("inv odd")
-            # Inventory is odd
-            inv_odd = True
-        else:
-            # Inventory is not odd
-            print("inv even")
-            r = len(game_data.PlayerData.Inventory) // 2
-            row1 = r
-            row2 = r
+            # If the inventory space num is odd, the first column will print 1 more than the second column
+            row1 += 1
 
         print(f"{'':<10}", end='')
         print(f"{'Item Name':^{item_spacing}}{'Item QTY':^{item_spacing}}{'Item ID':^{item_spacing}}"
               f"{'Item Name':^{item_spacing}}{'Item QTY':^{item_spacing}}{'Item ID':^{item_spacing}}\n")
         for i in range(game_data.PlayerData.Inventory_Space):
             print(f"{'':<10}", end='')
-            # if i <= len(game_data.PlayerData.Inventory) - 1:
-            #     print(f"{game_data.PlayerData.Inventory[i].name:^{item_spacing}}"
-            #           f"{game_data.PlayerData.Inventory[i].qty:^{item_spacing}}"
-            #           f"{game_data.PlayerData.Inventory[i].item_id:^{item_spacing}}", end='')
-            # else:
-            #     print(f"{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}", end='')
-            #
-            # if element_num == 1:  # if it is still printing first row elements
-            #     print("|", end='')
-            #     element_num += 1
-            # else:
-            #     print("\n", end='')
-            #     element_num -= 1
-            if i > len(game_data.PlayerData.Inventory) - 1:
+
+            if i > inv_size:
                 # Item is out of total inventory index
                 # Print Blank Row
                 print(f"{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}", end='')
@@ -196,22 +178,32 @@ def display_inv():
                 else:
                     element_num = 2
             elif element_num == 1:
+                item = game_data.PlayerData.Inventory[key_num]
+                print(f"{Fore.RED}", end='')
                 # Check to see if requested item exists if so print
-                print(f"{game_data.PlayerData.Inventory[i].name:^{item_spacing}}"
-                      f"{game_data.PlayerData.Inventory[i].qty:^{item_spacing}}"
-                      f"{game_data.PlayerData.Inventory[i].item_id:^{item_spacing}}", end='')
+                print(f"{item.name:^{item_spacing}}"
+                      f"{item.qty:^{item_spacing}}"
+                      f"{item.item_id:^{item_spacing}}", end='')
                 element_num = 2  # Set to second column
-                
+                print(f"{Fore.RESET}", end='')
+                key_num += 1
+
             elif element_num == 2:
+                print(f"{Fore.GREEN}", end='')
                 # Print second row, check to see if requested item exists if so print
                 # Attempt to index item that is out of index of the first row
-                if not row1 + i > len(game_data.PlayerData.Inventory) - 1:
-                    print(f"{game_data.PlayerData.Inventory[row1 + i].name:^{item_spacing}}"
-                          f"{game_data.PlayerData.Inventory[row1 + i].qty:^{item_spacing}}"
-                          f"{game_data.PlayerData.Inventory[row1 + i].item_id:^{item_spacing}}", end='')
+
+                if not row1 + sub_key_num > inv_size - 1:
+                    item = game_data.PlayerData.Inventory[row1 + sub_key_num]
+                    print(f"{item.name:^{item_spacing}}"
+                          f"{item.qty:^{item_spacing}}"
+                          f"{item.item_id:^{item_spacing}}", end='')
                 else:
                     print(f"{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}", end='')
                 element_num = 1  # Set to first column
+                sub_key_num += 1
+
+                print(f"{Fore.RESET}", end='')
                 print("\n", end='')
 
 

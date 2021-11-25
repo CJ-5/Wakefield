@@ -9,7 +9,7 @@ class PlayerData:
     Inventory_Displayed = False  # Is the inventory currently displayed on screen
     cur_inv_display_size = None  # The amount of characters that the current inventory display takes up
     Health = 100  # Players current health
-    Inventory_Space = 26  # Players current max inventory size
+    Inventory_Space = 13  # Players current max inventory size
     Inventory_Accessible = False  # Is the players inventory currently accessible
     Inventory = []  # Players current inventory populated with InvItem Objects
 
@@ -21,8 +21,12 @@ class StaticData:
         self.movement_blacklist = ["X"]  # The spots the player is not allowed to move onto
         self.map_spacing = 2  # The amount of spacing between each character on the map
         self.game_items = [  # The in game item data
-            lib.InvItem("Ol' Reliable Broad Sword", 0, 1, 1, 3, "weapon", (3, 6), "Its your sword a bit rusty but"
-                                                                                  "has always been reliable")
+            lib.InvItem("Ol' Reliable Broad Sword", 0, 1, 1, 3, "weapon", (3, 6), 0, 0, "Its your sword a bit rusty but"
+                                                                                        "has always been reliable"),
+            lib.InvItem("Apple", 1, 1, 10, 1, "consumable", (0, 0), 10, 5, "Its an apple"),
+            lib.InvItem("Bread", 2, 1, 5, 2, "consumable", (0, 0), 0, 0, "Its bread, at least it is not moldy"),
+            lib.InvItem("Sword", 3, 1, 1, 3, "weapon", (3, 6), 0, 0, "Its your sword a bit rusty but"
+                                                                               "has always been reliable"),
         ]
 
 

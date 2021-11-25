@@ -41,7 +41,6 @@ def enemy_move_calc(map_in):  # This was such a simple task, why did I add a ene
 
 def coord_set(map_in, x_m, y_m):  # Main Movement Engine
     # Move point to a certain position on the map
-    # Collision Checking
 
     # x_m = Amount to move on x plane
     # y_m = Amount to move on y plane
@@ -53,6 +52,7 @@ def coord_set(map_in, x_m, y_m):  # Main Movement Engine
     new_y = game_data.MapData.y + y_m
     if not (new_x > len(map_in.map_array[0]) - 1 or new_x < 0 or new_y > len(map_in.map_array) - 1 or new_y < 0):
         future_char = get_coord_char(map_in, new_x, new_y)
+        # Collision Checking to see if the player is allowed to move into this area
         if not Data.movement_blacklist.__contains__(future_char):
             internal_coordinates = []
             for yi, y in enumerate(map_in.map_array):
@@ -72,9 +72,9 @@ def coord_set(map_in, x_m, y_m):  # Main Movement Engine
 
 def show_map(map_in):
     # Print the map
-
+    local_spacing = Data.map_spacing  # Stops code from fetching value from outside class
     print("{:^50}".format(map_in.map_name))
-    print(f"{Fore.RED}{'/':^{Data.map_spacing}}{Fore.RESET}" * len(map_in.map_array[0]))
+    print(f"{Fore.RED}{'/':^{local_spacing}}{Fore.RESET}" * len(map_in.map_array[0]))
     map_out = ""
     for y in map_in.map_array:
         cur_row = ""  # Reset the line print out
@@ -82,18 +82,18 @@ def show_map(map_in):
             # Get Current Character and add it to the formatted line
             cur_char = x
             if cur_char == "":
-                cur_char = f"{' ':<{Data.map_spacing}}"
+                cur_char = f"{' ':<{local_spacing}}"
             elif cur_char == "X":
-                cur_char = f"{Fore.YELLOW}{cur_char:<{Data.map_spacing}}{Fore.RESET}"
+                cur_char = f"{Fore.YELLOW}{cur_char:<{local_spacing}}{Fore.RESET}"
             elif cur_char == "x":
-                cur_char = f"{Fore.CYAN}{cur_char:<{Data.map_spacing}}{Fore.RESET}"
+                cur_char = f"{Fore.CYAN}{cur_char:<{local_spacing}}{Fore.RESET}"
             elif cur_char == "-":
-                cur_char = f"{Fore.LIGHTGREEN_EX}{cur_char:<{Data.map_spacing}}{Fore.RESET}"
+                cur_char = f"{Fore.LIGHTGREEN_EX}{cur_char:<{local_spacing}}{Fore.RESET}"
 
             cur_row += cur_char
-        map_out += f"{cur_row}{Fore.RED}/{Fore.RESET}\n"
-    print(map_out, end='')  # Reduces the flashing of the console
-    print(f"{Fore.RED}{'/':^{Data.map_spacing}}{Fore.RESET}" * len(map_in.map_array[0]))
+        map_out += f"{cur_row}{Fore.RED}|{Fore.RESET}\n"
+    print(map_out, end='')  # Reduces the flashing of the console by printing pre formatted string
+    print(f"{Fore.RED}{'/':^{local_spacing}}{Fore.RESET}" * len(map_in.map_array[0]))
     print(f"Your current position is {get_coord(map_in)} "
           f"(Represented by the {Fore.GREEN + 'x' + Style.RESET_ALL})")
 
