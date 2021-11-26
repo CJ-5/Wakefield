@@ -143,73 +143,71 @@ def item_info(item_id: int, item_name: str = None):
 
 
 def display_inv():
-    # This was fun to write
-    item_spacing = 25
     # Display the inventory
+    reset_cursor = False
     if game_data.PlayerData.Inventory_Displayed is True:
-        # Refresh the inventory as it is already displayed
-        # sys.stdout.write("\b \b" * game_data.PlayerData.cur_inv_display_size)  # Remove old inv display
-        pass
-    else:
+        # Clear the amount of lines that are specified by the cur_inv_display_size value
+        reset_cursor = True
+        print(f"\x1b[{game_data.PlayerData.cur_inv_display_size}A")
 
-        element_num = 1  # Which side of the array is printing
-        key_num = 0  # The current item to print in the first column
-        sub_key_num = 0  # The current item to print in the second column
-        inv_size = len(game_data.PlayerData.Inventory) - 1
-        row1 = game_data.PlayerData.Inventory_Space // 2
+    # Note Only for use in display_inv()
+    item_spacing = 25
+    # print the inventory
+    element_num = 1  # Which side of the array is printing
+    key_num = 0  # The current item to print in the first column
+    sub_key_num = 0  # The current item to print in the second column
+    inv_size = len(game_data.PlayerData.Inventory) - 1
+    row1 = game_data.PlayerData.Inventory_Space // 2
 
-        if game_data.PlayerData.Inventory_Space % 2 == 1:
-            # If the inventory space num is odd, the first column will print 1 more than the second column
-            row1 += 1
+    if game_data.PlayerData.Inventory_Space % 2 == 1:
+        # If the inventory space num is odd, the first column will print 1 more than the second column
+        row1 += 1
 
+    print(f"{'':<10}", end='')
+    print(f"{'Item Name':^{item_spacing}}{'Item QTY':^{item_spacing}}{'Item ID':^{item_spacing}}"
+          f"{'Item Name':^{item_spacing}}{'Item QTY':^{item_spacing}}{'Item ID':^{item_spacing}}\n")
+    for i in range(game_data.PlayerData.Inventory_Space):
         print(f"{'':<10}", end='')
-        print(f"{'Item Name':^{item_spacing}}{'Item QTY':^{item_spacing}}{'Item ID':^{item_spacing}}"
-              f"{'Item Name':^{item_spacing}}{'Item QTY':^{item_spacing}}{'Item ID':^{item_spacing}}\n")
-        for i in range(game_data.PlayerData.Inventory_Space):
-            print(f"{'':<10}", end='')
 
-            if i > inv_size:
-                # Item is out of total inventory index
-                # Print Blank Row
-                print(f"{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}", end='')
-                if element_num == 2:
-                    print("\n", end='')
-                    element_num = 1
-                else:
-                    element_num = 2
-            elif element_num == 1:
-                item = game_data.PlayerData.Inventory[key_num]
-                print(f"{Fore.RED}", end='')
-                # Check to see if requested item exists if so print
+        if i > inv_size:
+            # Item is out of total inventory index
+            # Print Blank Row
+            print(f"{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}", end='')
+            if element_num == 2:
+                print("\n", end='')
+                element_num = 1
+            else:
+                element_num = 2
+        elif element_num == 1:
+            item = game_data.PlayerData.Inventory[key_num]
+            print(f"{Fore.RED}", end='')
+            # Check to see if requested item exists if so print
+            print(f"{item.name:^{item_spacing}}"
+                  f"{item.qty:^{item_spacing}}"
+                  f"{item.item_id:^{item_spacing}}", end='')
+            element_num = 2  # Set to second column
+            print(f"{Fore.RESET}", end='')
+            key_num += 1
+
+        elif element_num == 2:
+            print(f"{Fore.GREEN}", end='')
+            # Print second row, check to see if requested item exists if so print
+            # Attempt to index item that is out of index of the first row
+
+            if not row1 + sub_key_num > inv_size - 1:
+                item = game_data.PlayerData.Inventory[row1 + sub_key_num]
                 print(f"{item.name:^{item_spacing}}"
                       f"{item.qty:^{item_spacing}}"
                       f"{item.item_id:^{item_spacing}}", end='')
-                element_num = 2  # Set to second column
-                print(f"{Fore.RESET}", end='')
-                key_num += 1
+            else:
+                print(f"{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}", end='')
+            element_num = 1  # Set to first column
+            sub_key_num += 1
 
-            elif element_num == 2:
-                print(f"{Fore.GREEN}", end='')
-                # Print second row, check to see if requested item exists if so print
-                # Attempt to index item that is out of index of the first row
-
-                if not row1 + sub_key_num > inv_size - 1:
-                    item = game_data.PlayerData.Inventory[row1 + sub_key_num]
-                    print(f"{item.name:^{item_spacing}}"
-                          f"{item.qty:^{item_spacing}}"
-                          f"{item.item_id:^{item_spacing}}", end='')
-                else:
-                    print(f"{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}", end='')
-                element_num = 1  # Set to first column
-                sub_key_num += 1
-
-                print(f"{Fore.RESET}", end='')
-                print("\n", end='')
-
-
-def move(y, x):
-    # Console Caret Movement Script
-    print("\033[%d;%dH" % (y, x))
+            print(f"{Fore.RESET}", end='')
+            print("\n", end='')
+    if reset_cursor is True:
+        print(f'\x1b[{game_data.PlayerData.cur_inv_display_size // 2}B')
 
 
 @dataclass()

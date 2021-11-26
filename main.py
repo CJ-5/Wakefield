@@ -2,8 +2,7 @@
 try:
     import time
     import os
-    from colorama import init
-    from colorama import Fore, Back, Style
+    from colorama import *
     import configparser
     import lib
     import game_data
@@ -68,5 +67,28 @@ movement_engine.init_coord()
 # time.sleep(2)
 #
 # lib.gprint("Why don't you give that a try now?")
+num = 4
+print("1")
+print("2")
+print("3")
+print("4")
+print("5")
 
-lib.gprint("This is a test message for viewing purposes")
+print(f'\x1b[{num}A TestOver              ')  # Works
+print(f'\x1b[{num//2}B', end='')
+
+"""
+\x1b[{n}A : Up
+\x1b[{n}B : Down
+\x1b[{n}C : Right
+\x1b[{n}D : Left
+"""
+
+
+
+# print("test\n")
+# print("test")
+# time.sleep(1)
+# printpos(1, 1, "MultiLine warping")
+# printpos(1, 1)
+
