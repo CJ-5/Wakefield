@@ -1,4 +1,5 @@
 #  Holds the main functions that operate the backend of the game (e.g battle system)
+import lib
 import movement_engine
 import time
 from colorama import init
@@ -80,12 +81,41 @@ def print_logo():
     print('\n')
 
 
-def process_command():
+def process_command(cmd):
     # Process command
-    command = game_data.MapData.current_command.lower()
-    if game_data.MapData.demo_mode is True:
-        if command == "help" or command == "?":
-            pass
+    cmd = cmd.lower().split(' ')
+    if game_data.MapData.valid_cmd.__contains__(cmd[0]):
+        if cmd[0] == "help":  # Print the help page
+            if game_data.Demo.help_demo is True:
+                game_data.MapData.map_kill = True
+                game_data.Demo.help_demo = False
+            else:
+                display_help()
+        elif cmd[0] == "item_info":  # Print the specified items info
+            print(cmd)  # Debug Code
+        elif cmd[0] == "inventory":  # print the players inventory
+            print(cmd)  # Debug Code
+        elif cmd[0] == "stats":  # print system & player statistics
+            print(cmd)  # Debug Code
+    else:
+        gprint(MQ([ck("Invalid Command")]))
+
+
+def clear_line(num: int, max_line_length: int, reset: bool, multiple: bool = True, direction: str = 'A'):
+    # Clear the specified amount of lines
+    # Num = The amount of line to clear
+    # Max_Line_Length = The length of the largest line amongst the lines being cleared
+    # Reset = Whether or not to reset the cursor after clearing specified line amount
+    # Multiple = whether or not to clear all lines specified by num
+    # direction = The direction to clear the lines (default: A [Up])
+
+    if multiple is True:
+        for i in range(num):
+            print(f'\x1b[{1}{direction.upper()}\r{" "*max_line_length}', end='')
+    else:
+        print(f'\x1b[{num}{direction.upper()}')
+    if reset is True:
+        print(f'\x1b[{num // 2}B')  # Reset the cursor to the original position with magic
 
 
 def display_help(cmd: str = None):

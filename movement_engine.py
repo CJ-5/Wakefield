@@ -92,7 +92,7 @@ def show_map(map_in):
 
             cur_row += cur_char
         map_out += f"{cur_row}{Fore.RED}|{Fore.RESET}\n"
-    print(map_out, end='')  # Reduces the flashing of the console by printing pre formatted string
+    print(map_out, end='', flush=True)  # Reduces the flashing of the console by printing pre formatted string
     print(f"{Fore.RED}{'/':^{local_spacing}}{Fore.RESET}" * len(map_in.map_array[0]))
     print(f"Your current position is {get_coord(map_in)} "
           f"(Represented by the {Fore.GREEN + 'x' + Style.RESET_ALL})")
@@ -116,7 +116,7 @@ def on_release(key):
 def on_press(key):
     try:
         if key == keyboard.Key.enter:
-            lib.process_command()
+            lib.process_command(game_data.MapData.current_command)
         elif key == keyboard.Key.backspace:
             # Remove last character of both printed message, and the current command string
             game_data.MapData.current_command = game_data.MapData.current_command[:-1]
@@ -129,25 +129,27 @@ def on_press(key):
 
 
 def kb_listener():
-    def listener_start():
-        with keyboard.Listener(on_release=on_release, on_press=on_press) as listener:
-            def watcher():
-                while True:
-                    if game_data.MapData.map_kill is True:
-                        game_data.MapData.map_kill = False
-                        listener.stop()
-                        return False  # Kill Watcher Thread
-                    time.sleep(0.1)  # Probably the most important statement in the entire program
-            Thread(target=watcher).start()  # MULTI-THREADING!!!
-            listener.join()
-
-            print("Listener Ended")
-    Thread(target=listener_start).start()
+    with keyboard.Listener(on_release=on_release, on_press=on_press) as listener:
+        def watcher():
+            while True:
+                if game_data.MapData.map_kill is True:
+                    game_data.MapData.map_kill = False
+                    listener.stop()
+                    return False  # Kill Watcher Thread
+                time.sleep(0.01)  # Probably the most important statement in the entire program
+        Thread(target=watcher).start()  # MULTI-THREADING!!!
+        listener.join()
 
 
+# Used for player basic controls tutorial as not to display the active map
 def demo_prompt():
-    # Raw Keyboard input for commands
-    def listener_start():
-        with keyboard.Listener(on_press=on_press) as Listener:
-            Listener.start()
-    Thread(target=listener_start()).start()
+    with keyboard.Listener(on_press=on_press) as listener:
+        def watcher():
+            while True:
+                if game_data.MapData.map_kill is True:
+                    game_data.MapData.map_kill = False
+                    listener.stop()
+                    return False
+                time.sleep(0.01)
+        Thread(target=watcher).start()
+        listener.join()

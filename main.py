@@ -9,6 +9,7 @@ try:
     import movement_engine
     import sys
     import timeit
+    from threading import Thread
 
 except ModuleNotFoundError:
     File_Set = dict()
@@ -44,6 +45,25 @@ except ModuleNotFoundError:
         exit(0)
 
 
+"""
+num = 4
+print("5")
+print("4")  # Clears this line
+print("3")
+print("2")
+print("1")
+
+print(f'\x1b[{num}A TestOver              ')  # Works
+print(f'\x1b[{num//2}B', end='')
+"""
+
+"""
+\x1b[{n}A : Up
+\x1b[{n}B : Down
+\x1b[{n}C : Right
+\x1b[{n}D : Left
+"""
+
 # Initialization Script
 init()  # initiate colorama
 movement_engine.Data = game_data.StaticData()
@@ -66,24 +86,15 @@ movement_engine.init_coord()
 #
 # time.sleep(2)
 #
-# lib.gprint("Why don't you give that a try now?")
 
-"""
-num = 4
-print("1")
-print("2")
-print("3")
-print("4")
-print("5")
+lib.gprint("Why don't you give that a try now?")
+game_data.MapData.valid_cmd.append("help")
+movement_engine.demo_prompt()
+print()
 
-print(f'\x1b[{num}A TestOver              ')  # Works
-print(f'\x1b[{num//2}B', end='')
-"""
+lib.clear_line(2, 34, False, True)
+game_data.MapData.valid_cmd.clear()
+lib.gprint("\rGreat!")
 
-"""
-\x1b[{n}A : Up
-\x1b[{n}B : Down
-\x1b[{n}C : Right
-\x1b[{n}D : Left
-"""
-lib.display_help()
+while True:
+    pass

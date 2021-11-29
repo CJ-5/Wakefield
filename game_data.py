@@ -50,13 +50,14 @@ class StaticData:
 
 class Demo:
     demo_mode = True  # If program is in demo mode
-    help_demo = False  # If the help command demo has been completed
+    help_demo = True  # If the help command demo has been completed
 
 
 class MapData:
     # General Map Data
     y = 0
     x = 0
+    valid_cmd = []
     demo_mode = False
     current_map = None
     map_kill = False
@@ -70,8 +71,10 @@ class HelpPage:
     # cmd_list: Command List
     # ind_def: Individual Definitions
     def __init__(self):
-        self.ind_def = {"use": "Usage (use [item]): Uses the specified item (if it is valid for the situation)",
-                        "inventory / inv": "Usage (inventory) | (inv): Displays your current inventory"}
+        self.ind_def = {"use": "Usage (use [item name / item id]): Uses the specified item "
+                               "(if it is valid for the situation)",
+                        "inventory / inv": "Usage (inventory) | (inv): Displays your current inventory",
+                        "item_info": "Usage (item_info [item name / item id] | Displays info on the specified item"}
 
 # def test():
 #     class A:
