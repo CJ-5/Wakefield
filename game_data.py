@@ -5,13 +5,31 @@ import lib
 
 
 class PlayerData:
-    # Dynamic Data, DO NOT SLOT
     Inventory_Displayed = False  # Is the inventory currently displayed on screen
     cur_inv_display_size = None  # The amount of characters that the current inventory display takes up
     Health = 100  # Players current health
     Inventory_Space = 13  # Players current max inventory size
     Inventory_Accessible = False  # Is the players inventory currently accessible
     Inventory = []  # Players current inventory populated with InvItem Objects
+
+
+#  NPC and Enemy classes are NOT done
+@dataclass()
+class EnemyData:
+    Entity_id: int  # The spawn id of the enemy
+    Name: str  # The display name of the enemy
+    Health: int  # The Health of the enemy
+    max_inst: int  # The max amount of this enemy that can spawn on a valid map
+
+
+# Class instance for the creation of a NPC entity
+@dataclass()
+class NPCData:
+    Entity_id: int
+    Name: str
+    Health: int
+    Pos: tuple
+    Type: int = 0  # 0: Mass NPC (No shop or extra quest)
 
 
 class StaticData:
@@ -26,11 +44,17 @@ class StaticData:
             lib.InvItem("Apple", 1, 1, 10, 1, "consumable", (0, 0), 10, 5, "Its an apple"),
             lib.InvItem("Bread", 2, 1, 5, 2, "consumable", (0, 0), 0, 0, "Its bread, at least it is not moldy"),
             lib.InvItem("Sword", 3, 1, 1, 3, "weapon", (3, 6), 0, 0, "Its your sword a bit rusty but"
-                                                                               "has always been reliable"),
+                                                                     "has always been reliable"),
         ]
 
 
+class Demo:
+    demo_mode = True  # If program is in demo mode
+    help_demo = False  # If the help command demo has been completed
+
+
 class MapData:
+    # General Map Data
     y = 0
     x = 0
     demo_mode = False
@@ -59,11 +83,13 @@ class HelpPage:
 
 class MainMap:  # Main starting area Map
     # Blank Row ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-    __slots__ = ('map_name', 'map_array', 'map_desc', 'valid_moves')  # Total Memory Optimization stuff
+    __slots__ = ('map_name', 'map_array', 'map_desc', 'npc', 'enemy')  # Total Memory Optimization stuff
 
     def __init__(self):
         self.map_desc = "The main area of Wakefield!"
         self.map_name = Fore.GREEN + "Main Area" + Style.RESET_ALL
+        self.npc = []
+        self.enemy = None  # No enemies can spawn on this map
         self.map_array = [["-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "", "", ""],
                      ["-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "", "", "", ""],
                      ["-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "", "", "", "", ""],

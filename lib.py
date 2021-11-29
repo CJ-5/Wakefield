@@ -81,8 +81,25 @@ def print_logo():
 
 
 def process_command():
-    # Pull the Current command value and process it
-    pass
+    # Process command
+    command = game_data.MapData.current_command.lower()
+    if game_data.MapData.demo_mode is True:
+        if command == "help" or command == "?":
+            pass
+
+
+def display_help(cmd: str = None):
+    help_page = game_data.HelpPage()
+    # Display the help page for all or just one command
+    if cmd is None:
+        # Display the full help page
+        print("Game Command List\n")
+        for cmd_info in help_page.ind_def:
+            print(f"{cmd_info:<20}", end='')
+            print(f":  {help_page.ind_def[cmd_info]}")
+    else:
+        # Index the command info from the command info list
+        pass
 
 
 # Inventory Functions
@@ -206,8 +223,12 @@ def display_inv():
 
             print(f"{Fore.RESET}", end='')
             print("\n", end='')
+            game_data.PlayerData.cur_inv_display_size += 1
+
     if reset_cursor is True:
+        # Reset the cursor to the bottom
         print(f'\x1b[{game_data.PlayerData.cur_inv_display_size // 2}B')
+        game_data.PlayerData.cur_inv_display_size = 0
 
 
 @dataclass()

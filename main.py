@@ -45,7 +45,7 @@ except ModuleNotFoundError:
 
 
 # Initialization Script
-init()
+init()  # initiate colorama
 movement_engine.Data = game_data.StaticData()
 config_obj = configparser.ConfigParser()
 config_obj.read("C:/Users/carte/Documents/GitHub/Python_Adventure_Game/config.ini")
@@ -67,6 +67,8 @@ movement_engine.init_coord()
 # time.sleep(2)
 #
 # lib.gprint("Why don't you give that a try now?")
+
+"""
 num = 4
 print("1")
 print("2")
@@ -76,6 +78,7 @@ print("5")
 
 print(f'\x1b[{num}A TestOver              ')  # Works
 print(f'\x1b[{num//2}B', end='')
+"""
 
 """
 \x1b[{n}A : Up
@@ -83,12 +86,4 @@ print(f'\x1b[{num//2}B', end='')
 \x1b[{n}C : Right
 \x1b[{n}D : Left
 """
-
-
-
-# print("test\n")
-# print("test")
-# time.sleep(1)
-# printpos(1, 1, "MultiLine warping")
-# printpos(1, 1)
-
+lib.display_help()
