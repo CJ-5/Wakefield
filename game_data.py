@@ -6,7 +6,7 @@ import lib
 
 class PlayerData:
     Inventory_Displayed = False  # Is the inventory currently displayed on screen
-    cur_inv_display_size = None  # The amount of characters that the current inventory display takes up
+    cur_inv_display_size = 3  # The amount of characters that the current inventory display takes up
     Health = 100  # Players current health
     Inventory_Space = 13  # Players current max inventory size
     Inventory_Accessible = False  # Is the players inventory currently accessible
@@ -25,32 +25,33 @@ class EnemyData:
 # Class instance for the creation of a NPC entity
 @dataclass()
 class NPCData:
-    Entity_id: int
-    Name: str
-    Health: int
-    Pos: tuple
+    Entity_id: int  # Entity ID of the npc
+    Name: str  # Display name of the NPC
     Type: int = 0  # 0: Mass NPC (No shop or extra quest)
 
 
 class StaticData:
-    __slots__ = ("movement_blacklist", "map_spacing", "game_items")
+    __slots__ = ("movement_blacklist", "map_spacing", "game_items", "enemies")
 
     def __init__(self):
-        self.movement_blacklist = ["X"]  # The spots the player is not allowed to move onto
+        self.movement_blacklist = ["X", "0"]  # The spots the player is not allowed to move onto
         self.map_spacing = 2  # The amount of spacing between each character on the map
         self.game_items = [  # The in game item data
             lib.InvItem("Ol' Reliable Broad Sword", 0, 1, 1, 3, "weapon", (3, 6), 0, 0, "Its your sword a bit rusty but"
                                                                                         "has always been reliable"),
             lib.InvItem("Apple", 1, 1, 10, 1, "consumable", (0, 0), 10, 5, "Its an apple"),
-            lib.InvItem("Bread", 2, 1, 5, 2, "consumable", (0, 0), 0, 0, "Its bread, at least it is not moldy"),
+            lib.InvItem("Bread", 2, 1, 5, 2, "consumable", (0, 0), 15, 10, "Its bread, at least it is not moldy"),
             lib.InvItem("Sword", 3, 1, 1, 3, "weapon", (3, 6), 0, 0, "Its your sword a bit rusty but"
                                                                      "has always been reliable"),
         ]
+        self.enemies = [EnemyData(0, "Test_Enemy", 100, 5)]  # Holds enemy data
 
 
 class Demo:
     demo_mode = True  # If program is in demo mode
     help_demo = True  # If the help command demo has been completed
+    inventory_demo = True
+    item_info_demo = True
 
 
 class MapData:

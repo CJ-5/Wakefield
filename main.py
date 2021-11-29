@@ -87,14 +87,27 @@ movement_engine.init_coord()
 # time.sleep(2)
 #
 
-lib.gprint("Why don't you give that a try now?")
-game_data.MapData.valid_cmd.append("help")
-movement_engine.demo_prompt()
-print()
+# lib.gprint("Why don't you give that a try now?")
+# game_data.MapData.valid_cmd.append("help")
+# movement_engine.demo_prompt()
+# print()
+#
+# lib.clear_line(2, 34, False, True)
+# game_data.MapData.valid_cmd.clear()
+# lib.gprint("Great!")
+# lib.gprint(lib.MQ([lib.ck("Now try the "), lib.ck("inventory", "yellow"), " command to display your current items."]))
+# movement_engine.demo_prompt()
 
-lib.clear_line(2, 34, False, True)
-game_data.MapData.valid_cmd.clear()
-lib.gprint("\rGreat!")
-
+lib.display_inv()
+print("TEst")
+print("Test")
+print("Test")
+print("Test")
+print("Test")
+print("Test")
+print("Test")
+print("Test")
+print("Test")
+lib.clear_line(5, 34, True, True)
 while True:
-    pass
+    continue

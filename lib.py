@@ -89,8 +89,7 @@ def process_command(cmd):
             if game_data.Demo.help_demo is True:
                 game_data.MapData.map_kill = True
                 game_data.Demo.help_demo = False
-            else:
-                display_help()
+            display_help()
         elif cmd[0] == "item_info":  # Print the specified items info
             print(cmd)  # Debug Code
         elif cmd[0] == "inventory":  # print the players inventory
@@ -189,13 +188,21 @@ def item_info(item_id: int, item_name: str = None):
         return movement_engine.Data.game_items[item_id]
 
 
+def clear_inventory_display():
+    # Clear the inventory print out
+    game_data.PlayerData.Inventory_Displayed = False
+    print(game_data.PlayerData.cur_inv_display_size)
+    clear_line(game_data.PlayerData.cur_inv_display_size, len(game_data.MapData.current_map.map_array[0]), True, True)
+    game_data.PlayerData.cur_inv_display_size = 0
+
+
 def display_inv():
     # Display the inventory
-    reset_cursor = False
     if game_data.PlayerData.Inventory_Displayed is True:
         # Clear the amount of lines that are specified by the cur_inv_display_size value
-        reset_cursor = True
-        print(f"\x1b[{game_data.PlayerData.cur_inv_display_size}A")
+        clear_inventory_display()
+
+    game_data.PlayerData.Inventory_Displayed = True
 
     # Note Only for use in display_inv()
     item_spacing = 25
@@ -214,16 +221,18 @@ def display_inv():
     print(f"{'Item Name':^{item_spacing}}{'Item QTY':^{item_spacing}}{'Item ID':^{item_spacing}}"
           f"{'Item Name':^{item_spacing}}{'Item QTY':^{item_spacing}}{'Item ID':^{item_spacing}}\n")
     for i in range(game_data.PlayerData.Inventory_Space):
-        print(f"{'':<10}", end='')
 
         if i > inv_size:
             # Item is out of total inventory index
             # Print Blank Row
-            print(f"{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}", end='')
             if element_num == 2:
+                print(f"{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}", end='')
                 print("\n", end='')
+                game_data.PlayerData.cur_inv_display_size += 1
                 element_num = 1
             else:
+                print(f"{'':<10}", end='')
+                print(f"{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}", end='')
                 element_num = 2
         elif element_num == 1:
             item = game_data.PlayerData.Inventory[key_num]
@@ -243,22 +252,16 @@ def display_inv():
 
             if not row1 + sub_key_num > inv_size - 1:
                 item = game_data.PlayerData.Inventory[row1 + sub_key_num]
-                print(f"{item.name:^{item_spacing}}"
-                      f"{item.qty:^{item_spacing}}"
-                      f"{item.item_id:^{item_spacing}}", end='')
+                print(f"{item.name:>{item_spacing}}"
+                      f"{item.qty:>{item_spacing}}"
+                      f"{item.item_id:>{item_spacing}}", end='')
             else:
-                print(f"{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}", end='')
+                print(f"{'*':<{item_spacing}}{'*':<{item_spacing}}{'*':<{item_spacing}}", end='')
             element_num = 1  # Set to first column
             sub_key_num += 1
 
-            print(f"{Fore.RESET}", end='')
-            print("\n", end='')
+            print(f"{Fore.RESET}\n", end='')
             game_data.PlayerData.cur_inv_display_size += 1
-
-    if reset_cursor is True:
-        # Reset the cursor to the bottom
-        print(f'\x1b[{game_data.PlayerData.cur_inv_display_size // 2}B')
-        game_data.PlayerData.cur_inv_display_size = 0
 
 
 @dataclass()

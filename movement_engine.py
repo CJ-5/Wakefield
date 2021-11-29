@@ -89,6 +89,8 @@ def show_map(map_in):
                 cur_char = f"{Fore.CYAN}{cur_char:<{local_spacing}}{Fore.RESET}"
             elif cur_char == "-":
                 cur_char = f"{Fore.LIGHTGREEN_EX}{cur_char:<{local_spacing}}{Fore.RESET}"
+            elif cur_char == '0':
+                cur_char = f"{Style.DIM}{cur_char:<{local_spacing}}{Fore.RESET}"
 
             cur_row += cur_char
         map_out += f"{cur_row}{Fore.RED}|{Fore.RESET}\n"
