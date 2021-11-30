@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from colorama import Fore, Back, Style
 import game_data
 import sys
+from ctypes import windll
+import win32gui
 
 
 class Logo:
@@ -100,6 +102,23 @@ def process_command(cmd):
         gprint(MQ([ck("Invalid Command")]))
 
 
+user32 = windll.user32
+user32.SetProcessDPIAware()  # optional, makes functions return real pixel numbers instead of scaled values
+
+full_screen_rect = (0, 0, user32.GetSystemMetrics(0), user32.GetSystemMetrics(1))
+
+
+def is_full_screen():
+    try:
+        hwnd = user32.GetForegroundWindow()
+        rect = win32gui.GetWindowRect(hwnd)  # Get the size of the
+        print(rect)
+        print(full_screen_rect)
+        return rect == full_screen_rect
+    except:
+        return False
+
+
 def clear_line(num: int, max_line_length: int, reset: bool, multiple: bool = True, direction: str = 'A'):
     # Clear the specified amount of lines
     # Num = The amount of line to clear
@@ -110,7 +129,8 @@ def clear_line(num: int, max_line_length: int, reset: bool, multiple: bool = Tru
 
     if multiple is True:
         for i in range(num):
-            print(f'\x1b[{1}{direction.upper()}\r{" "*max_line_length}', end='')
+            print(f'\x1b[{1}{direction.upper()}', end='')
+            print(f'\r{Fore.RED}{" "*max_line_length}{Fore.RESET}', end='')
     else:
         print(f'\x1b[{num}{direction.upper()}')
     if reset is True:
@@ -262,6 +282,7 @@ def display_inv():
 
             print(f"{Fore.RESET}\n", end='')
             game_data.PlayerData.cur_inv_display_size += 1
+    print()  # Create newline at end of printout
 
 
 @dataclass()
@@ -273,7 +294,7 @@ def ck(text: str, color: str = None):
     return text, color
 
 
-def gprint(queue, speed: int = 25):
+def gprint(queue, speed: int = 35):
     # Print as if the text was being typed
     if type(queue) is not MQ:
         # Converts raw string into MQ format
