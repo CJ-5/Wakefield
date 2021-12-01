@@ -69,65 +69,70 @@ print(f'\x1b[{num//2}B', end='')
 
 # Initialization Script
 init()  # initiate colorama
-user32 = windll.user32
-user32.SetProcessDPIAware()
-hwnd = user32.GetForegroundWindow()
+# user32 = windll.user32
+# user32.SetProcessDPIAware()
+# hwnd = user32.GetForegroundWindow()
 movement_engine.Data = game_data.StaticData()
 config_obj = configparser.ConfigParser()
 config_obj.read("C:/Users/carte/Documents/GitHub/Python_Adventure_Game/config.ini")
+lib.get_max()  # Initiate the max console size
 
 # Initialize main map
 game_data.MapData.current_map = game_data.MainMap()
 movement_engine.init_coord()
-time.sleep(2)
-lib.gprint("Hello...")
-time.sleep(1)
-lib.gprint("Due to the fact that you are most likely running this program on a mac, I have very little way of being\n"
-           "able to account for the fact that our monitors' resolutions might be different...\n")
-time.sleep(1)
-lib.gprint("So since I didn't want to write a dedicated file to monitor whether or not this program is in\n"
-           "fullscreen during the entire play through and correct it if it is not, I am going to trust you...\n")
-time.sleep(1.5)
-lib.gprint("Please run this program in fullscreen as if you don't, many things will break and it will make me very sad")
-time.sleep(1.5)
-lib.gprint("I will give you some time to do that now")
-time.sleep(4)
 
-
-os.system("cls")
-
-# Basic Controls tutorial
-time.sleep(2)
-lib.print_logo()
-lib.gprint(lib.MQ([lib.ck("Welcome to the game, I couldn't be bothered to name it so its called "),
-                   lib.ck("'Adventure Game'", "green"), lib.ck(".")]))
-lib.gprint("Here is some info to help you get started")
-
-lib.gprint(lib.MQ([
-    lib.ck("- At anytime during the game if you want to see a list of all available actions simply type"),
-    lib.ck(" 'help'", "yellow"), lib.ck(" or "), lib.ck("?", "yellow")]))
-
-time.sleep(2)
-
-
-lib.gprint("Why don't you give that a try now?")
-game_data.MapData.valid_cmd.append("help")
-movement_engine.demo_prompt()
-print()
-
-lib.clear_line(2, 34, False, True)
-game_data.MapData.valid_cmd.clear()
-lib.gprint("Great!")
-lib.gprint(lib.MQ([lib.ck("Now try the "), lib.ck("inventory", "yellow"), " command to display your current items."]))
-movement_engine.demo_prompt()
-
-line_length = len(f"{'':<10}") + len(f"{'*':^25}{'*':^25}{'*':^25}") * 2
-lib.display_inv()
-time.sleep(2)
-lib.clear_line(5, line_length, False, True)
-time.sleep(1)
-
+# Intro Script
+# time.sleep(2)
+# lib.gprint("Hello...")
+# time.sleep(1)
+# lib.gprint("Due to the fact that you are most likely running this program on a mac, I have very little way of being\n"
+#            "able to account for the fact that our monitors' resolutions might be different...\n")
+# time.sleep(1)
+# lib.gprint("So since I didn't want to write a dedicated file to monitor whether or not this program is in\n"
+#            "fullscreen during the entire play through and correct it if it is not, I am going to trust you...\n")
+# time.sleep(1.5)
+# lib.gprint("Please run this program in fullscreen as if you don't, many things will break and it will make me very sad")
+# time.sleep(1.5)
+# lib.gprint("I will give you some time to do that now")
+# time.sleep(4)
 #
+#
+# os.system("cls")
+#
+# # Basic Controls tutorial
+# time.sleep(2)
+# lib.print_logo()
+# lib.gprint(lib.MQ([lib.ck("Welcome to the game, I couldn't be bothered to name it so its called "),
+#                    lib.ck("'Adventure Game'", "green"), lib.ck(".")]))
+# lib.gprint("Here is some info to help you get started")
+#
+# lib.gprint(lib.MQ([
+#     lib.ck("- At anytime during the game if you want to see a list of all available actions simply type"),
+#     lib.ck(" 'help'", "yellow"), lib.ck(" or "), lib.ck("?", "yellow")]))
+#
+# time.sleep(2)
+#
+#
+# lib.gprint("Why don't you give that a try now?")
+# game_data.MapData.valid_cmd.append("help")
+# movement_engine.demo_prompt()
+# print()
+#
+# lib.clear_line(2, 34, False, True)
+# game_data.MapData.valid_cmd.clear()
+# lib.gprint("Great!")
+# lib.gprint(lib.MQ([lib.ck("Now try the "), lib.ck("inventory", "yellow"), " command to display your current items."]))
+# movement_engine.demo_prompt()
+#
+# line_length = len(f"{'':<10}") + len(f"{'*':^25}{'*':^25}{'*':^25}") * 2
+# lib.display_inv()
+# time.sleep(2)
+# lib.clear_line(5, line_length, False, True)
+# time.sleep(1)
+#
+
+lib.maximize_console()
+
 random_variable_that_has_one_purpose = True
 while random_variable_that_has_one_purpose:
     continue

@@ -31,11 +31,12 @@ class NPCData:
 
 
 class StaticData:
-    __slots__ = ("movement_blacklist", "map_spacing", "game_items", "enemies")
+    __slots__ = ("movement_blacklist", "map_spacing", "game_items", "enemies", "lib_spacing_size")
 
     def __init__(self):
         self.movement_blacklist = ["X", "0"]  # The spots the player is not allowed to move onto
         self.map_spacing = 2  # The amount of spacing between each character on the map
+        self.lib_spacing_size = 160  # Equivalent to 1 inventory row worth of characters
         self.game_items = [  # The in game item data
             lib.InvItem("Ol' Reliable Broad Sword", 0, 1, 1, 3, "weapon", (3, 6), 0, 0, "Its your sword a bit rusty but"
                                                                                         "has always been reliable"),
@@ -45,6 +46,11 @@ class StaticData:
                                                                      "has always been reliable"),
         ]
         self.enemies = [EnemyData(0, "Test_Enemy", 100, 5)]  # Holds enemy data
+
+
+class SysData:
+    max_screen_size = ()  # The max size of the console in rows / columns
+    hwnd = None  # PID
 
 
 class Demo:

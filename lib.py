@@ -15,6 +15,7 @@ import ctypes
 import msvcrt
 import subprocess
 from ctypes import wintypes
+import inspect
 
 
 class Logo:
@@ -108,28 +109,48 @@ def process_command(cmd):
         gprint(MQ([ck("Invalid Command")]))
 
 
-user32 = windll.user32
-user32.SetProcessDPIAware()  # optional, makes functions return real pixel numbers instead of scaled values
+def get_max():
+    # Initiate the max size of the console
+    kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
+    user32 = ctypes.WinDLL('user32', use_last_error=True)
+    kernel32.GetConsoleWindow.restype = wintypes.HWND
+    kernel32.GetLargestConsoleWindowSize.restype = wintypes._COORD
+    kernel32.GetLargestConsoleWindowSize.argtypes = (wintypes.HANDLE,)
+    user32.ShowWindow.argtypes = (wintypes.HWND, ctypes.c_int)
 
-full_screen_rect = (0, 0, user32.GetSystemMetrics(0), user32.GetSystemMetrics(1))
+    fd = os.open('CONOUT$', os.O_RDWR)
+
+    try:
+        hcon = msvcrt.get_osfhandle(fd)
+        max_size = kernel32.GetLargestConsoleWindowSize(hcon)
+        if max_size.X == 0 and max_size.Y == 0:
+            raise ctypes.WinError(ctypes.get_last_error())
+        cols = max_size.X
+        hwnd = kernel32.GetConsoleWindow()
+        if cols and hwnd:
+            lines = max_size.Y
+            game_data.SysData.max_screen_size = (cols, lines)
+    finally:
+        os.close(fd)
 
 
 def is_full_screen():
     try:
-        hwnd = user32.GetForegroundWindow()
-        rect = win32gui.GetWindowRect(hwnd)  # Get the size of the
-        print(rect)
-        print(full_screen_rect)
-        return rect == full_screen_rect
+        col, row = os.get_terminal_size()
+        print((col, row))
+        print(game_data.SysData.max_screen_size)
+        print((col, row) == get_max())
+        return (col, row) == game_data.SysData.max_screen_size
     except:
         return False
 
 
 def maximize_console(lines=None):
+    #  I hate how long this took to figure out
     kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
     user32 = ctypes.WinDLL('user32', use_last_error=True)
 
-    SW_MAXIMIZE = 3
+    SW_MAXIMIZE = 3  # specifies to maximize the window
     kernel32.GetConsoleWindow.restype = wintypes.HWND
     kernel32.GetLargestConsoleWindowSize.restype = wintypes._COORD
     kernel32.GetLargestConsoleWindowSize.argtypes = (wintypes.HANDLE,)
@@ -139,18 +160,20 @@ def maximize_console(lines=None):
     try:
         hcon = msvcrt.get_osfhandle(fd)
         max_size = kernel32.GetLargestConsoleWindowSize(hcon)
+
         if max_size.X == 0 and max_size.Y == 0:
             raise ctypes.WinError(ctypes.get_last_error())
 
         cols = max_size.X
         hwnd = kernel32.GetConsoleWindow()
+
         if cols and hwnd:
             if lines is None:
                 lines = max_size.Y
             else:
                 lines = max(min(lines, 9999), max_size.Y)
-            subprocess.check_call('mode.com con cols={} lines={}'.format(
-                                    cols, lines))
+            game_data.SysData.max_screen_size = (cols, lines)
+            subprocess.check_call('mode.com con cols={} lines={}'.format(cols, lines))
             user32.ShowWindow(hwnd, SW_MAXIMIZE)
     finally:
         os.close(fd)
