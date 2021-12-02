@@ -3,6 +3,8 @@ import sys
 from dataclasses import dataclass
 import lib
 
+# Because who needs a config file right?
+
 
 class PlayerData:
     Inventory_Displayed = False  # Is the inventory currently displayed on screen
@@ -49,7 +51,7 @@ class StaticData:
 
 
 class SysData:
-    max_screen_size = ()  # The max size of the console in rows / columns
+    max_screen_size = ()  # The max size of the console in rows / columns (x, y)
     hwnd = None  # PID
 
 
@@ -58,6 +60,7 @@ class Demo:
     help_demo = True  # If the help command demo has been completed
     inventory_demo = True
     item_info_demo = True
+    stats_demo = True
 
 
 class MapData:
@@ -78,6 +81,7 @@ class HelpPage:
     # cmd_list: Command List
     # ind_def: Individual Definitions
     def __init__(self):
+        self.cmd_list = ["help", "?", "inventory", "item_info", "stats"]
         self.ind_def = {"use": "Usage (use [item name / item id]): Uses the specified item "
                                "(if it is valid for the situation)",
                         "inventory / inv": "Usage (inventory) | (inv): Displays your current inventory",

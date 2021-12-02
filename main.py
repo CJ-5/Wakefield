@@ -67,72 +67,83 @@ print(f'\x1b[{num//2}B', end='')
 \x1b[{n}D : Left
 """
 
-# Initialization Script
-init()  # initiate colorama
-# user32 = windll.user32
-# user32.SetProcessDPIAware()
-# hwnd = user32.GetForegroundWindow()
-movement_engine.Data = game_data.StaticData()
-config_obj = configparser.ConfigParser()
-config_obj.read("C:/Users/carte/Documents/GitHub/Python_Adventure_Game/config.ini")
+lib.gprint("Initializing...", 25)
+time.sleep(0.5)
+# Font / Console Size Initialization
+lib.maximize_console()  # Maximize the console window
+lib.reset_sys_font()  # Set the font and font size
 lib.get_max()  # Initiate the max console size
+lib.maximize_console()
+init()  # initiate colorama
+
+# Config Pull Script
+movement_engine.Data = game_data.StaticData()   # Initialize static data
+config_obj = configparser.ConfigParser()  # Setup configparser object
+config_obj.read("C:/Users/carte/Documents/GitHub/Python_Adventure_Game/config.ini")  # Read config
 
 # Initialize main map
 game_data.MapData.current_map = game_data.MainMap()
 movement_engine.init_coord()
 
-# Intro Script
-# time.sleep(2)
-# lib.gprint("Hello...")
-# time.sleep(1)
-# lib.gprint("Due to the fact that you are most likely running this program on a mac, I have very little way of being\n"
-#            "able to account for the fact that our monitors' resolutions might be different...\n")
-# time.sleep(1)
-# lib.gprint("So since I didn't want to write a dedicated file to monitor whether or not this program is in\n"
-#            "fullscreen during the entire play through and correct it if it is not, I am going to trust you...\n")
-# time.sleep(1.5)
-# lib.gprint("Please run this program in fullscreen as if you don't, many things will break and it will make me very sad")
-# time.sleep(1.5)
-# lib.gprint("I will give you some time to do that now")
-# time.sleep(4)
-#
-#
-# os.system("cls")
-#
-# # Basic Controls tutorial
-# time.sleep(2)
-# lib.print_logo()
-# lib.gprint(lib.MQ([lib.ck("Welcome to the game, I couldn't be bothered to name it so its called "),
-#                    lib.ck("'Adventure Game'", "green"), lib.ck(".")]))
-# lib.gprint("Here is some info to help you get started")
-#
-# lib.gprint(lib.MQ([
-#     lib.ck("- At anytime during the game if you want to see a list of all available actions simply type"),
-#     lib.ck(" 'help'", "yellow"), lib.ck(" or "), lib.ck("?", "yellow")]))
-#
-# time.sleep(2)
-#
-#
-# lib.gprint("Why don't you give that a try now?")
-# game_data.MapData.valid_cmd.append("help")
-# movement_engine.demo_prompt()
-# print()
-#
-# lib.clear_line(2, 34, False, True)
-# game_data.MapData.valid_cmd.clear()
-# lib.gprint("Great!")
-# lib.gprint(lib.MQ([lib.ck("Now try the "), lib.ck("inventory", "yellow"), " command to display your current items."]))
-# movement_engine.demo_prompt()
-#
-# line_length = len(f"{'':<10}") + len(f"{'*':^25}{'*':^25}{'*':^25}") * 2
-# lib.display_inv()
-# time.sleep(2)
-# lib.clear_line(5, line_length, False, True)
-# time.sleep(1)
-#
+os.system("cls")
 
-lib.maximize_console()
+# Basic Controls tutorial
+lib.print_logo()
+lib.gprint(lib.MQ([lib.ck("WARNING", "yellow"),
+                   lib.ck(": This program should only be ran in the python 3.9+ interpreter\n"
+                          "and keep in mind that ALL keyboard input is listened to (for game commands)\n")]), 0)
+lib.gprint(lib.MQ([lib.ck("WARNING", "yellow"),
+                   lib.ck(": KEEP THIS PROGRAM IN FULLSCREEN FOR THE ENTIRE PLAY THROUGH"
+                          "(otherwise things will break, and I will be sad)\n"
+                          "The script does everything for you, let it do it's thing\n")]), 0)
+time.sleep(3.5)
+lib.gprint(lib.MQ([lib.ck("Welcome to the game, I couldn't be bothered to name it so its called "),
+                   lib.ck("Adventure Game", "green"), lib.ck(".")]))
+time.sleep(1)
+lib.gprint("Here is some info to help you get started")
+time.sleep(1.5)
 
-random_variable_that_has_one_purpose = True
-while random_variable_that_has_one_purpose:
+lib.gprint(lib.MQ([
+    lib.ck("- At anytime during the game if you want to see a list of all available actions simply type"),
+    lib.ck(" help", "yellow"), lib.ck(" or "), lib.ck("?", "yellow")]))
+
+time.sleep(2)
+
+lib.gprint("Why don't you give that a try now?")
+game_data.MapData.valid_cmd.append("help")
+game_data.MapData.valid_cmd.append("?")
+movement_engine.demo_prompt()
+print()
+
+game_data.MapData.valid_cmd.clear()
+lib.gprint("\nAs you can see here this list displays the info of all commands ")
+
+time.sleep(5)
+lib.clear_line(6 + len(game_data.HelpPage().ind_def))
+lib.gprint(lib.MQ([lib.ck("Now try the "), lib.ck("inventory", "yellow"),
+                   lib.ck(" command to display your current items.")]))
+game_data.MapData.valid_cmd.append("inventory")
+movement_engine.demo_prompt()
+game_data.MapData.valid_cmd.clear()
+
+time.sleep(2)
+lib.clear_line(3 + game_data.PlayerData.cur_inv_display_size)
+lib.gprint("")
+
+
+while True:  # Debug code to hold in place while testing
     continue
+
+# To-Do:
+# - Finish intro script / tutorial
+# - Start / Finish map intro
+# - Fix help command to get list of valid moves for the specific map
+# - Dungeon Entrance / Exit proximity system
+# - Death System
+# - Battle System
+# - Map transition System
+# - Save File ?
+# - Floor Progression
+# - Enemy Movement System
+# - Enemy Spawning / Death System
+# - System Watchdogs

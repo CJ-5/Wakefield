@@ -1,6 +1,8 @@
 #  Holds the main functions that operate the backend of the game (e.g battle system)
 import os
 from os import system
+
+import lib
 import movement_engine
 import time
 from colorama import init
@@ -90,25 +92,6 @@ def print_logo():
     print('\n')
 
 
-def process_command(cmd):
-    # Process command
-    cmd = cmd.lower().split(' ')
-    if game_data.MapData.valid_cmd.__contains__(cmd[0]):
-        if cmd[0] == "help":  # Print the help page
-            if game_data.Demo.help_demo is True:
-                game_data.MapData.map_kill = True
-                game_data.Demo.help_demo = False
-            display_help()
-        elif cmd[0] == "item_info":  # Print the specified items info
-            print(cmd)  # Debug Code
-        elif cmd[0] == "inventory":  # print the players inventory
-            print(cmd)  # Debug Code
-        elif cmd[0] == "stats":  # print system & player statistics
-            print(cmd)  # Debug Code
-    else:
-        gprint(MQ([ck("Invalid Command")]))
-
-
 def get_max():
     # Initiate the max size of the console
     kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
@@ -179,20 +162,19 @@ def maximize_console(lines=None):
         os.close(fd)
 
 
-def clear_line(num: int, max_line_length: int, reset: bool, multiple: bool = True, direction: str = 'A'):
-    # Clear the specified amount of lines
+def clear_line(num: int, max_line_length: int = None,
+               reset: bool = False, direction: str = 'A'):
+    # Clear the specified amount of lines from the console
     # Num = The amount of line to clear
     # Max_Line_Length = The length of the largest line amongst the lines being cleared
     # Reset = Whether or not to reset the cursor after clearing specified line amount
-    # Multiple = whether or not to clear all lines specified by num
     # direction = The direction to clear the lines (default: A [Up])
+    if max_line_length is None:
+        max_line_length = game_data.SysData.max_screen_size[0]
+    for i in range(num):
+        print(f'\x1b[{1}{direction.upper()}', end='')
+        print(f'\r{Fore.RED}{" "*max_line_length}{Fore.RESET}\r', end='')
 
-    if multiple is True:
-        for i in range(num):
-            print(f'\x1b[{1}{direction.upper()}', end='')
-            print(f'\r{Fore.RED}{" "*max_line_length}{Fore.RESET}', end='')
-    else:
-        print(f'\x1b[{num}{direction.upper()}')
     if reset is True:
         print(f'\x1b[{num // 2}B')  # Reset the cursor to the original position with magic
 
@@ -200,7 +182,7 @@ def clear_line(num: int, max_line_length: int, reset: bool, multiple: bool = Tru
 def display_help(cmd: str = None):
     help_page = game_data.HelpPage()
     # Display the help page for all or just one command
-    if cmd is None:
+    if cmd.isspace() or cmd is cmd == "":
         # Display the full help page
         print("Game Command List\n")
         for cmd_info in help_page.ind_def:
@@ -255,9 +237,35 @@ def add_item(item_id: int):
         print("Error: Player Inventory is inaccessible")
 
 
-def item_info(item_id: int, item_name: str = None):
-    # Create Instance of game items
+def reset_sys_font():
 
+    LF_FACESIZE = 32
+    STD_OUTPUT_HANDLE = -11
+
+    class COORD(ctypes.Structure):
+        _fields_ = [("X", ctypes.c_short), ("Y", ctypes.c_short)]
+
+    class CONSOLE_FONT_INFOEX(ctypes.Structure):
+        _fields_ = [("cbSize", ctypes.c_ulong),
+                    ("nFont", ctypes.c_ulong),
+                    ("dwFontSize", COORD),
+                    ("FontFamily", ctypes.c_uint),
+                    ("FontWeight", ctypes.c_uint),
+                    ("FaceName", ctypes.c_wchar * LF_FACESIZE)]
+
+    font = CONSOLE_FONT_INFOEX()
+    font.cbSize = ctypes.sizeof(CONSOLE_FONT_INFOEX)
+    font.dwFontSize.Y = 20  # The actual scalable size of the font
+    font.FontFamily = 54
+    font.FontWeight = 400
+    font.FaceName = "NSimSun"
+
+    handle = ctypes.windll.kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
+    ctypes.windll.kernel32.SetCurrentConsoleFontEx(
+        handle, ctypes.c_long(False), ctypes.pointer(font))
+
+
+def item_info(item_id: int, item_name: str = None):
     if item_id is None and item_name is None:
         print("Error: No Item specified @ InvItemInfo Call")
     elif item_id is None:  # Look for item info by name (Slower)
@@ -272,7 +280,7 @@ def clear_inventory_display():
     # Clear the inventory print out
     game_data.PlayerData.Inventory_Displayed = False
     print(game_data.PlayerData.cur_inv_display_size)
-    clear_line(game_data.PlayerData.cur_inv_display_size, len(game_data.MapData.current_map.map_array[0]), True, True)
+    clear_line(game_data.PlayerData.cur_inv_display_size, len(game_data.MapData.current_map.map_array[0]), False)
     game_data.PlayerData.cur_inv_display_size = 0
 
 
@@ -324,7 +332,7 @@ def display_inv():
             element_num = 2  # Set to second column
             print(f"{Fore.RESET}", end='')
             key_num += 1
-
+            game_data.PlayerData.cur_inv_display_size += 1
         elif element_num == 2:
             print(f"{Fore.GREEN}", end='')
             # Print second row, check to see if requested item exists if so print
@@ -341,8 +349,15 @@ def display_inv():
             sub_key_num += 1
 
             print(f"{Fore.RESET}\n", end='')
-            game_data.PlayerData.cur_inv_display_size += 1
     print()  # Create newline at end of printout
+
+
+def display_stats():  # Display stats of system and player
+    pass
+
+
+def display_item_info(cmd):  # Display info on specified item
+    pass
 
 
 @dataclass()
@@ -352,6 +367,43 @@ class MQ:
 
 def ck(text: str, color: str = None):
     return text, color
+
+
+def process_command(cmd_raw):
+    # Process command
+    cmd = cmd_raw.lower().split(' ')
+    if len(cmd_raw) > 0 and game_data.HelpPage().cmd_list.__contains__(cmd[0]) \
+            and game_data.MapData.valid_cmd.__contains__(cmd[0]):
+        cmd_latter = " ".join(cmd[1:])  # Removes the command keyword
+        print(cmd_latter)
+        if cmd[0] == "help" or cmd[0] == "?":  # Print the help page
+            if game_data.Demo.help_demo is True:
+                game_data.MapData.map_kill = True
+                game_data.Demo.help_demo = False
+                print()
+            display_help(cmd_latter)
+        elif cmd[0] == "inventory":  # print the players inventory
+            if game_data.Demo.inventory_demo is True:
+                game_data.MapData.map_kill = True
+                game_data.Demo.inventory_demo = False
+                print()
+            display_inv()
+        elif cmd[0] == "item_info":  # Print the specified items info
+            if game_data.Demo.item_info_demo is True:
+                game_data.MapData.map_kill = True
+                game_data.Demo.item_info_demo = False
+                print()
+            display_item_info(cmd_latter)
+        elif cmd[0] == "stats":  # print system & player statistics
+            if game_data.Demo.stats_demo is True:
+                game_data.MapData.map_kill = True
+                game_data.Demo.stats_demo = False
+                print()
+            display_stats()
+    else:
+        gprint(MQ([ck("\nInvalid Command", "red")]))
+
+    game_data.MapData.current_command = ""  # Reset the inputted command
 
 
 def gprint(queue, speed: int = 35):
@@ -366,7 +418,7 @@ def gprint(queue, speed: int = 35):
     for msg in queue.messages:
         if msg[1] is not None:
             # if color printing is specified
-            print(colors_list[msg[1]], end='')
+            print(colors_list[msg[1].lower()], end='')
             for char in msg[0]:
                 print(char, end='')
                 time.sleep(delay)
