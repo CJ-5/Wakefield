@@ -2,7 +2,7 @@ from colorama import Fore, Back, Style
 import sys
 from dataclasses import dataclass
 import lib
-
+import colorama
 # Because who needs a config file right?
 
 
@@ -12,7 +12,9 @@ class PlayerData:
     Health = 100  # Players current health
     Inventory_Space = 13  # Players current max inventory size
     Inventory_Accessible = False  # Is the players inventory currently accessible
+    command_status = False  # Whether or not the player is allowed to enter commands
     Inventory = []  # Players current inventory populated with InvItem Objects
+    Detection_Distance = 3  # The distance that the player needs to be within in order to see hidden objects
 
 
 #  NPC and Enemy classes are NOT done
@@ -68,11 +70,12 @@ class MapData:
     y = 0
     x = 0
     valid_cmd = []
-    demo_mode = False
+    map_displayed = False
     current_map = None
     map_kill = False
     last_char = ""
     current_command = ""
+    y_max = 0  # The max y coordinate  [Used for proximity calculations]
 
 
 class HelpPage:
@@ -97,14 +100,15 @@ class HelpPage:
 
 class MainMap:  # Main starting area Map
     # Blank Row ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-    __slots__ = ('map_name', 'map_array', 'map_desc', 'npc', 'enemy')  # Total Memory Optimization stuff
+    __slots__ = ('map_name', 'map_array', 'map_desc', 'npc', 'enemy', 'door_alt')  # Total Memory Optimization stuff
 
     def __init__(self):
         self.map_desc = "The main area of Wakefield!"
         self.map_name = Fore.GREEN + "Main Area" + Style.RESET_ALL
         self.npc = []
         self.enemy = None  # No enemies can spawn on this map
-        self.map_array = [["-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "", "", ""],
+        self.door_alt = ('-', Fore.GREEN)
+        self.map_array = [["-", "-", "-", "-", "-", "-", "-", "-", "-", "1", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "", "", ""],
                      ["-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "", "", "", ""],
                      ["-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "", "", "", "", ""],
                      ["-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "", "", "", "", "", "", ""],
@@ -117,7 +121,7 @@ class MainMap:  # Main starting area Map
                      ["-", "-", "-", "-", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
                      ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
                      ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X"],
-                     ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "x", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
+                     ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
                      ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
                      ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
                      ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
@@ -129,5 +133,5 @@ class MainMap:  # Main starting area Map
                      ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
                      ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
                      ["X", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
-                     ["X", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X"]]
+                     ["X", "X", "x", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X"]]
 

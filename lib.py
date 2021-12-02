@@ -13,6 +13,7 @@ import sys
 from ctypes import windll
 import win32gui
 import win32gui, win32com.client
+import math
 import ctypes
 import msvcrt
 import subprocess
@@ -208,6 +209,12 @@ class InvItem:
     desc: str = None  # Description of item
 
 
+def check_proximity(object_pos: tuple):
+    # Check if the player is within distance of the object
+    return math.sqrt(abs((object_pos[0] - game_data.MapData.x) ** 2 + (object_pos[1] - game_data.MapData.y) ** 2)) <= \
+        game_data.PlayerData.Detection_Distance
+
+
 def add_item(item_id: int):
     # Add a item by id to a players inventory
     if game_data.PlayerData.Inventory_Accessible is True:
@@ -237,7 +244,7 @@ def add_item(item_id: int):
         print("Error: Player Inventory is inaccessible")
 
 
-def reset_sys_font():
+def reset_sys_font(font_size: int = 18):
 
     LF_FACESIZE = 32
     STD_OUTPUT_HANDLE = -11
@@ -255,7 +262,7 @@ def reset_sys_font():
 
     font = CONSOLE_FONT_INFOEX()
     font.cbSize = ctypes.sizeof(CONSOLE_FONT_INFOEX)
-    font.dwFontSize.Y = 20  # The actual scalable size of the font
+    font.dwFontSize.Y = font_size  # The actual scalable size of the font
     font.FontFamily = 54
     font.FontWeight = 400
     font.FaceName = "NSimSun"
@@ -276,7 +283,12 @@ def item_info(item_id: int, item_name: str = None):
         return movement_engine.Data.game_items[item_id]
 
 
-def clear_inventory_display():
+def cmove(num: int = 1, dir: str = 'A'):
+    # Move the console cursor
+    print(f"\x1b[{num}{dir}", end='')
+
+
+def clear_inventory_display(line: int = 0):
     # Clear the inventory print out
     game_data.PlayerData.Inventory_Displayed = False
     print(game_data.PlayerData.cur_inv_display_size)
@@ -285,16 +297,13 @@ def clear_inventory_display():
 
 
 def display_inv():
+    # if the map is displayed, clear the map and then display the inventory
     # Display the inventory
-    if game_data.PlayerData.Inventory_Displayed is True:
-        # Clear the amount of lines that are specified by the cur_inv_display_size value
-        clear_inventory_display()
-
     game_data.PlayerData.Inventory_Displayed = True
-
-    # Note Only for use in display_inv()
+    game_data.PlayerData.command_status = False
+    os.system("cls")
     item_spacing = 25
-    # print the inventory
+    side_spacing = 5
     element_num = 1  # Which side of the array is printing
     key_num = 0  # The current item to print in the first column
     sub_key_num = 0  # The current item to print in the second column
@@ -305,7 +314,7 @@ def display_inv():
         # If the inventory space num is odd, the first column will print 1 more than the second column
         row1 += 1
 
-    print(f"{'':<10}", end='')
+    print(f"{'':<{side_spacing}}", end='')  # Title Side Spacing
     print(f"{'Item Name':^{item_spacing}}{'Item QTY':^{item_spacing}}{'Item ID':^{item_spacing}}"
           f"{'Item Name':^{item_spacing}}{'Item QTY':^{item_spacing}}{'Item ID':^{item_spacing}}\n")
     for i in range(game_data.PlayerData.Inventory_Space):
@@ -319,10 +328,11 @@ def display_inv():
                 game_data.PlayerData.cur_inv_display_size += 1
                 element_num = 1
             else:
-                print(f"{'':<10}", end='')
+                print(f"{'':<{side_spacing}}", end='')
                 print(f"{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}", end='')
                 element_num = 2
         elif element_num == 1:
+            print(f"{'':<{side_spacing}}", end='')
             item = game_data.PlayerData.Inventory[key_num]
             print(f"{Fore.RED}", end='')
             # Check to see if requested item exists if so print
@@ -356,7 +366,7 @@ def display_stats():  # Display stats of system and player
     pass
 
 
-def display_item_info(cmd):  # Display info on specified item
+def display_item_info(cmd):  # Get raw item info and display it in formatted statement
     pass
 
 
@@ -372,8 +382,9 @@ def ck(text: str, color: str = None):
 def process_command(cmd_raw):
     # Process command
     cmd = cmd_raw.lower().split(' ')
-    if len(cmd_raw) > 0 and game_data.HelpPage().cmd_list.__contains__(cmd[0]) \
-            and game_data.MapData.valid_cmd.__contains__(cmd[0]):
+    if (len(cmd_raw) > 0 and game_data.HelpPage().cmd_list.__contains__(cmd[0])
+            and game_data.MapData.valid_cmd.__contains__(cmd[0])) or cmd[0] == "exit":
+
         cmd_latter = " ".join(cmd[1:])  # Removes the command keyword
         print(cmd_latter)
         if cmd[0] == "help" or cmd[0] == "?":  # Print the help page
@@ -400,6 +411,13 @@ def process_command(cmd_raw):
                 game_data.Demo.stats_demo = False
                 print()
             display_stats()
+        elif cmd[0] == "exit":
+            os.system('cls')
+            reset_sys_font(30)
+            lib.get_max()
+            print(f"{'':<{game_data.SysData.max_screen_size[0] // 2}}", end='')
+            gprint(MQ([ck("Goodbye :(")]))
+            exit(0)
     else:
         gprint(MQ([ck("\nInvalid Command", "red")]))
 

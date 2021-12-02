@@ -69,17 +69,18 @@ print(f'\x1b[{num//2}B', end='')
 
 lib.gprint("Initializing...", 25)
 time.sleep(0.5)
+
 # Font / Console Size Initialization
-lib.maximize_console()  # Maximize the console window
 lib.reset_sys_font()  # Set the font and font size
+lib.maximize_console()  # Maximize the console window
 lib.get_max()  # Initiate the max console size
 lib.maximize_console()
 init()  # initiate colorama
 
 # Config Pull Script
 movement_engine.Data = game_data.StaticData()   # Initialize static data
-config_obj = configparser.ConfigParser()  # Setup configparser object
-config_obj.read("C:/Users/carte/Documents/GitHub/Python_Adventure_Game/config.ini")  # Read config
+# config_obj = configparser.ConfigParser()  # Setup configparser object
+# config_obj.read("C:/Users/carte/Documents/GitHub/Python_Adventure_Game/config.ini")  # Read config
 
 # Initialize main map
 game_data.MapData.current_map = game_data.MainMap()
@@ -88,53 +89,58 @@ movement_engine.init_coord()
 os.system("cls")
 
 # Basic Controls tutorial
-lib.print_logo()
-lib.gprint(lib.MQ([lib.ck("WARNING", "yellow"),
-                   lib.ck(": This program should only be ran in the python 3.9+ interpreter\n"
-                          "and keep in mind that ALL keyboard input is listened to (for game commands)\n")]), 0)
-lib.gprint(lib.MQ([lib.ck("WARNING", "yellow"),
-                   lib.ck(": KEEP THIS PROGRAM IN FULLSCREEN FOR THE ENTIRE PLAY THROUGH"
-                          "(otherwise things will break, and I will be sad)\n"
-                          "The script does everything for you, let it do it's thing\n")]), 0)
-time.sleep(3.5)
-lib.gprint(lib.MQ([lib.ck("Welcome to the game, I couldn't be bothered to name it so its called "),
-                   lib.ck("Adventure Game", "green"), lib.ck(".")]))
-time.sleep(1)
-lib.gprint("Here is some info to help you get started")
-time.sleep(1.5)
-
-lib.gprint(lib.MQ([
-    lib.ck("- At anytime during the game if you want to see a list of all available actions simply type"),
-    lib.ck(" help", "yellow"), lib.ck(" or "), lib.ck("?", "yellow")]))
-
-time.sleep(2)
-
-lib.gprint("Why don't you give that a try now?")
-game_data.MapData.valid_cmd.append("help")
-game_data.MapData.valid_cmd.append("?")
-movement_engine.demo_prompt()
-print()
-
-game_data.MapData.valid_cmd.clear()
-lib.gprint("\nAs you can see here this list displays the info of all commands ")
-
-time.sleep(5)
-lib.clear_line(6 + len(game_data.HelpPage().ind_def))
-lib.gprint(lib.MQ([lib.ck("Now try the "), lib.ck("inventory", "yellow"),
-                   lib.ck(" command to display your current items.")]))
+# lib.print_logo()
+# lib.gprint(lib.MQ([lib.ck("WARNING", "yellow"),
+#                    lib.ck(": This program should only be ran in the python 3.9+ interpreter\n"
+#                           "and keep in mind that ALL keyboard input is listened to (for game commands)\n")]), 0)
+# lib.gprint(lib.MQ([lib.ck("WARNING", "yellow"),
+#                    lib.ck(": KEEP THIS PROGRAM IN FULLSCREEN FOR THE ENTIRE PLAY THROUGH"
+#                           "(otherwise things will break, and I will be sad)\n"
+#                           "The script does everything for you, let it do it's thing\n")]), 0)
+# time.sleep(3.5)
+# lib.gprint(lib.MQ([lib.ck("Welcome to the game, I couldn't be bothered to name it so its called "),
+#                    lib.ck("Adventure Game", "green"), lib.ck(".")]))
+# time.sleep(1)
+# lib.gprint("Here is some info to help you get started")
+# time.sleep(1.5)
+#
+# lib.gprint(lib.MQ([
+#     lib.ck("- At anytime during the game if you want to see a list of all available actions simply type"),
+#     lib.ck(" help", "yellow"), lib.ck(" or "), lib.ck("?", "yellow")]))
+#
+# time.sleep(2)
+#
+# lib.gprint("Why don't you give that a try now?")
+# game_data.MapData.valid_cmd.append("help")
+# game_data.MapData.valid_cmd.append("?")
+# movement_engine.demo_prompt()
+# print()
+#
+# game_data.MapData.valid_cmd.clear()
+# lib.gprint("\nAs you can see here this list displays the info of all commands ")
+#
+# time.sleep(5)
+# lib.clear_line(6 + len(game_data.HelpPage().ind_def))
+# lib.gprint(lib.MQ([lib.ck("Now try the "), lib.ck("inventory", "yellow"),
+#                    lib.ck(" command to display your current items.")]))
+# game_data.MapData.valid_cmd.append("inventory")
+# movement_engine.demo_prompt()
+# game_data.MapData.valid_cmd.clear()
+#
+# time.sleep(2)
+# lib.clear_line(3 + game_data.PlayerData.cur_inv_display_size)
+# lib.gprint("")
+game_data.PlayerData.Inventory_Accessible = True
+lib.add_item(0)
+game_data.Demo.inventory_demo = False
 game_data.MapData.valid_cmd.append("inventory")
-movement_engine.demo_prompt()
-game_data.MapData.valid_cmd.clear()
-
-time.sleep(2)
-lib.clear_line(3 + game_data.PlayerData.cur_inv_display_size)
-lib.gprint("")
-
+movement_engine.kb_listener()
 
 while True:  # Debug code to hold in place while testing
     continue
 
 # To-Do:
+# - Remove functions for attempting to print map and inventory together
 # - Finish intro script / tutorial
 # - Start / Finish map intro
 # - Fix help command to get list of valid moves for the specific map
