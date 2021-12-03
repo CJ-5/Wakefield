@@ -7,7 +7,7 @@ from pynput import keyboard
 from threading import Thread
 import time
 import lib
-
+import random
 
 init()
 global Data
@@ -74,6 +74,13 @@ def coord_set(map_in, x_m, y_m):  # Main Movement Engine
                 game_data.MapData.last_char = future_char
 
 
+def init_door():
+    # Sets the doors on the map
+    map_in = game_data.MapData.current_map
+    pos = map_in.door_pos[random.randint(0, len(map_in.door_pos) - 1)]
+    map_in.map_array[::-1][pos[1]][pos[0]] = map_in.door_type
+
+
 def show_map(map_in):
     # Print the map
 
@@ -97,7 +104,7 @@ def show_map(map_in):
             elif cur_char == '0':
                 cur_char = f"{Style.DIM}{cur_char:<{local_spacing}}{Fore.RESET}"
             elif cur_char == "1":
-                if lib.check_proximity((xi, game_data.MapData.y_max - yi)) is True:
+                if lib.check_proximity((xi, game_data.MapData.y_max - yi)) is True:  # Reverses y axis, x is the same
                     cur_char = f"{Fore.BLUE}{chr(127):<{local_spacing}}{Fore.RESET}"
                 else:
                     cur_char = f"{map_in.door_alt[1]}{map_in.door_alt[0]:<{local_spacing}}{Fore.RESET}"

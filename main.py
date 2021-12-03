@@ -130,11 +130,22 @@ os.system("cls")
 # time.sleep(2)
 # lib.clear_line(3 + game_data.PlayerData.cur_inv_display_size)
 # lib.gprint("")
+
+movement_engine.init_door()
+
 game_data.PlayerData.Inventory_Accessible = True
 lib.add_item(0)
 game_data.Demo.inventory_demo = False
 game_data.MapData.valid_cmd.append("inventory")
 movement_engine.kb_listener()
+
+#
+# map = game_data.MapData.current_map.map_array[::-1]
+# for yi, y in enumerate(map):
+#     for xi, char in enumerate(y):
+#         if char == "1":
+#             print(f"Found door at: {(xi, yi)}")
+
 
 while True:  # Debug code to hold in place while testing
     continue

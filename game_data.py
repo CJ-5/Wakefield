@@ -6,6 +6,7 @@ import colorama
 # Because who needs a config file right?
 
 
+# Coordinates with player stats
 class PlayerData:
     Inventory_Displayed = False  # Is the inventory currently displayed on screen
     cur_inv_display_size = 3  # The amount of characters that the current inventory display takes up
@@ -17,13 +18,21 @@ class PlayerData:
     Detection_Distance = 3  # The distance that the player needs to be within in order to see hidden objects
 
 
-#  NPC and Enemy classes are NOT done
+@dataclass()
+class AK:
+    id: int  # The id of the attack
+    name: str  # The name of the attack
+    attack_msg: list  # What is message is displayed when the attack hits you
+
+
+#  NPC and Enemy classes are NOT done, in fact the are shit
 @dataclass()
 class EnemyData:
     Entity_id: int  # The spawn id of the enemy
     Name: str  # The display name of the enemy
     Health: int  # The Health of the enemy
-    max_inst: int  # The max amount of this enemy that can spawn on a valid map
+    Max_inst: int  # The max amount of this enemy that can spawn on a valid map
+    Attacks = []
 
 
 # Class instance for the creation of a NPC entity
@@ -65,6 +74,11 @@ class Demo:
     stats_demo = True
 
 
+class MapDataCache:
+    doors_found = {}  # Which maps the player has found the door on
+    main_area_city = False  # The access status of the city area of the main map
+
+
 class MapData:
     # General Map Data
     y = 0
@@ -76,6 +90,21 @@ class MapData:
     last_char = ""
     current_command = ""
     y_max = 0  # The max y coordinate  [Used for proximity calculations]
+
+
+@dataclass()
+class TileData:
+    # Tile data, I hate this
+    tile_type: int  # 0: door
+
+
+@dataclass()
+class DoorData:
+    map_warp: int  # id of the map this door leads to
+    symbol: str  # The symbol of the actual door
+    symbol_alt: str  # The symbol displayed in the doors place (if prox_check is True)
+    prox_check: bool  # Whether or not to display the door only when the player is within detection distance
+    pos: tuple
 
 
 class HelpPage:
@@ -100,14 +129,19 @@ class HelpPage:
 
 class MainMap:  # Main starting area Map
     # Blank Row ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-    __slots__ = ('map_name', 'map_array', 'map_desc', 'npc', 'enemy', 'door_alt')  # Total Memory Optimization stuff
+    __slots__ = ('map_name', 'map_array', 'map_desc', 'npc', 'enemy', 'door_alt', 'map_id', 'door_pos', 'door_type',
+                 'extra_doors')
 
     def __init__(self):
+        self.map_id = 0
         self.map_desc = "The main area of Wakefield!"
         self.map_name = Fore.GREEN + "Main Area" + Style.RESET_ALL
-        self.npc = []
+        self.npc = []  # NPC DATA [NEED TO WORK ON]
         self.enemy = None  # No enemies can spawn on this map
+        self.extra_doors = []
         self.door_alt = ('-', Fore.GREEN)
+        self.door_pos = [(9, 25)]
+        self.door_type = "1"
         self.map_array = [["-", "-", "-", "-", "-", "-", "-", "-", "-", "1", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "", "", ""],
                      ["-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "", "", "", ""],
                      ["-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "", "", "", "", ""],
@@ -135,3 +169,36 @@ class MainMap:  # Main starting area Map
                      ["X", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
                      ["X", "X", "x", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X"]]
 
+
+class Floor0:
+    __slots__ = ('map_name', 'map_array', 'map_desc', 'npc', 'enemy', 'door_alt', 'map_id', 'door_function')
+
+    def __init__(self):
+        self.map_id = 1
+        self.map_desc = "The main area of Wakefield!"
+        self.map_name = Fore.GREEN + "Floor 0" + Style.RESET_ALL
+        self.npc = []
+        self.enemy = None  # No enemies can spawn on this map
+        self.door_alt = ('-', Fore.GREEN)
+        self.map_array = [
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+        ]
