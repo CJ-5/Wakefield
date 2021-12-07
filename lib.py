@@ -1,8 +1,6 @@
 #  Holds the main functions that operate the backend of the game (e.g battle system)
 import os
 from os import system
-
-import lib
 import movement_engine
 import time
 from colorama import init
@@ -19,6 +17,7 @@ import msvcrt
 import subprocess
 from ctypes import wintypes
 import inspect
+import sys
 
 
 class Logo:
@@ -288,6 +287,16 @@ def cmove(num: int = 1, dir: str = 'A'):
     print(f"\x1b[{num}{dir}", end='')
 
 
+def map_index(map_id: int):
+    # Find and return the map data for the specified id
+    maps = [game_data.MainMap, game_data.Floor0]
+    if not map_id > len(maps) - 1:
+        return maps[map_id]
+    else:
+        os.system("cls")
+        print(f"{Fore.RED}Error: Failed to find map based off of specified id{Fore.RESET}")
+
+
 def clear_inventory_display(line: int = 0):
     # Clear the inventory print out
     game_data.PlayerData.Inventory_Displayed = False
@@ -412,12 +421,13 @@ def process_command(cmd_raw):
                 print()
             display_stats()
         elif cmd[0] == "exit":
+            game_data.MapData.map_kill = True  # Exit listener thread
             os.system('cls')
             reset_sys_font(30)
-            lib.get_max()
+            get_max()
             print(f"{'':<{game_data.SysData.max_screen_size[0] // 2}}", end='')
             gprint(MQ([ck("Goodbye :(")]))
-            exit(0)
+            system('exit')
     else:
         gprint(MQ([ck("\nInvalid Command", "red")]))
 

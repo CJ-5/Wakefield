@@ -147,7 +147,8 @@ movement_engine.kb_listener()
 #             print(f"Found door at: {(xi, yi)}")
 
 
-while True:  # Debug code to hold in place while testing
+while game_data.SysData.full_kill is False:  # Debug code to hold in place while testing
+    time.sleep(0.1)
     continue
 
 # To-Do:
