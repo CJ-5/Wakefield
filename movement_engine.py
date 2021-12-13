@@ -14,7 +14,7 @@ global Data
 
 
 # Note: Create map then use reverse operation for coordinate reading otherwise everything will be confusing
-def get_coord(map_in):
+def get_coord(map_in):  # Find and return the coordinates of the player
     map_in = map_in.map_array[::-1]  # Reverse the map
     for y in range(len(map_in)):
         for x in range(len(map_in[y])):
@@ -42,16 +42,32 @@ def enemy_move_calc(map_in):  # This was such a simple task, why did I add a ene
 
 
 def process_tile(tile_char: str, coord: tuple):
-    if tile_char == "1":
+    if tile_char == "1":  # Map switcher
         # Tile type is a door, fetch and process door data
+        old_coord = get_coord(game_data.MapData.current_map)
+        old_id = game_data.MapData.current_map.map_id
         for d in game_data.MapData.current_map.door_data:
-            print(d.pos)
-            print(coord)
             if d.pos == coord:
-                game_data.MapData.current_map = lib.map_index(d.map_warp)()
-                init_coord()
-                init_door()
+                game_data.MapData.current_map = lib.map_index(d.map_warp)()  # Set new map and initialize
+                init_coord()  # initiate new coordinate values
+                init_door()  # initiate all door data
+                d.event = False
+                if d.event:
+                    lib.event_handler(d.door_id, 0)  # Process door event type with event id of door
+                else:
+                    if game_data.MapData.current_map.map_id == 0:  # Checks if the map is the main map
+                        # Reset to the entrance position
+                        lmc = game_data.MapData.lmc
+                        cc = get_coord(game_data.MapData.current_map)
+                        game_data.MapData.current_map.map_array[::-1][cc[1]][cc[0]] = ""
+                        game_data.MapData.current_map.map_array[::-1][lmc[1]][lmc[0]] = 'x'
+                        init_coord()
+                        game_data.MapData.last_char = '-'
+                    if old_id == 0:
+                        game_data.MapData.lmc = old_coord
+
                 show_map(game_data.MapData.current_map)
+                break  # Data has been found, no need to continue
 
 
 def coord_set(map_in, x_m, y_m):  # Main Movement Engine
@@ -71,6 +87,7 @@ def coord_set(map_in, x_m, y_m):  # Main Movement Engine
     else:
         new_x = game_data.MapData.x + x_m
         new_y = game_data.MapData.y + y_m
+        # Out of boundary check
         if not (new_x > len(map_in.map_array[0]) - 1 or new_x < 0 or new_y > len(map_in.map_array) - 1 or new_y < 0):
             future_char = get_coord_char(map_in, new_x, new_y)
             # Collision Checking to see if the player is allowed to move into this area
@@ -91,6 +108,12 @@ def init_door():
     # Sets the doors on the map
     map_in = game_data.MapData.current_map
     for m in map_in.door_data:
+
+        for e in game_data.EventData.events["door"]:  # Event Binding
+            if e.object_id == m.door_id:
+                m.event = True
+                break
+
         if len(m.pos) > 1:
             m.multiple_pos = True  # Door has multiple positions, bypass the discovered door cache
         pos = m.pos[random.randint(0, len(m.pos) - 1)]
@@ -134,13 +157,14 @@ def show_map(map_in):
                     if m.pos == cur_coord:
                         # Door data has been found, use it to print
                         data_fail = False
-
-                        if not str(map_in.map_id) in game_data.MapDataCache.doors_found.keys:
+                        if str(map_in.map_id) not in game_data.MapDataCache.doors_found.keys():
                             # Create dict entry for current map
                             game_data.MapDataCache.doors_found[str(map_in.map_id)] = []
 
                         if m.prox_check and m.door_id not in game_data.MapDataCache.doors_found[str(map_in.map_id)]:
                             if lib.check_proximity(cur_coord):  # Check if player is within detection distance of door
+                                # Door is accessible
+                                # Check for door events
                                 if not m.multiple_pos:  # Only add bypass entry for doors without multiple positions
                                     game_data.MapDataCache.doors_found[str(map_in.map_id)].append(m.door_id)
                                 cur_char = f"{m.symbol_color}{m.symbol:<{local_spacing}}{Fore.RESET}"
@@ -173,34 +197,40 @@ def show_map(map_in):
 
 
 def on_release(key):  # For movement processing
-    if key == keyboard.Key.up:
-        coord_set(game_data.MapData.current_map, 0, 1)
-        # Thread(target=coord_set, args=(game_data.MapData.current_map, 0, 1)).start()
-    elif key == keyboard.Key.down:
-        coord_set(game_data.MapData.current_map, 0, -1)
-    elif key == keyboard.Key.right:
-        coord_set(game_data.MapData.current_map, 1, 0)
-    elif key == keyboard.Key.left:
-        coord_set(game_data.MapData.current_map, -1, 0)
-    elif key == keyboard.Key.esc:
-        game_data.MapData.map_kill = True
-        return False  # Test Code, allows code exit mid run
+    if not game_data.MapData.map_idle:
+        if key == keyboard.Key.up:
+            coord_set(game_data.MapData.current_map, 0, 1)
+            # Thread(target=coord_set, args=(game_data.MapData.current_map, 0, 1)).start()
+        elif key == keyboard.Key.down:
+            coord_set(game_data.MapData.current_map, 0, -1)
+        elif key == keyboard.Key.right:
+            coord_set(game_data.MapData.current_map, 1, 0)
+        elif key == keyboard.Key.left:
+            coord_set(game_data.MapData.current_map, -1, 0)
+        elif key == keyboard.Key.esc:
+            game_data.MapData.map_kill = True
+            return False  # Test Code, allows code exit mid run
+    else:
+        pass
 
 
 def on_press(key):  # For command processing
-    try:
-        if game_data.PlayerData.command_status:
-            if key == keyboard.Key.enter:
-                lib.process_command(game_data.MapData.current_command)
-            elif key == keyboard.Key.backspace:
-                # Remove last character of both printed message, and the current command string
-                game_data.MapData.current_command = game_data.MapData.current_command[:-1]
-                sys.stdout.write('\b \b')
-            else:
-                print(f"{Fore.LIGHTCYAN_EX}{key.char}{Fore.RESET}", end='')
-                game_data.MapData.current_command += key.char
-    except AttributeError:
-        pass  # Entered key was a special key
+    if not game_data.MapData.map_idle:
+        try:
+            if game_data.PlayerData.command_status:
+                if key == keyboard.Key.enter:
+                    lib.process_command(game_data.MapData.current_command)
+                elif key == keyboard.Key.backspace:
+                    # Remove last character of both printed message, and the current command string
+                    game_data.MapData.current_command = game_data.MapData.current_command[:-1]
+                    sys.stdout.write('\b \b')
+                else:
+                    print(f"{Fore.LIGHTCYAN_EX}{key.char}{Fore.RESET}", end='')
+                    game_data.MapData.current_command += key.char
+        except:
+            pass  # Entered key was a special key
+    else:
+        pass
 
 
 def kb_listener():

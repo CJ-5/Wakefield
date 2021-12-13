@@ -3,21 +3,16 @@ import os
 from os import system
 import movement_engine
 import time
-from colorama import init
 from dataclasses import dataclass
 from colorama import Fore, Back, Style
 import game_data
 import sys
-from ctypes import windll
-import win32gui
-import win32gui, win32com.client
+
 import math
 import ctypes
 import msvcrt
 import subprocess
 from ctypes import wintypes
-import inspect
-import sys
 
 
 class Logo:
@@ -282,7 +277,7 @@ def item_info(item_id: int, item_name: str = None):
         return movement_engine.Data.game_items[item_id]
 
 
-def cmove(num: int = 1, dir: str = 'A'):
+def cmove(num: int = 1, dir: str = 'A'):  # Dunno, seems kinda useless, but who will actually read all of this?
     # Move the console cursor
     print(f"\x1b[{num}{dir}", end='')
 
@@ -412,13 +407,13 @@ def process_command(cmd_raw):
             if game_data.Demo.item_info_demo is True:
                 game_data.MapData.map_kill = True
                 game_data.Demo.item_info_demo = False
-                print()
+                print("ITEM INFO")
             display_item_info(cmd_latter)
         elif cmd[0] == "stats":  # print system & player statistics
             if game_data.Demo.stats_demo is True:
                 game_data.MapData.map_kill = True
                 game_data.Demo.stats_demo = False
-                print()
+                print("STATS DISPLAY")
             display_stats()
         elif cmd[0] == "exit":
             game_data.MapData.map_kill = True  # Exit listener thread
@@ -432,6 +427,24 @@ def process_command(cmd_raw):
         gprint(MQ([ck("\nInvalid Command", "red")]))
 
     game_data.MapData.current_command = ""  # Reset the inputted command
+
+
+def event_handler(event_id: int, event_type: int):
+    if event_id not in game_data.MapDataCache.event_cache:  # Make sure not to duplicate events
+        game_data.MapData.map_idle = True  # Stop keyboard listener and printout
+        game_data.PlayerData.command_status = False  # Disable command input
+        system('cls')
+        time.sleep(2)
+        # Fetch event data
+        for m in game_data.EventData.events[list(game_data.EventData.events.keys())
+                                            [event_type]][event_id].event_dialogue:
+            gprint(m[0])  # Print specified dialogue
+            time.sleep(m[1] / 1000)  # Pause for specified delay in MS
+        time.sleep(3)
+        game_data.MapDataCache.event_cache.append(event_id)
+        movement_engine.show_map(game_data.MapData.current_map)
+        game_data.MapData.map_idle = False  # Resume the map listener
+        game_data.PlayerData.command_status = True  # Re-Enable user command input
 
 
 def gprint(queue, speed: int = 35):
@@ -455,4 +468,4 @@ def gprint(queue, speed: int = 35):
             for char in msg[0]:
                 print(char, end='')
                 time.sleep(delay)
-    print()
+    print()  # Create new line

@@ -79,13 +79,11 @@ init()  # initiate colorama
 
 # Config Pull Script
 movement_engine.Data = game_data.StaticData()   # Initialize static data
-# config_obj = configparser.ConfigParser()  # Setup configparser object
-# config_obj.read("C:/Users/carte/Documents/GitHub/Python_Adventure_Game/config.ini")  # Read config
 
 # Initialize main map
 game_data.MapData.current_map = game_data.MainMap()
 movement_engine.init_coord()
-
+movement_engine.init_door()
 os.system("cls")
 
 # Basic Controls tutorial
@@ -131,8 +129,6 @@ os.system("cls")
 # lib.clear_line(3 + game_data.PlayerData.cur_inv_display_size)
 # lib.gprint("")
 
-movement_engine.init_door()
-
 game_data.PlayerData.Inventory_Accessible = True
 lib.add_item(0)
 game_data.Demo.inventory_demo = False
@@ -152,6 +148,7 @@ while game_data.SysData.full_kill is False:  # Debug code to hold in place while
     continue
 
 # To-Do:
+# - Item Pickup system
 # - Remove functions for attempting to print map and inventory together
 # - Finish intro script / tutorial
 # - Start / Finish map intro
