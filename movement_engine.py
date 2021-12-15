@@ -10,7 +10,7 @@ import lib
 import random
 
 init()
-global Data
+global Data  # Holds static system data (Initiated by the main file)
 
 
 # Note: Create map then use reverse operation for coordinate reading otherwise everything will be confusing
@@ -28,7 +28,7 @@ def get_coord_char(map_in, x, y):
     return map_in.map_array[::-1][y][x]
 
 
-# Coordinate init code:
+# Coordinate init code: (Resets system coordinate values to accommodate the current map)
 def init_coord():
     init_coordinates = get_coord(game_data.MapData.current_map)
     game_data.MapData.y = init_coordinates[1]
@@ -38,6 +38,14 @@ def init_coord():
 
 
 def enemy_move_calc(map_in):  # This was such a simple task, why did I add a enemy movement system?
+    """
+    Order of operations:
+         - Check if any enemy tiles are on the map, if there are none pull the enemy data configuration for the map
+        Spawning Script:
+            - Calculate valid positions for enemies to make sure enemy is not spawned within certain radius of main
+              door and does not spawn on top of player tile. Store list of invalid positions in cache data for map.
+            - For each entry of enemy data attempt to initialize the tile on the map in a valid position
+    """
     pass
 
 
@@ -47,7 +55,7 @@ def process_tile(tile_char: str, coord: tuple):
         old_coord = get_coord(game_data.MapData.current_map)
         old_id = game_data.MapData.current_map.map_id
         for d in game_data.MapData.current_map.door_data:
-            if d.pos == coord:
+            if d.pos == coord:  # Look for door with matching player current coordinate
                 game_data.MapData.current_map = lib.map_index(d.map_warp)()  # Set new map and initialize
                 init_coord()  # initiate new coordinate values
                 init_door()  # initiate all door data
@@ -63,8 +71,9 @@ def process_tile(tile_char: str, coord: tuple):
                         game_data.MapData.current_map.map_array[::-1][lmc[1]][lmc[0]] = 'x'
                         init_coord()
                         game_data.MapData.last_char = '-'
-                    if old_id == 0:
-                        game_data.MapData.lmc = old_coord
+
+                if old_id == 0:  # If the map the player is coming off of is the main map, pull the coordinates
+                    game_data.MapData.lmc = (old_coord[0], old_coord[1])  # Set door entrance map coord
 
                 show_map(game_data.MapData.current_map)
                 break  # Data has been found, no need to continue
