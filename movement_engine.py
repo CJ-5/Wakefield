@@ -60,9 +60,14 @@ def process_tile(tile_char: str, coord: tuple):
                 init_coord()  # initiate new coordinate values
                 init_door()  # initiate all door data
                 d.event = False
+
+                if d.floor_progress[0]:  # Trigger the floor progression question system
+                    lib.question_handler(d.floor_progress[1])
+
                 if d.event:
                     lib.event_handler(d.door_id, 0)  # Process door event type with event id of door
                 else:
+                    # Main map entrance view reset
                     if game_data.MapData.current_map.map_id == 0:  # Checks if the map is the main map
                         # Reset to the entrance position
                         lmc = game_data.MapData.lmc
@@ -242,6 +247,9 @@ def on_press(key):  # For command processing
         pass
 
 
+# Keyboard Listeners
+
+# Main Input Listener
 def kb_listener():
     with keyboard.Listener(on_release=on_release, on_press=on_press) as listener:
         def watcher():
@@ -260,8 +268,22 @@ def demo_prompt():
     with keyboard.Listener(on_press=on_press) as listener:
         def watcher():
             while True:
-                if game_data.MapData.map_kill is True:
+                if game_data.MapData.map_kill:
                     game_data.MapData.map_kill = False
+                    listener.stop()
+                    return False
+                time.sleep(0.01)
+        Thread(target=watcher).start()
+        listener.join()
+
+
+# Type input only listener (used in question handler)
+def question_input():
+    with keyboard.Listener(on_press=on_press) as listener:
+        def watcher():
+            while True:
+                if game_data.PlayerData.question_status:
+                    game_data.PlayerData.question_status = False
                     listener.stop()
                     return False
                 time.sleep(0.01)

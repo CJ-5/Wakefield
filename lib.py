@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from colorama import Fore, Back, Style
 import game_data
 import sys
-
+import random
 import math
 import ctypes
 import msvcrt
@@ -445,6 +445,18 @@ def event_handler(event_id: int, event_type: int):
         movement_engine.show_map(game_data.MapData.current_map)
         game_data.MapData.map_idle = False  # Resume the map listener
         game_data.PlayerData.command_status = True  # Re-Enable user command input
+
+
+def question_handler(question_diff: int):
+    # Kill main listener
+    game_data.MapData.map_kill = True
+
+    # Get random set of questions
+    question = movement_engine.Data.questions[0][question_diff]
+    question = question[random.randint(0, len(question))]
+
+    # Ask Question and initiate the input
+    gprint(question)
 
 
 def gprint(queue, speed: int = 35):
