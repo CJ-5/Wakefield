@@ -284,7 +284,7 @@ def cmove(num: int = 1, dir: str = 'A'):  # Dunno, seems kinda useless, but who 
 
 def map_index(map_id: int):
     # Find and return the map data for the specified id
-    maps = [game_data.MainMap, game_data.Floor0]
+    maps = [game_data.MainMap, game_data.Floor0, game_data.Floor1]
     if not map_id > len(maps) - 1:
         return maps[map_id]
     else:
@@ -379,7 +379,7 @@ class MQ:
     messages: list
 
 
-def ck(text: str, color: str = None):
+def ck(text: str, color: str = None):  # Kind of useless
     return text, color
 
 
@@ -453,7 +453,7 @@ def question_handler(question_diff: int):
 
     # Get random set of questions
     question = movement_engine.Data.questions[0][question_diff]
-    question = question[random.randint(0, len(question))]
+    question = question[random.randint(0, len(question) - 1)]
 
     # Ask Question and initiate the input
     gprint(question)

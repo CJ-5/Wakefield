@@ -59,9 +59,11 @@ def process_tile(tile_char: str, coord: tuple):
                 game_data.MapData.current_map = lib.map_index(d.map_warp)()  # Set new map and initialize
                 init_coord()  # initiate new coordinate values
                 init_door()  # initiate all door data
-                d.event = False
+                d.event = False  # Debug line REMOVE THIS LINE IN LIVE VERSION
 
-                if d.floor_progress[0]:  # Trigger the floor progression question system
+                # Checks if this door leads to the next floor, if it does trigger the question system
+                if d.floor_progress[0] and len(Data.questions[0][d.floor_progress[1]]) > 0:
+                    # Trigger the floor progression question system
                     lib.question_handler(d.floor_progress[1])
 
                 if d.event:
@@ -122,8 +124,8 @@ def init_door():
     # Sets the doors on the map
     map_in = game_data.MapData.current_map
     for m in map_in.door_data:
-
         for e in game_data.EventData.events["door"]:  # Event Binding
+            print(m.door_id)
             if e.object_id == m.door_id:
                 m.event = True
                 break
@@ -229,7 +231,21 @@ def on_release(key):  # For movement processing
 
 
 def on_press(key):  # For command processing
-    if not game_data.MapData.map_idle:
+    if game_data.PlayerData.question_status is True:
+        # The question system is active, pass all input to this handler
+        try:
+            if key == keyboard.Key.enter:
+                # Check if answer is valid
+                pass
+            elif key == keyboard.Key.backspace:
+                game_data.PlayerData.question_answer = game_data.PlayerData.question_answer[:-1]
+            else:
+                print(f"{Fore.LIGHTCYAN_EX}{key.char}{Fore.RESET}", end='')
+                game_data.PlayerData.question_answer += key.char
+        except:
+            pass
+
+    elif not game_data.MapData.map_idle:
         try:
             if game_data.PlayerData.command_status:
                 if key == keyboard.Key.enter:
@@ -282,8 +298,8 @@ def question_input():
     with keyboard.Listener(on_press=on_press) as listener:
         def watcher():
             while True:
-                if game_data.PlayerData.question_status:
-                    game_data.PlayerData.question_status = False
+                if game_data.PlayerData.question_kill:
+                    game_data.PlayerData.question_kill = False
                     listener.stop()
                     return False
                 time.sleep(0.01)
