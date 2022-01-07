@@ -1,15 +1,15 @@
 # Python Adventure Game
 
-#### Basic Requirements:
+## Basic Requirements:
 - Windows 10
 - Python 3.9 or later
 - Faster CPU NO LONGER required
 
-### Setup:
+## Setup:
 Put all files in the **same** directory.
 Launch ***main.py***
 
-### Info:
+## Info:
 - When the program first opens it will run a intialization script
 that will optimize the screen size for your monitor and resize 
 the console accordingly. It will also check if all the required
