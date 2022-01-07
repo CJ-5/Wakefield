@@ -1,4 +1,4 @@
-# Python_Adventure_Game
+# Python Adventure Game
 
 #### Basic Requirements:
 - Windows 10
