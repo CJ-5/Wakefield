@@ -49,13 +49,22 @@ def enemy_move_calc(map_in):  # This was such a simple task, why did I add a ene
     pass
 
 
-def process_tile(tile_char: str, coord: tuple):
-    if tile_char == "1":  # Map switcher
+def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
+    if tile_char == "1":  # Door Tile
         # Tile type is a door, fetch and process door data
-        old_coord = get_coord(game_data.MapData.current_map)
-        old_id = game_data.MapData.current_map.map_id
         for d in game_data.MapData.current_map.door_data:
             if d.pos == coord:  # Look for door with matching player current coordinate
+                # Door has been found
+                if not d.valid:
+                    game_data.MapData.map_idle = True
+                    lib.gprint(game_data.MQ([lib.ck("The door won't budge. Try Again Later?", 'yellow')]))
+                    time.sleep(1)
+                    lib.back_line(38)
+                    game_data.MapData.map_idle = False
+                    return
+
+                old_coord = get_coord(game_data.MapData.current_map)
+                old_id = game_data.MapData.current_map.map_id
                 game_data.MapData.current_map = lib.map_index(d.map_warp)()  # Set new map and initialize
                 init_coord()  # initiate new coordinate values
                 init_door()  # initiate all door data
@@ -111,13 +120,61 @@ def coord_set(map_in, x_m, y_m):  # Main Movement Engine
                 if Data.tile_data.__contains__(future_char):
                     process_tile(future_char, (new_x, new_y))
                 else:
-                    internal_coordinates = [game_data.MapData.x, game_data.MapData.y_max - game_data.MapData.y]
-                    game_data.MapData.x += x_m
-                    game_data.MapData.y += y_m
+                    # Add movement entry
+                    game_data.MapData.movement.append((((game_data.MapData.x, game_data.MapData.y), (new_x, new_y)),
+                                                       game_data.MapData.last_char))
+
+                    internal_coordinates = [game_data.MapData.x, game_data.MapData.y_max - game_data.MapData.y]  # local
+                    game_data.MapData.x += x_m  # Global
+                    game_data.MapData.y += y_m  # Global
                     map_in.map_array[internal_coordinates[1]][internal_coordinates[0]] = game_data.MapData.last_char
                     map_in.map_array[::-1][game_data.MapData.y][game_data.MapData.x] = "x"  # Enter new position
                     game_data.MapData.last_char = future_char
-                    show_map(map_in)
+                    move_char()
+                    # show_map(map_in)
+
+
+def move_char():  # Map display script version 2
+    # Isolates movements down into individual requests rather than reprinting the entire map every time.
+    # All backend calculations remain the same, that way the ability to perform collision checking and prox checks
+    # remain unaffected
+    for m in game_data.MapData.movement:
+
+        # Clear old position
+        last_colour = Fore.WHITE
+        last_char = m[1]
+        if last_char == '':
+            last_char = ' '
+        elif last_char in game_data.MapData.ici.keys():
+            last_colour = game_data.MapData.ici[last_char]
+
+        print(f"\x1b[{game_data.MapData.space_buffer + m[0][0][1]}A", end='')
+        print(f"\x1b[{m[0][0][0] * Data.map_spacing}C", end='')
+        print(last_colour + last_char + Fore.RESET, end='')
+        print(f'\x1b[{game_data.MapData.space_buffer + m[0][0][1]}B', end='\r')  # Reset Cursor Y
+
+        # Enter new position
+        print(f"\x1b[{game_data.MapData.space_buffer + m[0][1][1]}A", end='')
+        print(f"\x1b[{m[0][1][0] * Data.map_spacing}C", end='')
+        print(f"{Fore.CYAN}x", end=Fore.RESET)
+        print(f"\x1b[{game_data.MapData.space_buffer + m[0][1][1]}B", end='\r')  # Reset Cursor X
+
+    # Door prox check
+    for d in game_data.MapData.current_map.door_data:
+        if d.prox_check and d.door_id not in \
+                    game_data.MapDataCache.doors_found[str(game_data.MapData.current_map.map_id)]:
+            if lib.check_proximity(d.pos):
+                # Display the door
+                print(f"\x1b[{game_data.MapData.space_buffer + d.pos[1]}A", end='')
+                print(f"\x1b[{d.pos[0] * Data.map_spacing}C", end='')
+                print(d.symbol_color + d.symbol + Fore.RESET, end='')
+                print(f"\x1b[{game_data.MapData.space_buffer + d.pos[1]}B", end='\r')
+
+    # Display coordinates
+    game_data.MapData.movement.clear()
+    print(f"\x1b[1A", end=f"{' ' * game_data.SysData.max_screen_size[0]}\r")
+    print(f"Your current position is {get_coord(game_data.MapData.current_map)} "
+          f"(Represented by the {Fore.CYAN + 'x' + Style.RESET_ALL})")
 
 
 def init_door():
@@ -135,10 +192,17 @@ def init_door():
         pos = m.pos[random.randint(0, len(m.pos) - 1)]
         m.pos = pos  # Overwrites coordinate list to selected coord
         map_in.map_array[::-1][pos[1]][pos[0]] = "1"  # Sets the tile type as door data
+        if not m.floor_progress:
+            m.symbol_color = Fore.GREEN
+        if not lib.map_index(m.map_warp):
+            m.symbol_color = Fore.RED
+            m.valid = False
 
 
+# Print the entire map
 def show_map(map_in):
     # Map display processing
+    # Does not affect any backend MAP data
 
     local_spacing = Data.map_spacing  # Stops code from fetching value from outside class
     map_out = ""
@@ -206,7 +270,7 @@ def show_map(map_in):
     os.system("cls")
     print("{:^50}".format(map_in.map_name))
     print(f"{Fore.RED}{'/':^{local_spacing}}{Fore.RESET}" * len(map_in.map_array[0]))
-    sys.stdout.write(map_out)
+    print(map_out, flush=True, end='')
     print(f"{Fore.RED}{'/':^{local_spacing}}{Fore.RESET}" * len(map_in.map_array[0]))
     print(f"Your current position is {get_coord(map_in)} "
           f"(Represented by the {Fore.CYAN + 'x' + Style.RESET_ALL})")

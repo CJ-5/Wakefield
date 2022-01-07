@@ -57,7 +57,7 @@ print("2")
 print("1")
 
 print(f'\x1b[{num}A TestOver              ')  # Works
-print(f'\x1b[{num//2}B', end='')
+print(f'\x1b[{num//2}B', end='')  # Reset 
 """
 
 """
@@ -81,7 +81,7 @@ init()  # initiate colorama
 movement_engine.Data = game_data.StaticData()   # Initialize static data
 
 # Initialize main map
-game_data.MapData.current_map = game_data.MainMap()
+game_data.MapData.current_map = game_data.Floor1()
 movement_engine.init_coord()
 movement_engine.init_door()
 os.system("cls")
@@ -133,6 +133,7 @@ game_data.PlayerData.Inventory_Accessible = True
 lib.add_item(0)
 game_data.Demo.inventory_demo = False
 game_data.MapData.valid_cmd.append("inventory")
+movement_engine.show_map(game_data.MapData.current_map)
 movement_engine.kb_listener()
 
 #

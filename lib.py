@@ -4,15 +4,15 @@ from os import system
 import movement_engine
 import time
 from dataclasses import dataclass
-from colorama import Fore, Back, Style
+from colorama import Fore
 import game_data
-import sys
 import random
 import math
 import ctypes
 import msvcrt
 import subprocess
 from ctypes import wintypes
+from game_data import MQ, InvItem
 
 
 class Logo:
@@ -168,10 +168,19 @@ def clear_line(num: int, max_line_length: int = None,
         max_line_length = game_data.SysData.max_screen_size[0]
     for i in range(num):
         print(f'\x1b[{1}{direction.upper()}', end='')
-        print(f'\r{Fore.RED}{" "*max_line_length}{Fore.RESET}\r', end='')
+        print(f'\r{Fore.RED}{" " * max_line_length}{Fore.RESET}\r', end='')
 
     if reset is True:
         print(f'\x1b[{num // 2}B')  # Reset the cursor to the original position with magic
+
+
+def back_line(num: int, delay: int = 10, index: int = 1):
+    # Clear specified line in a typing backspace fashion
+    print(f'\x1b[{index}A' + f'\x1b[{num}C', end=' ')
+    for i in range(num):
+        print(f'\x1b[2D ', end='')
+        time.sleep(delay / 1000)
+    print('\r', end='')
 
 
 def display_help(cmd: str = None):
@@ -188,23 +197,8 @@ def display_help(cmd: str = None):
         pass
 
 
-# Inventory Functions
-@dataclass()
-class InvItem:
-    name: str
-    item_id: int
-    qty: int = 1
-    max_qty: int = None
-    item_size: int = 1
-    type: str = "consumable"  # The type of the item [weapon / consumable / clothing]
-    damage: tuple = (0, 0)  # Damage range items deals (does not apply to non-weapon type items)
-    health_regen: int = 0
-    stamina_regen: int = 0
-    desc: str = None  # Description of item
-
-
 def check_proximity(object_pos: tuple):
-    # Check if the player is within distance of the object
+    # Return the distance of the player to an object
     return math.sqrt(abs((object_pos[0] - game_data.MapData.x) ** 2 + (object_pos[1] - game_data.MapData.y) ** 2)) <= \
         game_data.PlayerData.Detection_Distance
 
@@ -288,8 +282,7 @@ def map_index(map_id: int):
     if not map_id > len(maps) - 1:
         return maps[map_id]
     else:
-        os.system("cls")
-        print(f"{Fore.RED}Error: Failed to find map based off of specified id{Fore.RESET}")
+        return False
 
 
 def clear_inventory_display(line: int = 0):
@@ -372,11 +365,6 @@ def display_stats():  # Display stats of system and player
 
 def display_item_info(cmd):  # Get raw item info and display it in formatted statement
     pass
-
-
-@dataclass()
-class MQ:
-    messages: list
 
 
 def ck(text: str, color: str = None):  # Kind of useless
