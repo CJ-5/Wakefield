@@ -12,13 +12,37 @@ class PlayerData:
     Inventory_Displayed = False  # Is the inventory currently displayed on screen [Redundant]
     question_answer = ""  # The accumulated answer
     question_status = False  # Is the player currently answering a question
-    question_kill = False  # Whether to kill the questions listener
+    question_attempt = 0  # The amount of times the player has tried to answer the question
+
+    battles_won = 0  # How many battles have been won
+    battles_lost = 0  # How many battles have been lost
+    battles = battles_won + battles_lost  # The total amount of battles played
+    battle_turn = 0  # How many turns are in the current battle
+    in_battle = False  # Whether the player is in a battle
+    battle_action: str = ''  # The current action to be processed
+    battle_damage_player = 0  # The current total damage dealt to the player from the enemy
+    battle_damage_enemy = 0  # The current total damage dealt to the enemy from the player
+    battle_inventory = False  # Whether the player is looking at the inventory during battle
+    battle_action_processing = False
+
+    item_info_displayed = False  # Whether the item info screen is displayed or not
     cur_inv_display_size = 3  # The amount of characters that the current inventory display takes up
     Health = 100  # Players current health
+    health_recovery = 5  # The amount of hp that the player recovers per move (out of battle)
+    crit_mod = 25  # Critical Modifier increases damage by x % when attacking
+    crit_chance = 3  # The percent chance of hitting a critical attack
+    defense = None  # To be implemented
+    player_level = 0  # The players current level
+    total_xp = 0
+    exp_scaling = 6  # The scaling of exp required to advance to the next level
+    exp_lvl = player_level * exp_scaling  # XP required for next level
+    level_cap = 10  # Player level cap
     Inventory_Space = 13  # Players current max inventory size
     Inventory_Accessible = False  # Is the players inventory currently accessible
     command_status = False  # Whether the player is allowed to enter commands
     Inventory = []  # Players current inventory populated with InvItem Objects
+    Inv0 = []
+    Inv1 = []
     Detection_Distance = 3  # The distance that the player needs to be within in order to see hidden objects
 
 
@@ -27,8 +51,12 @@ class EnemyData:
     Entity_id: int  # The spawn id of the enemy
     Name: str  # The display name of the enemy
     Health: int  # The Health of the enemy
-    Max_inst: int  # The max amount of this enemy that can spawn on a valid map
-    Attacks = []
+    base_level: int  # Enemy base level
+    display_char: str
+    display_colour: colorama.Fore
+    Attacks: list  # Holds attack data from attack class
+    xp_drop: tuple = (0, 0)  # The amount of xp that the enemy drops when killed
+    cur_lvl: int = 0  # Auto Generated
 
 
 # Class instance for the creation of a NPC entity
@@ -44,7 +72,7 @@ class StaticData:  # Core Game Data
                  "questions")
 
     def __init__(self):
-        self.tile_data = ["1"]  # Specifies which tile types have data
+        self.tile_data = ["1", "2"]  # Specifies which tile types have data
         self.movement_blacklist = ["X", "0"]  # The spots the player is not allowed to move onto
         self.map_spacing = 2  # The amount of spacing between each character on the map
         self.lib_spacing_size = 160  # Equivalent to 1 inventory row worth of characters
@@ -53,10 +81,10 @@ class StaticData:  # Core Game Data
                                                                                         "has always been reliable"),
             lib.InvItem("Apple", 1, 1, 10, 1, "consumable", (0, 0), 10, 5, "Its an apple"),
             lib.InvItem("Bread", 2, 1, 5, 2, "consumable", (0, 0), 15, 10, "Its bread, at least it is not moldy"),
-            lib.InvItem("Sword", 3, 1, 1, 3, "weapon", (3, 6), 0, 0, "Its your sword a bit rusty but"
-                                                                     "has always been reliable"),
+            lib.InvItem("God Sword", 3, 1, 1, 3, "weapon", (99, 120), 0, 0, "Infinite Damage"),
         ]
-        self.enemies = [EnemyData(0, "Test_Enemy", 100, 5)]  # Holds enemy data
+        self.enemies = [EnemyData(0, "Test_Enemy", 100, 10, "☻", Fore.RED, [], (3, 10))]  # Holds enemy data
+
         # Questions are divided up into different difficulty tiers and have a corresponding timeouts
         # Questions should be in tuples that list the answer(s)
         self.questions = ([[], [], []], [15000, 10000, 6000])
@@ -66,6 +94,9 @@ class SysData:
     max_screen_size = ()  # The max size of the console in rows / columns (x, y)
     hwnd = None  # PID
     full_kill = False
+    main_listener = None
+    demo_listener = None
+    question_listener = None
 
 
 @dataclass()
@@ -112,15 +143,19 @@ class MapData:
     map_displayed = False
     current_map = None  # Holds the entirety of all current map data
     map_idle = False  # Put map listener into sleep mode without fully killing it
+    movement_idle = False
     d_exit_rest = True  # The player has just left the dungeon, override the last_char calculation
     map_kill = False
+    demo_kill = False
     lmc = (0, 0)  # The coordinate of the entrance to the dungeon  (Only valid for main map entrances)
     last_char = ""
     current_command = ""
     y_max = 0  # The max y coordinate  [Used for proximity calculations]
     ici = {'-': colorama.Fore.GREEN
            }  # Icon color index, declares what the icons display colour should be when shown (Only include valid icons)
+    # Note: ici is part of the gen 2 movement script aka 'move_char()'
     movement = []  # should contain tuples of movement to display, so it can be cleared and moved to a new location
+    csq = []
 
 
 @dataclass()
@@ -141,6 +176,7 @@ class InvItem:
     health_regen: int = 0
     stamina_regen: int = 0
     desc: str = None  # Description of item
+    InvID: int = 0  # Which column the item will appear in. [Auto-Generated]
 
 
 @dataclass()
@@ -255,19 +291,19 @@ class Floor1:
         self.map_desc = "Dungeon Floor 1"
         self.map_name = Fore.GREEN + "Floor 1" + Style.RESET_ALL
         self.npc = []  # NPC DATA [NEED TO WORK ON]
-        self.enemy = []
+        self.enemy = [(0, (7, 16))]
         self.door_data = [DoorData(3, 1, chr(9688), "-", Fore.BLUE, Fore.GREEN, False, [(0, 12)]),
                           DoorData(4, 3, chr(9688), "", Fore.BLUE, Fore.BLACK, False, [(23, 11)], (True, 1))]
         self.map_array = [
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "2", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "x", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", ""],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "X", "X", "", "", "", "", "", ""],
             ["", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "X", "X", "", "", "", "", "", "", ""],
             ["1", "", "", "X", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "X", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "x", "1"],
+            ["", "", "", "X", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "1"],
             ["", "", "X", "X", "X", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["", "X", "X", "X", "X", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["", "", "X", "X", "X", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],

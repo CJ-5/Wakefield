@@ -73,7 +73,7 @@ time.sleep(0.5)
 # Font / Console Size Initialization
 lib.reset_sys_font()  # Set the font and font size
 lib.maximize_console()  # Maximize the console window
-lib.get_max()  # Initiate the max console size
+lib.get_max()  # Initiate the max console size set to SysData
 lib.maximize_console()
 init()  # initiate colorama
 
@@ -130,10 +130,13 @@ os.system("cls")
 # lib.gprint("")
 
 game_data.PlayerData.Inventory_Accessible = True
-lib.add_item(0)
+lib.add_item(3)
+lib.add_item(1)
+lib.add_item(2)
 game_data.Demo.inventory_demo = False
 game_data.MapData.valid_cmd.append("inventory")
 movement_engine.show_map(game_data.MapData.current_map)
+Thread(target=movement_engine.csq_watch_dog).start()
 movement_engine.kb_listener()
 
 #
@@ -142,7 +145,6 @@ movement_engine.kb_listener()
 #     for xi, char in enumerate(y):
 #         if char == "1":
 #             print(f"Found door at: {(xi, yi)}")
-
 
 while game_data.SysData.full_kill is False:  # Debug code to hold in place while testing
     time.sleep(0.1)

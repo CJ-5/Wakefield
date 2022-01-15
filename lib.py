@@ -204,25 +204,24 @@ def check_proximity(object_pos: tuple):
 
 
 def add_item(item_id: int):
-    # Add a item by id to a players inventory
-    if game_data.PlayerData.Inventory_Accessible is True:
+    # Add an item by id to a players inventory
+    if game_data.PlayerData.Inventory_Accessible:
         item_data = item_info(item_id)
         size_calc = game_data.PlayerData.Inventory_Space - item_data.item_size
         if size_calc >= 0:
-            #
+
             # Check for duplicate entries and combine their qty
             dupe = False
-            ind = 0
             for idx, inv_item in enumerate(game_data.PlayerData.Inventory):
                 if inv_item.item_id == item_data.item_id:
                     if not game_data.PlayerData.Inventory[idx].qty + 1 > inv_item.max_qty:
-                        # Makes sure to not add items that cant have multiple instances in the inventory
+                        # Makes sure to not add items that can't have multiple instances in the inventory
                         dupe = True
                         game_data.PlayerData.Inventory[idx].qty += 1
-                        ind = idx
+
                         break
 
-            if dupe is False:
+            if not dupe:
                 game_data.PlayerData.Inventory.append(item_data)
                 # print(game_data.PlayerData.Inventory[ind])
 
@@ -230,6 +229,16 @@ def add_item(item_id: int):
             print("Could not add item(s) to your inventory due to lack of space")
     else:
         print("Error: Player Inventory is inaccessible")
+
+
+def remove_item(item_id: int, qty: int = 1):
+    if game_data.PlayerData.Inventory_Accessible:
+        for i in game_data.PlayerData.Inventory:
+            if i.item_id == item_id:
+                if i.qty > 1:
+                    i.qty -= qty
+                else:
+                    game_data.PlayerData.Inventory.remove(i)
 
 
 def reset_sys_font(font_size: int = 18):
@@ -260,20 +269,41 @@ def reset_sys_font(font_size: int = 18):
         handle, ctypes.c_long(False), ctypes.pointer(font))
 
 
+def has_item(item_search, is_id: bool,data_return: bool = False):
+    # Check if the player has the item in their inventory
+    if is_id:
+        for n in game_data.PlayerData.Inventory:
+            if n.item_id == int(item_search):
+                if data_return:
+                    return n
+                else:
+                    return True
+    else:
+        item_search = item_search.replace("-", " ")
+        for n in game_data.PlayerData.Inventory:
+            if n.name.lower() == item_search.lower():
+                if data_return:
+                    return n
+                else:
+                    return True
+    return False  # item not found
+
+
 def item_info(item_id: int, item_name: str = None):
     if item_id is None and item_name is None:
-        print("Error: No Item specified @ InvItemInfo Call")
+        return False  # Item error
     elif item_id is None:  # Look for item info by name (Slower)
         for n in movement_engine.Data.game_items:
             if n.name == item_name:
                 return n
     elif item_name is None:  # Directly index the item by the index (equivalent to the id) (Faster)
         return movement_engine.Data.game_items[item_id]
+    return False  # Item error
 
 
-def cmove(num: int = 1, dir: str = 'A'):  # Dunno, seems kinda useless, but who will actually read all of this?
+def cmove(num: int = 1, direction: str = 'A'):  # Dunno, seems kinda useless, but who will actually read all of this?
     # Move the console cursor
-    print(f"\x1b[{num}{dir}", end='')
+    print(f"\x1b[{num}{direction}", end='')
 
 
 def map_index(map_id: int):
@@ -285,19 +315,11 @@ def map_index(map_id: int):
         return False
 
 
-def clear_inventory_display(line: int = 0):
-    # Clear the inventory print out
-    game_data.PlayerData.Inventory_Displayed = False
-    print(game_data.PlayerData.cur_inv_display_size)
-    clear_line(game_data.PlayerData.cur_inv_display_size, len(game_data.MapData.current_map.map_array[0]), False)
-    game_data.PlayerData.cur_inv_display_size = 0
-
-
 def display_inv():
     # if the map is displayed, clear the map and then display the inventory
     # Display the inventory
     game_data.PlayerData.Inventory_Displayed = True
-    game_data.PlayerData.command_status = False
+    game_data.PlayerData.command_status = False  # Disable command input
     os.system("cls")
     item_spacing = 25
     side_spacing = 5
@@ -306,55 +328,47 @@ def display_inv():
     sub_key_num = 0  # The current item to print in the second column
     inv_size = len(game_data.PlayerData.Inventory) - 1
     row1 = game_data.PlayerData.Inventory_Space // 2
+    inv0 = []
+    inv1 = []
 
     if game_data.PlayerData.Inventory_Space % 2 == 1:
         # If the inventory space num is odd, the first column will print 1 more than the second column
         row1 += 1
 
+    # Initialize the inventory columns
+    for x, i in enumerate(game_data.PlayerData.Inventory):
+        if x > row1:
+            inv1.append(i)
+        else:
+            inv0.append(i)
+
     print(f"{'':<{side_spacing}}", end='')  # Title Side Spacing
-    print(f"{'Item Name':^{item_spacing}}{'Item QTY':^{item_spacing}}{'Item ID':^{item_spacing}}"
-          f"{'Item Name':^{item_spacing}}{'Item QTY':^{item_spacing}}{'Item ID':^{item_spacing}}\n")
+    print(f"{Fore.RED}{'Item Name':^{item_spacing}}{'Item QTY':^{item_spacing}}{'Item ID':^{item_spacing}}"
+          f"{'Item Name':^{item_spacing}}{'Item QTY':^{item_spacing}}{'Item ID':^{item_spacing}}{Fore.RESET}\n")
+
     for i in range(game_data.PlayerData.Inventory_Space):
-
-        if i > inv_size:
-            # Item is out of total inventory index
-            # Print Blank Row
-            if element_num == 2:
-                print(f"{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}", end='')
-                print("\n", end='')
-                game_data.PlayerData.cur_inv_display_size += 1
-                element_num = 1
-            else:
-                print(f"{'':<{side_spacing}}", end='')
-                print(f"{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}", end='')
-                element_num = 2
-        elif element_num == 1:
+        if element_num == 1:
             print(f"{'':<{side_spacing}}", end='')
-            item = game_data.PlayerData.Inventory[key_num]
-            print(f"{Fore.RED}", end='')
-            # Check to see if requested item exists if so print
-            print(f"{item.name:^{item_spacing}}"
-                  f"{item.qty:^{item_spacing}}"
-                  f"{item.item_id:^{item_spacing}}", end='')
-            element_num = 2  # Set to second column
-            print(f"{Fore.RESET}", end='')
-            key_num += 1
-            game_data.PlayerData.cur_inv_display_size += 1
-        elif element_num == 2:
-            print(f"{Fore.GREEN}", end='')
-            # Print second row, check to see if requested item exists if so print
-            # Attempt to index item that is out of index of the first row
-
-            if not row1 + sub_key_num > inv_size - 1:
-                item = game_data.PlayerData.Inventory[row1 + sub_key_num]
-                print(f"{item.name:>{item_spacing}}"
-                      f"{item.qty:>{item_spacing}}"
-                      f"{item.item_id:>{item_spacing}}", end='')
+            if key_num > len(inv0) - 1:
+                # No Item to print
+                print(f"{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}", end='')
             else:
-                print(f"{'*':<{item_spacing}}{'*':<{item_spacing}}{'*':<{item_spacing}}", end='')
-            element_num = 1  # Set to first column
-            sub_key_num += 1
+                # There is an item to print
+                item = inv0[key_num]
+                print(f"{item.name:^{item_spacing}}{item.qty:^{item_spacing}}{item.item_id:^{item_spacing}}", end='')
+                key_num += 1
+            element_num = 2
+        elif element_num == 2:
+            # Print second row, check to see if requested item exists if so print
+            # Check to see if the second column has anything to print
 
+            if i > len(inv1) - 1:
+                print(f"{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}", end='')
+            else:
+                item = inv1[sub_key_num]
+                print(f"{item.name:^{item_spacing}}{item.qty:^{item_spacing}}{item.item_id:^{item_spacing}}", end='')
+                sub_key_num += 1
+            element_num = 1  # Set to first column
             print(f"{Fore.RESET}\n", end='')
     print()  # Create newline at end of printout
 
@@ -436,15 +450,38 @@ def event_handler(event_id: int, event_type: int):
 
 
 def question_handler(question_diff: int):
-    # Kill main listener
-    game_data.MapData.map_kill = True
+    """
+    Order of operations:
+        1. Set map movement system into idle
+        2. Pull a random question of the specified difficulty
+        3. Ask and open input (kb_listener on_press thread will handle question accumulation)
+        4. if the user got the question right progress to the next map (return True), if the user got it wrong
+           give them the option to retry or to leave (leaving will leave them on the same floor, adds number of tries
+           to total to avoid a leave and retry loophole) 3 wrong questions spawns them outside of the mine
+    """
 
-    # Get random set of questions
-    question = movement_engine.Data.questions[0][question_diff]
-    question = question[random.randint(0, len(question) - 1)]
+    question = movement_engine.Data.questions[0][question_diff][
+               random.randint(0, len(movement_engine.Data.questions[0][0]))][0]
 
-    # Ask Question and initiate the input
-    gprint(question)
+    # Find the longest line
+    question_cache = question.split("\n")
+    max_l = 0
+    for line in question_cache:
+        if len(line) > max_l:
+            max_l = len(line)
+
+    os.system("cls")
+    print("\n" * (game_data.SysData.max_screen_size[1] // 2) + " " *
+                 (game_data.SysData.max_screen_size[0] - (max_l // 2)), end='')
+
+    print(question)
+    game_data.PlayerData.question_status = True  # set the input listener to accumulate the answer
+    while game_data.PlayerData.question_status:  # Lock the script here until the question input has been satisfied
+        time.sleep(0.1)
+        continue
+
+    answer = game_data.PlayerData.question_answer
+
 
 
 def gprint(queue, speed: int = 35):

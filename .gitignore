@@ -2,3 +2,5 @@
 *.pyc
 .idea/Python_Adventure_Game.iml
 *.iml
+ASCII_LIST.txt
+ASCII_GEN.py
