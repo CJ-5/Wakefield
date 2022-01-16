@@ -298,6 +298,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                         break
                     elif game_data.PlayerData.total_xp > game_data.PlayerData.exp_lvl:
                         game_data.PlayerData.player_level += 1
+                        lvl_change += 1
                     else:
                         break
 
