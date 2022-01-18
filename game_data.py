@@ -28,6 +28,10 @@ class PlayerData:
     item_info_displayed = False  # Whether the item info screen is displayed or not
     cur_inv_display_size = 3  # The amount of characters that the current inventory display takes up
     Health = 100  # Players current health
+    Health_Max = 100  # The player's max health
+    regen_max_warn = False  # When a player uses a consumable that will bring
+    # their over max this is used to confirm the usage of the item
+    regen_max_warn_response = False  # Whether to continue or not with the item use
     health_recovery = 5  # The amount of hp that the player recovers per move (out of battle)
     crit_mod = 25  # Critical Modifier increases damage by x % when attacking
     crit_chance = 3  # The percent chance of hitting a critical attack
@@ -169,7 +173,7 @@ class InvItem:
     name: str
     item_id: int
     qty: int = 1
-    max_qty: int = None
+    max_qty: int = 0
     item_size: int = 1
     type: str = "consumable"  # The type of the item [weapon / consumable / clothing]
     damage: tuple = (0, 0)  # Damage range items deals (does not apply to non-weapon type items)

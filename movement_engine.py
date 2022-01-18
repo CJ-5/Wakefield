@@ -150,7 +150,8 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
             print(f"{'':<{ss}}", f"{Fore.YELLOW}Turn{Fore.RESET}: {Fore.RED}{game_data.PlayerData.battle_turn}\n")
             print(f"{'':<{ss}}", f"{Fore.YELLOW}{f'Enemy Health{Fore.RESET}: ':<{ui_ss}} {Fore.RED}{enemy.Health}")
             print(f"{'':<{ss}}", f"{Fore.YELLOW}{f'Player Health{Fore.RESET}: ':<{ui_ss}} "
-                                 f"{Fore.RED}{game_data.PlayerData.Health}")
+                                 f"{Fore.RED}{game_data.PlayerData.Health} {Fore.YELLOW}/{Fore.RESET} "
+                                 f"{game_data.PlayerData.Health_Max}")
             print(Fore.RESET, end='')
             print(f"{f'  {Fore.YELLOW}Actions{Fore.RESET}  ':-^{game_data.SysData.max_screen_size[0] // 2}}\n\n")
 
@@ -162,7 +163,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
             print(f'{action_printout:^{game_data.SysData.max_screen_size[0] // 2}}')
             # I don't feel like getting this to be perfectly centered. Deal with it
 
-            print(f"  {Fore.RED}:{Fore.RESET}>", end='')
+            print(f"  {Fore.RED}:{Fore.RESET}> ", end='')
             game_data.PlayerData.battle_action = ""
 
             # since the main keyboard listener is still active but the movement module is idle
@@ -172,7 +173,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                 time.sleep(0.1)
                 continue
 
-            action = game_data.PlayerData.battle_action.split(" ")
+            action = str(game_data.PlayerData.battle_action).split(" ")
 
             if action[0] not in game_data.MapData.valid_cmd:
                 os.system("cls")
@@ -207,10 +208,10 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                     time.sleep(2)
                 else:
                     # Fetch item data
-                    item_data = lib.has_item(action[1], action[1].isnumeric(), True)
+                    item_data = lib.has_item(action[1], True)
                     if item_data is False:
                         os.system('cls')
-                        sl = [lib.ck("Could not find item with the name ", "red"),
+                        sl = [lib.ck(f"Could not find item with the {['name', 'id'][action[1].isnumeric()]} ", "red"),
                               lib.ck("["), lib.ck(action[1], "yellow"), lib.ck("]")]
 
                         print("\n" * (game_data.SysData.max_screen_size[1] // 2) +
@@ -219,7 +220,8 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                               end='')
                         lib.gprint(game_data.MQ(sl))
                         sl = [lib.ck("When trying to use an item with a space " +
-                                    "in its name replace the space with a dash", "yellow")]
+                                     "in its name replace the space with a dash", "yellow")]
+
                         print("\n" + " " * (game_data.SysData.max_screen_size[0] // 2 -
                                             len(sl[0]) // 2), end='')
                         lib.gprint(game_data.MQ(sl))
@@ -260,7 +262,40 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                             enemy.Health -= damage
                             pass
                         elif item_data.type == "consumable":
-                            pass
+                            """
+                            Currently only implements healing items. Add potions that add skill buffs (later)
+                            version 2 maybe. Stick with simplicity for now.
+                            """
+                            os.system('cls')
+                            if game_data.PlayerData.Health + item_data.health_regen > game_data.PlayerData.Health_Max:
+                                # Ask the player if they still wish to use the item
+                                script = [lib.ck('Consuming a ', 'yellow'), lib.ck(item_data.name, 'red'),
+                                          lib.ck(' will bring you over max health. Your health will be maxed at ',
+                                                 'yellow'),
+                                          lib.ck(str(game_data.PlayerData.Health_Max), 'red'), lib.ck(' and', 'yellow'),
+                                          lib.ck(' ' + str(game_data.PlayerData.Health + item_data.health_regen -
+                                                 game_data.PlayerData.Health_Max), "red"), lib.ck(' HP will be wasted.',
+                                                                                                  "yellow")]
+                                sl = 0
+                                for d in script[:-1]:
+                                    sl += len(d[0])
+
+                                print('\n' * (game_data.SysData.max_screen_size[1] // 2) + ' ' *
+                                      ((game_data.SysData.max_screen_size[0] // 2) - (sl // 2)), end='')
+                                lib.gprint(game_data.MQ(script))
+                                script = "Do you wish to continue? (Y / N)"
+                                print(' ' * ((game_data.SysData.max_screen_size[0] // 2) - (len(script) // 2)), end='')
+                                lib.gprint(game_data.MQ([lib.ck(script, "yellow")]))
+
+                                game_data.PlayerData.regen_max_warn = True
+                                any_key()
+                                while game_data.SysData.demo_listener.running:
+                                    continue
+                                
+                                if game_data.PlayerData.regen_max_warn_response:
+                                    pass
+                            else:
+                                pass
 
             elif action[0] == "inventory":
                 game_data.PlayerData.battle_inventory = True
@@ -270,7 +305,65 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                 while game_data.SysData.demo_listener.running is True:
                     continue
             elif action[0] == "item-info":
-                pass
+                # Display item info regardless of whether the player has the item
+                # Fetch item data
+                if len(action) != 2:
+                    os.system('cls')
+                    print("\n" * (game_data.SysData.max_screen_size[1] // 2) +
+                          " " * (game_data.SysData.max_screen_size[0] // 2 - (sl // 2)), end='')
+                    lib.gprint(game_data.MQ([lib.ck("item-info", "yellow"), lib.ck(" requires ", "red"),
+                                             lib.ck("1", "yellow"), lib.ck(" argument. Usage: ", "yellow"),
+                                             lib.ck("item-info [item_name / item_id]", "red")]))
+                    time.sleep(5)
+                elif len(action[1]) > 15:
+                    os.system('cls')
+                    sl = "Stop, no item has a name that long"
+                    print("\n" * (game_data.SysData.max_screen_size[1] // 2) +
+                          " " * (game_data.SysData.max_screen_size[0] // 2 - (len(sl) // 2)), end='')
+                    lib.gprint(sl)  # No Formatting used print raw without MQ class
+                    time.sleep(2)
+                else:
+                    item_data = lib.has_item(action[1], True)
+                    os.system("cls")
+
+                    if item_data is False:
+                        os.system('cls')
+                        sl = [lib.ck(f"Could not find item with the {['name', 'id'][action[1].isnumeric()]} ", "red"),
+                              lib.ck("["), lib.ck(action[1], "yellow"), lib.ck("]")]
+
+                        print("\n" * (game_data.SysData.max_screen_size[1] // 2) +
+                              " " * (game_data.SysData.max_screen_size[0] // 2 -
+                                     ((len(sl[0][0]) + len(sl[2][0]) + 2) // 2)),
+                              end='')
+                        lib.gprint(game_data.MQ(sl))
+                        sl = [lib.ck("When trying to use an item with a space " +
+                                     "in its name replace the space with a dash", "yellow")]
+                        print("\n" + " " * (game_data.SysData.max_screen_size[0] // 2 -
+                                            len(sl[0]) // 2), end='')
+                        lib.gprint(game_data.MQ(sl))
+                        time.sleep(3)
+
+                    spacing = 30
+                    has_item = item_data is not False
+                    print('\n' * 3 + f'{item_data.name:-^20}')
+                    print(f'{Fore.YELLOW}{"Player has item:":<{spacing}}{[Fore.RED, Fore.GREEN][has_item]}{has_item}')
+                    print(f'{Fore.YELLOW}{"Item ID:":<{spacing}}{Fore.RESET}{item_data.item_id}')
+                    print(f'{Fore.YELLOW}{"Item Type:":<{spacing}}{Fore.RESET}{item_data.type}')
+                    print(f'{Fore.YELLOW}{"Item Max Quantity:":<{spacing}}{Fore.RESET}{item_data.max_qty}')
+                    print(f'{Fore.YELLOW}{"Item Size:":<{spacing}}{Fore.RESET}{item_data.item_size}')
+                    print(f'{Fore.YELLOW}{"Damage: ":<{spacing}}{Fore.RESET}{item_data.damage[0]} {Fore.YELLOW}-> '
+                          f'{Fore.RESET}{item_data.damage[1]}')
+                    print(f'{Fore.YELLOW}{"Health Regeneration:":<{spacing}}{Fore.RESET}{item_data.health_regen}')
+                    # print(f'{"Stamina Regeneration:":<{spacing}}{item_data.stamina_regen}')  # Not Integrated yet
+                    print(f'{"Description:":<{spacing}}{item_data.desc}')
+                    lib.gprint("\nPress any key to exit...")
+
+                    game_data.PlayerData.battle_inventory = True  # Same idea as the inventory display
+                    any_key()
+                    while game_data.SysData.demo_listener.running is True:
+                        continue
+                    print("Ended")
+            # End of game actions
 
             if game_data.PlayerData.Health <= 0:
                 """
@@ -543,7 +636,17 @@ def on_release(key):  # For movement processing
 
 # CLEAN THIS UP
 def on_press(key):  # For command processing
-    if game_data.PlayerData.battle_action_processing:
+    if game_data.PlayerData.regen_max_warn:
+        try:
+            if key == keyboard.Key.y:
+                game_data.PlayerData.regen_max_warn_response = True
+                game_data.MapData.demo_kill = True
+            elif key == keyboard.Key.n:
+                game_data.PlayerData.regen_max_warn_response = False
+                game_data.MapData.demo_kill = True
+        except:
+            pass
+    elif game_data.PlayerData.battle_action_processing:
         # Pull keys
         try:
             if key == keyboard.Key.space:

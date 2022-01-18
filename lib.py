@@ -269,9 +269,9 @@ def reset_sys_font(font_size: int = 18):
         handle, ctypes.c_long(False), ctypes.pointer(font))
 
 
-def has_item(item_search, is_id: bool,data_return: bool = False):
+def has_item(item_search: str, data_return: bool = False):
     # Check if the player has the item in their inventory
-    if is_id:
+    if item_search.isnumeric():  # Check if the player specified an id
         for n in game_data.PlayerData.Inventory:
             if n.item_id == int(item_search):
                 if data_return:

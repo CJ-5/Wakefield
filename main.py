@@ -130,9 +130,7 @@ os.system("cls")
 # lib.gprint("")
 
 game_data.PlayerData.Inventory_Accessible = True
-lib.add_item(3)
-lib.add_item(1)
-lib.add_item(2)
+lib.add_item(2)  # Add Bread
 game_data.Demo.inventory_demo = False
 game_data.MapData.valid_cmd.append("inventory")
 movement_engine.show_map(game_data.MapData.current_map)
