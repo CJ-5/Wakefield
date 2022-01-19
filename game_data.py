@@ -23,18 +23,19 @@ class PlayerData:
     battle_damage_player = 0  # The current total damage dealt to the player from the enemy
     battle_damage_enemy = 0  # The current total damage dealt to the enemy from the player
     battle_inventory = False  # Whether the player is looking at the inventory during battle
-    battle_action_processing = False
+    battle_action_processing = False  # Locks thread until the player has entered an action
+    battle_run_warning = False  # Listener Lock
+    battle_run_response = False  # Player Response
 
     item_info_displayed = False  # Whether the item info screen is displayed or not
     cur_inv_display_size = 3  # The amount of characters that the current inventory display takes up
     Health = 100  # Players current health
     Health_Max = 100  # The player's max health
-    regen_max_warn = False  # When a player uses a consumable that will bring
-    # their over max this is used to confirm the usage of the item
+    regen_max_warn = False  # HP over max regen consumable warning
     regen_max_warn_response = False  # Whether to continue or not with the item use
     health_recovery = 5  # The amount of hp that the player recovers per move (out of battle)
     crit_mod = 25  # Critical Modifier increases damage by x % when attacking
-    crit_chance = 3  # The percent chance of hitting a critical attack
+    crit_chance = 12  # The percent chance of hitting a critical attack
     defense = None  # To be implemented
     player_level = 0  # The players current level
     total_xp = 0
@@ -60,7 +61,9 @@ class EnemyData:
     display_colour: colorama.Fore
     Attacks: list  # Holds attack data from attack class
     xp_drop: tuple = (0, 0)  # The amount of xp that the enemy drops when killed
-    cur_lvl: int = 0  # Auto Generated
+    loot_table: tuple = (([], [], [], []), (range(0, 0), range(0, 0), range(0, 0)))
+    escape: bool = True
+    cur_lvl: int = 0  # Auto Generated the calculated temporary level of the enemy
 
 
 # Class instance for the creation of a NPC entity
@@ -69,6 +72,32 @@ class NPCData:
     Entity_id: int  # Entity ID of the npc
     Name: str  # Display name of the NPC
     Type: int = 0  # 0: Mass NPC (No shop or extra quest)
+
+
+@dataclass()
+class AttackData:
+    name: str = ''  # The name of the attack
+    damage: tuple = (0, 0)  # Base attack range
+    dia: str = ""  # The dialogue when the enemy uses the attack
+
+
+@dataclass()
+class LT:
+    # Loot Table class
+    common_items: list  # Item IDs of common items
+    uncommon_items: list  # Item IDs of uncommon items
+    rare_items: list  # Item IDs of rare items
+    super_rare_items: list  # Item IDs of super rare items
+    common_item_chance: int  # The chance of a random common item to be picked
+    uncommon_item_chance: int  # The chance of a random uncommon item to be picked
+    rare_item_chance: int  # The chance of a random rare item to be picked
+    super_rare_item_chance: int  # The chance of a random super rare item to be picked
+
+
+class LootTables:
+    base_loot = []
+    mid_level = []
+    high_level = []
 
 
 class StaticData:  # Core Game Data
@@ -81,13 +110,19 @@ class StaticData:  # Core Game Data
         self.map_spacing = 2  # The amount of spacing between each character on the map
         self.lib_spacing_size = 160  # Equivalent to 1 inventory row worth of characters
         self.game_items = [  # The in game item data
-            lib.InvItem("Ol' Reliable Broad Sword", 0, 1, 1, 3, "weapon", (3, 6), 0, 0, "Its your sword a bit rusty but"
-                                                                                        "has always been reliable"),
-            lib.InvItem("Apple", 1, 1, 10, 1, "consumable", (0, 0), 10, 5, "Its an apple"),
-            lib.InvItem("Bread", 2, 1, 5, 2, "consumable", (0, 0), 15, 10, "Its bread, at least it is not moldy"),
-            lib.InvItem("God Sword", 3, 1, 1, 3, "weapon", (99, 120), 0, 0, "Infinite Damage"),
+            InvItem('Small HP Potion', 0, 1, 5, 2, health_regen=(13, 15), desc='Small Healing Potion, increases hp.'),
+            InvItem('Medium HP Potion', 1, 1, 3, 2, health_regen=(22, 25), desc='Medium Healing Potion, increases hp.'),
+            InvItem('Sausage', 2, 1, 10, 1, health_regen=(5, 6), desc='Meat with questionable ingredients.'),
+            InvItem('Pretzel', 3, 1, 10, 1, health_regen=(2, 3), desc='It\'s gone a little stale.'),
+            InvItem('Bread', 4, 1, 5, 2, health_regen=(4, 6), desc='This is a whole loaf of bread. '
+                                                                   'At least its not moldy'),
+            InvItem('Meat', 5, 1, 5, 1, health_regen=(6, 8), desc='Keep in mind this dropped from a monster'),
+            InvItem('Moldy Bread', 6, 1, 3, 2, health_regen=(-2, 1), desc='A little penicillin (mostly) never hurts.'),
+            InvItem('Apple', 7, 1, 1, 1, health_regen=(4, 7), desc='Keeps the doctor away')
         ]
-        self.enemies = [EnemyData(0, "Test_Enemy", 100, 10, "☻", Fore.RED, [], (3, 10))]  # Holds enemy data
+        self.enemies = [
+            EnemyData(0, 'Slime', 3, 1, '◉', Fore.CYAN, [AttackData('Jump Attack', (2, 3))], (4, 6)),
+                        ]  # Holds enemy data
 
         # Questions are divided up into different difficulty tiers and have a corresponding timeouts
         # Questions should be in tuples that list the answer(s)
@@ -149,7 +184,7 @@ class MapData:
     map_idle = False  # Put map listener into sleep mode without fully killing it
     movement_idle = False
     d_exit_rest = True  # The player has just left the dungeon, override the last_char calculation
-    map_kill = False
+    map_kill = False  # Bad idea to use
     demo_kill = False
     lmc = (0, 0)  # The coordinate of the entrance to the dungeon  (Only valid for main map entrances)
     last_char = ""
@@ -177,8 +212,8 @@ class InvItem:
     item_size: int = 1
     type: str = "consumable"  # The type of the item [weapon / consumable / clothing]
     damage: tuple = (0, 0)  # Damage range items deals (does not apply to non-weapon type items)
-    health_regen: int = 0
-    stamina_regen: int = 0
+    health_regen: tuple = (0, 0)
+    stamina_regen: tuple = (0, 0)
     desc: str = None  # Description of item
     InvID: int = 0  # Which column the item will appear in. [Auto-Generated]
 
@@ -206,11 +241,11 @@ class HelpPage:
     # cmd_list: Command List
     # ind_def: Individual Definitions
     def __init__(self):
-        self.cmd_list = ["help", "?", "inventory", "item_info", "stats"]
+        self.cmd_list = ["help", "?", "inventory", "item-info", "stats"]
         self.ind_def = {"use": "Usage (use [item name / item id]): Uses the specified item "
                                "(if it is valid for the situation)",
                         "inventory / inv": "Usage (inventory) | (inv): Displays your current inventory",
-                        "item_info": "Usage (item_info [item name / item id] | Displays info on the specified item"}
+                        "item-info": "Usage (item-info [item name / item id] | Displays info on the specified item"}
 
 
 class MainMap:  # Main starting area Map

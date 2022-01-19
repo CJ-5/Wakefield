@@ -81,7 +81,7 @@ init()  # initiate colorama
 movement_engine.Data = game_data.StaticData()   # Initialize static data
 
 # Initialize main map
-game_data.MapData.current_map = game_data.Floor1()
+game_data.MapData.current_map = game_data.MainMap()
 movement_engine.init_coord()
 movement_engine.init_door()
 os.system("cls")
@@ -132,7 +132,9 @@ os.system("cls")
 game_data.PlayerData.Inventory_Accessible = True
 lib.add_item(2)  # Add Bread
 game_data.Demo.inventory_demo = False
-game_data.MapData.valid_cmd.append("inventory")
+game_data.Demo.help_demo = False
+game_data.Demo.item_info_demo = False
+game_data.MapData.valid_cmd = ["inventory", "item-info", "help"]
 movement_engine.show_map(game_data.MapData.current_map)
 Thread(target=movement_engine.csq_watch_dog).start()
 movement_engine.kb_listener()

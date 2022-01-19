@@ -54,6 +54,18 @@ def enemy_move_calc(map_in):  # This was such a simple task, why did I add an en
     pass
 
 
+def map_check():
+    # Map Specific events
+    if game_data.MapData.current_map.map_id == 0:  # Checks if the map is the main map
+        # Reset to the entrance position
+        lmc = game_data.MapData.lmc
+        cc = get_coord(game_data.MapData.current_map)
+        game_data.MapData.current_map.map_array[::-1][cc[1]][cc[0]] = ""
+        game_data.MapData.current_map.map_array[::-1][lmc[1]][lmc[0]] = 'x'
+        init_coord()
+        game_data.MapData.last_char = '-'
+
+
 def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
     # tile_char : The character of the tile to process
     # coord : the coordinate of that tile
@@ -87,14 +99,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                     lib.event_handler(d.door_id, 0)  # Process door event type with event id of door
                 else:
                     # Main map entrance view reset
-                    if game_data.MapData.current_map.map_id == 0:  # Checks if the map is the main map
-                        # Reset to the entrance position
-                        lmc = game_data.MapData.lmc
-                        cc = get_coord(game_data.MapData.current_map)
-                        game_data.MapData.current_map.map_array[::-1][cc[1]][cc[0]] = ""
-                        game_data.MapData.current_map.map_array[::-1][lmc[1]][lmc[0]] = 'x'
-                        init_coord()
-                        game_data.MapData.last_char = '-'
+                    map_check()
 
                 if old_id == 0:  # If the map the player is coming off of is the main map, pull the coordinates
                     game_data.MapData.lmc = (old_coord[0], old_coord[1])  # Set door entrance map coord
@@ -142,7 +147,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
         time.sleep(0.5)
 
         # Set Valid Commands
-        game_data.MapData.valid_cmd = ["inventory", "use", "item-info"]
+        game_data.MapData.valid_cmd = ["inventory", "use", "item-info", 'run']
         game_data.PlayerData.in_battle = True
         while game_data.PlayerData.in_battle:
             os.system("cls")
@@ -223,7 +228,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                                      "in its name replace the space with a dash", "yellow")]
 
                         print("\n" + " " * (game_data.SysData.max_screen_size[0] // 2 -
-                                            len(sl[0]) // 2), end='')
+                                            len(sl[0][0]) // 2), end='')
                         lib.gprint(game_data.MQ(sl))
                         time.sleep(3)
                     else:
@@ -232,7 +237,6 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                             pass  # Clothing has not been implemented
                         elif item_data.type == "weapon":
                             critical = False
-                            script = []
                             sl = 0
                             damage = random.randint(item_data.damage[0], item_data.damage[1])
                             if random.randint(0, 100) <= game_data.PlayerData.crit_chance:  # Calculate critical
@@ -262,8 +266,9 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                             enemy.Health -= damage
                             pass
                         elif item_data.type == "consumable":
+                            consume = False
                             """
-                            Currently only implements healing items. Add potions that add skill buffs (later)
+                            Currently only implements healing / food items. Add potions that add skill buffs (later)
                             version 2 maybe. Stick with simplicity for now.
                             """
                             os.system('cls')
@@ -277,25 +282,40 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                                                  game_data.PlayerData.Health_Max), "red"), lib.ck(' HP will be wasted.',
                                                                                                   "yellow")]
                                 sl = 0
-                                for d in script[:-1]:
+                                for d in script:
                                     sl += len(d[0])
 
                                 print('\n' * (game_data.SysData.max_screen_size[1] // 2) + ' ' *
                                       ((game_data.SysData.max_screen_size[0] // 2) - (sl // 2)), end='')
                                 lib.gprint(game_data.MQ(script))
+
                                 script = "Do you wish to continue? (Y / N)"
                                 print(' ' * ((game_data.SysData.max_screen_size[0] // 2) - (len(script) // 2)), end='')
                                 lib.gprint(game_data.MQ([lib.ck(script, "yellow")]))
-
                                 game_data.PlayerData.regen_max_warn = True
                                 any_key()
                                 while game_data.SysData.demo_listener.running:
                                     continue
                                 
                                 if game_data.PlayerData.regen_max_warn_response:
-                                    pass
+                                    consume = True
                             else:
-                                pass
+                                consume = True
+
+                            if consume:
+                                game_data.PlayerData.Health += item_data.health_regen
+                                os.system('cls')
+                                script = [lib.ck('You consume the ', 'yellow'), lib.ck(item_data.name, 'green'),
+                                          lib.ck(' your health is now at ', 'yellow'),
+                                          lib.ck(str(game_data.PlayerData.Health), 'green'), lib.ck(' HP')]
+                                sl = 0
+                                for i in script:
+                                    sl += len(i[0])
+
+                                lib.center_cursor(sl)
+                                lib.gprint(game_data.MQ(script))
+                                time.sleep(2)
+
 
             elif action[0] == "inventory":
                 game_data.PlayerData.battle_inventory = True
@@ -323,7 +343,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                     lib.gprint(sl)  # No Formatting used print raw without MQ class
                     time.sleep(2)
                 else:
-                    item_data = lib.has_item(action[1], True)
+                    item_data = lib.item_info(action[0])
                     os.system("cls")
 
                     if item_data is False:
@@ -339,30 +359,54 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                         sl = [lib.ck("When trying to use an item with a space " +
                                      "in its name replace the space with a dash", "yellow")]
                         print("\n" + " " * (game_data.SysData.max_screen_size[0] // 2 -
-                                            len(sl[0]) // 2), end='')
+                                            len(sl[0][0]) // 2), end='')
                         lib.gprint(game_data.MQ(sl))
                         time.sleep(3)
+                    else:
 
-                    spacing = 30
-                    has_item = item_data is not False
-                    print('\n' * 3 + f'{item_data.name:-^20}')
-                    print(f'{Fore.YELLOW}{"Player has item:":<{spacing}}{[Fore.RED, Fore.GREEN][has_item]}{has_item}')
-                    print(f'{Fore.YELLOW}{"Item ID:":<{spacing}}{Fore.RESET}{item_data.item_id}')
-                    print(f'{Fore.YELLOW}{"Item Type:":<{spacing}}{Fore.RESET}{item_data.type}')
-                    print(f'{Fore.YELLOW}{"Item Max Quantity:":<{spacing}}{Fore.RESET}{item_data.max_qty}')
-                    print(f'{Fore.YELLOW}{"Item Size:":<{spacing}}{Fore.RESET}{item_data.item_size}')
-                    print(f'{Fore.YELLOW}{"Damage: ":<{spacing}}{Fore.RESET}{item_data.damage[0]} {Fore.YELLOW}-> '
-                          f'{Fore.RESET}{item_data.damage[1]}')
-                    print(f'{Fore.YELLOW}{"Health Regeneration:":<{spacing}}{Fore.RESET}{item_data.health_regen}')
-                    # print(f'{"Stamina Regeneration:":<{spacing}}{item_data.stamina_regen}')  # Not Integrated yet
-                    print(f'{"Description:":<{spacing}}{item_data.desc}')
-                    lib.gprint("\nPress any key to exit...")
+                        lib.display_item_info(item_data)
+                        lib.gprint("\nPress any key to exit...")
 
-                    game_data.PlayerData.battle_inventory = True  # Same idea as the inventory display
+                        game_data.PlayerData.battle_inventory = True  # Same idea as the inventory display
+                        any_key()
+                        while game_data.SysData.demo_listener.running is True:
+                            continue
+                        print("Ended")
+
+            elif action[0] == 'run':
+                os.system('cls')
+                if enemy.escape:
+                    script = [lib.ck('Running from this battle will return you to the main map. '
+                                     'Do you wish to continue? [',
+                                     'yellow'), lib.ck(' Y ', "red"), lib.ck('/', 'yellow'), lib.ck(' N ', "green"),
+                              lib.ck(']', 'yellow')]
+                else:
+                    script = [lib.ck('You cannot run from this enemy', 'red')]
+
+                sl = 0
+                for i in script:
+                    sl += len(i[0])
+                lib.center_cursor(sl)
+                lib.gprint(game_data.MQ(script))
+
+                if not enemy.escape:
+                    time.sleep(2)
+                else:
+                    game_data.PlayerData.battle_run_warning = True
                     any_key()
-                    while game_data.SysData.demo_listener.running is True:
+                    while game_data.SysData.demo_listener.running:
                         continue
-                    print("Ended")
+
+                    if game_data.PlayerData.battle_run_response:
+                        # Player wants to run
+                        game_data.MapData.current_map = game_data.MainMap()
+                        init_coord()
+                        init_door()
+                        map_check()
+                        game_data.PlayerData.in_battle = False
+
+
+
             # End of game actions
 
             if game_data.PlayerData.Health <= 0:
@@ -411,6 +455,8 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                           " " * game_data.SysData.max_screen_size[0] - (sl // 2), end='')
                     lib.gprint(game_data.MQ(script))
 
+                # Loot Drop Calculations
+
                 game_data.PlayerData.in_battle = False
 
         game_data.MapData.map_idle = False
@@ -453,15 +499,14 @@ def coord_set(map_in, x_m, y_m):  # Main Movement Engine
                     map_in.map_array[::-1][game_data.MapData.y][game_data.MapData.x] = "x"  # Enter new position
                     game_data.MapData.last_char = future_char
                     move_char()
-                    # show_map(map_in)
 
 
-def csq_watch_dog():
+def csq_watch_dog():  # Movement manager
     while True:
         for x in game_data.MapData.csq:
             coord_set(game_data.MapData.current_map, x[0], x[1])
         game_data.MapData.csq.clear()
-        time.sleep(0.0001)
+        time.sleep(0.001)  # do not remove this
 
 
 def move_char():  # Map display script version 2
@@ -637,13 +682,24 @@ def on_release(key):  # For movement processing
 
 # CLEAN THIS UP
 def on_press(key):  # For command processing
-    if game_data.PlayerData.regen_max_warn:
+    if game_data.PlayerData.regen_max_warn or game_data.PlayerData.battle_run_warning:
         try:
-            if key == keyboard.Key.y:
-                game_data.PlayerData.regen_max_warn_response = True
+            if key.char == 'y':
+                if game_data.PlayerData.regen_max_warn:
+                    game_data.PlayerData.regen_max_warn_response = True
+                else:
+                    game_data.PlayerData.battle_run_response = True
+
+                game_data.PlayerData.battle_run_warning = False
+                game_data.PlayerData.regen_max_warn = False
                 game_data.MapData.demo_kill = True
-            elif key == keyboard.Key.n:
-                game_data.PlayerData.regen_max_warn_response = False
+            elif key.char == 'n':
+                if game_data.PlayerData.regen_max_warn:
+                    game_data.PlayerData.regen_max_warn_response = True
+                else:
+                    game_data.PlayerData.battle_run_response = True
+                game_data.PlayerData.battle_run_warning = False
+                game_data.PlayerData.regen_max_warn = False
                 game_data.MapData.demo_kill = True
         except:
             pass
@@ -665,7 +721,7 @@ def on_press(key):  # For command processing
             pass
     elif game_data.PlayerData.battle_inventory is True:
         game_data.PlayerData.battle_inventory = False
-        game_data.MapData.demo_kill = True
+        game_data.SysData.demo_listener.stop()
     elif game_data.PlayerData.question_status is True:
         # The question system is active, pass all input to this handler
         try:

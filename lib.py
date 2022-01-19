@@ -4,7 +4,7 @@ from os import system
 import movement_engine
 import time
 from dataclasses import dataclass
-from colorama import Fore
+from colorama import Fore, Style
 import game_data
 import random
 import math
@@ -206,7 +206,7 @@ def check_proximity(object_pos: tuple):
 def add_item(item_id: int):
     # Add an item by id to a players inventory
     if game_data.PlayerData.Inventory_Accessible:
-        item_data = item_info(item_id)
+        item_data = item_info(str(item_id))
         size_calc = game_data.PlayerData.Inventory_Space - item_data.item_size
         if size_calc >= 0:
 
@@ -289,16 +289,17 @@ def has_item(item_search: str, data_return: bool = False):
     return False  # item not found
 
 
-def item_info(item_id: int, item_name: str = None):
-    if item_id is None and item_name is None:
-        return False  # Item error
-    elif item_id is None:  # Look for item info by name (Slower)
-        for n in movement_engine.Data.game_items:
-            if n.name == item_name:
-                return n
-    elif item_name is None:  # Directly index the item by the index (equivalent to the id) (Faster)
-        return movement_engine.Data.game_items[item_id]
-    return False  # Item error
+def item_info(item: str):
+    if item.isnumeric():
+        if not int(item) > len(movement_engine.Data.game_items) - 1:
+            return movement_engine.Data.game_items[int(item)]  # Item found by id
+        else:
+            return False  # Invalid item
+    else:
+        for i in movement_engine.Data.game_items:
+            if i.name == item:
+                return item  # Item found by name
+        return False  # Item not found
 
 
 def cmove(num: int = 1, direction: str = 'A'):  # Dunno, seems kinda useless, but who will actually read all of this?
@@ -326,7 +327,7 @@ def display_inv():
     element_num = 1  # Which side of the array is printing
     key_num = 0  # The current item to print in the first column
     sub_key_num = 0  # The current item to print in the second column
-    inv_size = len(game_data.PlayerData.Inventory) - 1
+    # inv_size = len(game_data.PlayerData.Inventory) - 1
     row1 = game_data.PlayerData.Inventory_Space // 2
     inv0 = []
     inv1 = []
@@ -351,7 +352,8 @@ def display_inv():
             print(f"{'':<{side_spacing}}", end='')
             if key_num > len(inv0) - 1:
                 # No Item to print
-                print(f"{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}", end='')
+                print(f"{Style.BRIGHT}{Fore.BLACK}{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}"
+                      f"{Fore.RESET}", end='')
             else:
                 # There is an item to print
                 item = inv0[key_num]
@@ -363,26 +365,44 @@ def display_inv():
             # Check to see if the second column has anything to print
 
             if i > len(inv1) - 1:
-                print(f"{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}", end='')
+                print(f"{Style.BRIGHT}{Fore.BLACK}{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}"
+                      f"{Fore.RESET}", end='')
             else:
                 item = inv1[sub_key_num]
                 print(f"{item.name:^{item_spacing}}{item.qty:^{item_spacing}}{item.item_id:^{item_spacing}}", end='')
                 sub_key_num += 1
             element_num = 1  # Set to first column
             print(f"{Fore.RESET}\n", end='')
-    print()  # Create newline at end of printout
+    print(Fore.RESET + Style.RESET_ALL)  # Create newline at end of printout
 
 
 def display_stats():  # Display stats of system and player
     pass
 
 
-def display_item_info(cmd):  # Get raw item info and display it in formatted statement
-    pass
+def display_item_info(item_data):  # Get raw item info and display it in formatted statement
+    spacing = 30
+    item_has = item_data is not False
+    print('\n' * 3 + f'{item_data.name:-^20}')
+    print(f'{Fore.YELLOW}{"Player has item:":<{spacing}}{[Fore.RED, Fore.GREEN][item_has]}{item_has}')
+    print(f'{Fore.YELLOW}{"Item ID:":<{spacing}}{Fore.RESET}{item_data.item_id}')
+    print(f'{Fore.YELLOW}{"Item Type:":<{spacing}}{Fore.RESET}{item_data.type}')
+    print(f'{Fore.YELLOW}{"Item Max Quantity:":<{spacing}}{Fore.RESET}{item_data.max_qty}')
+    print(f'{Fore.YELLOW}{"Item Size:":<{spacing}}{Fore.RESET}{item_data.item_size}')
+    print(f'{Fore.YELLOW}{"Damage: ":<{spacing}}{Fore.RESET}{item_data.damage[0]} {Fore.YELLOW}-> '
+          f'{Fore.RESET}{item_data.damage[1]}')
+    print(f'{Fore.YELLOW}{"Health Regeneration:":<{spacing}}{Fore.RESET}{item_data.health_regen}')
+    # print(f'{"Stamina Regeneration:":<{spacing}}{item_data.stamina_regen}')  # Not Integrated yet
+    print(f'{"Description:":<{spacing}}{item_data.desc}')
 
 
 def ck(text: str, color: str = None):  # Kind of useless
     return text, color
+
+
+def init_loot_tables():
+    # Initiate the template loot tables
+    game_data.LootTables.base_loot = game_data.LT([])
 
 
 def process_command(cmd_raw):
@@ -393,27 +413,30 @@ def process_command(cmd_raw):
 
         cmd_latter = " ".join(cmd[1:])  # Removes the command keyword
         print(cmd_latter)
+        system('cls')
         if cmd[0] == "help" or cmd[0] == "?":  # Print the help page
             if game_data.Demo.help_demo is True:
-                game_data.MapData.map_kill = True
+                game_data.MapData.map_idle = True
                 game_data.Demo.help_demo = False
                 print()
             display_help(cmd_latter)
         elif cmd[0] == "inventory":  # print the players inventory
             if game_data.Demo.inventory_demo is True:
-                game_data.MapData.map_kill = True
+                game_data.MapData.map_idle = True
                 game_data.Demo.inventory_demo = False
                 print()
             display_inv()
-        elif cmd[0] == "item_info":  # Print the specified items info
+            gprint(game_data.MQ([ck("\nMove to exit...")]))
+        elif cmd[0] == "item-info":  # Print the specified items info
+            game_data.PlayerData.Inventory_Displayed = True
+            game_data.PlayerData.command_status = False  # Disable command input
             if game_data.Demo.item_info_demo is True:
-                game_data.MapData.map_kill = True
                 game_data.Demo.item_info_demo = False
-                print("ITEM INFO")
-            display_item_info(cmd_latter)
+            display_item_info(item_info(cmd_latter))
+            gprint(game_data.MQ([ck("\nMove to exit...")]))
         elif cmd[0] == "stats":  # print system & player statistics
             if game_data.Demo.stats_demo is True:
-                game_data.MapData.map_kill = True
+                game_data.MapData.map_idle = True
                 game_data.Demo.stats_demo = False
                 print("STATS DISPLAY")
             display_stats()
@@ -424,11 +447,27 @@ def process_command(cmd_raw):
             get_max()
             print(f"{'':<{game_data.SysData.max_screen_size[0] // 2}}", end='')
             gprint(MQ([ck("Goodbye :(")]))
+            time.sleep(1)
             system('exit')
+            game_data.SysData.full_kill = True
     else:
-        gprint(MQ([ck("\nInvalid Command", "red")]))
-
+        game_data.MapData.map_idle = True
+        game_data.PlayerData.command_status = False
+        system('cls')
+        script = "Invalid Command"
+        print('\n' * (game_data.SysData.max_screen_size[1] // 2) +
+              ' ' * (game_data.SysData.max_screen_size[0] // 2 - (len(script) // 2)), end='')
+        gprint(MQ([ck(script, "red")]))
+        time.sleep(2)
+        movement_engine.show_map(game_data.MapData.current_map)
+        game_data.MapData.map_idle = False
+        game_data.PlayerData.command_status = True
     game_data.MapData.current_command = ""  # Reset the inputted command
+
+
+def center_cursor(x_offset: int, y_offset: int = 0):
+    print('\n' * ((game_data.SysData.max_screen_size[1] // 2) - y_offset) +
+          ' ' * ((game_data.SysData.max_screen_size[0] // 2) - (x_offset // 2)), end='')
 
 
 def event_handler(event_id: int, event_type: int):
@@ -483,8 +522,7 @@ def question_handler(question_diff: int):
     answer = game_data.PlayerData.question_answer
 
 
-
-def gprint(queue, speed: int = 35):
+def gprint(queue, speed: int = 25):
     # Print as if the text was being typed
     if type(queue) is not MQ:
         # Converts raw string into MQ format
