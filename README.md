@@ -6,8 +6,8 @@
 - Faster CPU NO LONGER required
 
 ## Setup:
-Put all files in the **same** directory.
-Launch ***main.py***
+Keep all files in the **same** directory.
+Launch ***main.py*** through python interpreter or command prompt
 
 ## Info:
 - When the program first opens it will run a intialization script
