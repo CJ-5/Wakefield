@@ -465,7 +465,8 @@ def process_command(cmd_raw):
     game_data.MapData.current_command = ""  # Reset the inputted command
 
 
-def center_cursor(x_offset: int, y_offset: int = 0):
+def center_cursor(x_offset: int, y_offset: int = 0):  # Move the cursor to the middle of the screen with optional offset
+    # Maybe change to use /x1b[#A/B/C/D exit code to move cursor
     print('\n' * ((game_data.SysData.max_screen_size[1] // 2) - y_offset) +
           ' ' * ((game_data.SysData.max_screen_size[0] // 2) - (x_offset // 2)), end='')
 

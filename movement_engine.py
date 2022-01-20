@@ -12,7 +12,6 @@ import time
 import lib
 import random
 
-
 init()
 global Data  # Holds static system data (Initiated by the main file)
 
@@ -131,7 +130,11 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
 
         if enemy is None:  # enemy was found in map data but the id referenced non-existent data
             map_data.map_array[::-1][coord[1]][coord[0]] = ''
-        enemy.cur_lvl = enemy.base_level + random.randint(0, game_data.MapData.current_map.map_id) * 2
+        enemy.cur_lvl = \
+            enemy.base_level + random.randint(0, game_data.MapData.current_map.map_id) * random.randint(0, 2)
+        enemy.Health = enemy.Health + int((enemy.Health // 2) * enemy.cur_lvl - enemy.base_level)
+        enemy_cur_health = enemy.Health + (enemy.health * 0.15) * (enemy.cur_lvl - enemy.base_level)
+
         # Initiate battle script
         os.system("cls")
         time.sleep(1)
@@ -153,9 +156,10 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
             os.system("cls")
             print(f"{f'  {Fore.YELLOW}{enemy.Name}{Fore.RESET}  ':-^{game_data.SysData.max_screen_size[0] // 2}}\n")
             print(f"{'':<{ss}}", f"{Fore.YELLOW}Turn{Fore.RESET}: {Fore.RED}{game_data.PlayerData.battle_turn}\n")
-            print(f"{'':<{ss}}", f"{Fore.YELLOW}{f'Enemy Health{Fore.RESET}: ':<{ui_ss}} {Fore.RED}{enemy.Health}")
+            print(f"{'':<{ss}}", f"{Fore.YELLOW}{f'Enemy Health{Fore.RESET}: ':<{ui_ss}} {Fore.RED}{enemy.Health}"
+                                 f"{Fore.YELLOW}/ {Fore.GREEN}{enemy_cur_health}")
             print(f"{'':<{ss}}", f"{Fore.YELLOW}{f'Player Health{Fore.RESET}: ':<{ui_ss}} "
-                                 f"{Fore.RED}{game_data.PlayerData.Health} {Fore.YELLOW}/{Fore.RESET} "
+                                 f"{Fore.RED}{game_data.PlayerData.Health} {Fore.YELLOW}/{Fore.GREEN} "
                                  f"{game_data.PlayerData.Health_Max}")
             print(Fore.RESET, end='')
             print(f"{f'  {Fore.YELLOW}Actions{Fore.RESET}  ':-^{game_data.SysData.max_screen_size[0] // 2}}\n\n")
@@ -172,7 +176,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
             game_data.PlayerData.battle_action = ""
 
             # since the main keyboard listener is still active but the movement module is idle
-            # this changes the mode to proces battle actions instead of game movements / commands
+            # this changes the mode to process battle actions instead of game movements / commands
             game_data.PlayerData.battle_action_processing = True
             while game_data.PlayerData.battle_action_processing:
                 time.sleep(0.1)
@@ -279,8 +283,9 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                                                  'yellow'),
                                           lib.ck(str(game_data.PlayerData.Health_Max), 'red'), lib.ck(' and', 'yellow'),
                                           lib.ck(' ' + str(game_data.PlayerData.Health + item_data.health_regen -
-                                                 game_data.PlayerData.Health_Max), "red"), lib.ck(' HP will be wasted.',
-                                                                                                  "yellow")]
+                                                           game_data.PlayerData.Health_Max), "red"),
+                                          lib.ck(' HP will be wasted.',
+                                                 "yellow")]
                                 sl = 0
                                 for d in script:
                                     sl += len(d[0])
@@ -296,7 +301,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                                 any_key()
                                 while game_data.SysData.demo_listener.running:
                                     continue
-                                
+
                                 if game_data.PlayerData.regen_max_warn_response:
                                     consume = True
                             else:
@@ -315,7 +320,6 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                                 lib.center_cursor(sl)
                                 lib.gprint(game_data.MQ(script))
                                 time.sleep(2)
-
 
             elif action[0] == "inventory":
                 game_data.PlayerData.battle_inventory = True
@@ -343,7 +347,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                     lib.gprint(sl)  # No Formatting used print raw without MQ class
                     time.sleep(2)
                 else:
-                    item_data = lib.item_info(action[0])
+                    item_data = lib.item_info(action[1])
                     os.system("cls")
 
                     if item_data is False:
@@ -405,10 +409,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                         map_check()
                         game_data.PlayerData.in_battle = False
 
-
-
             # End of game actions
-
             if game_data.PlayerData.Health <= 0:
                 """
                 Player has died, drop random item and return player to main map
@@ -425,8 +426,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                 for i in script:
                     sl += len(i[0])
 
-                print("\n" * game_data.SysData.max_screen_size[1] // 2 +
-                      " " * game_data.SysData.max_screen_size[0] - (sl // 2), end='')
+                lib.center_cursor(sl)
 
                 # Recursive level up system
                 lvl_change = 0  # amount of times player leveled up
@@ -458,6 +458,9 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                 # Loot Drop Calculations
 
                 game_data.PlayerData.in_battle = False
+            else:
+                # Enemy Attack Turn
+                pass
 
         game_data.MapData.map_idle = False
         show_map(game_data.MapData.current_map)
@@ -537,7 +540,7 @@ def move_char():  # Map display script version 2
     # Door prox check
     for d in game_data.MapData.current_map.door_data:
         if d.prox_check and d.door_id not in \
-                    game_data.MapDataCache.doors_found[str(game_data.MapData.current_map.map_id)]:
+                game_data.MapDataCache.doors_found[str(game_data.MapData.current_map.map_id)]:
             if lib.check_proximity(d.pos):
                 # Display the door
                 print(f"\x1b[{game_data.MapData.space_buffer + d.pos[1]}A", end='')
@@ -769,6 +772,7 @@ def kb_listener():
         game_data.MapData.map_kill = False
         game_data.SysData.main_listener.stop()
         return False
+
     Thread(target=watcher).start()
 
 
@@ -783,6 +787,7 @@ def demo_prompt():
                     listener.stop()
                     return False
                 time.sleep(0.1)
+
         Thread(target=watcher).start()
         listener.join()
 
@@ -799,4 +804,5 @@ def any_key():
         game_data.MapData.demo_kill = False
         game_data.SysData.demo_listener.stop()
         return False
+
     Thread(target=watcher).start()

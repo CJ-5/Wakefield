@@ -51,21 +51,6 @@ class PlayerData:
     Detection_Distance = 3  # The distance that the player needs to be within in order to see hidden objects
 
 
-@dataclass()
-class EnemyData:
-    Entity_id: int  # The spawn id of the enemy
-    Name: str  # The display name of the enemy
-    Health: int  # The Health of the enemy
-    base_level: int  # Enemy base level
-    display_char: str
-    display_colour: colorama.Fore
-    Attacks: list  # Holds attack data from attack class
-    xp_drop: tuple = (0, 0)  # The amount of xp that the enemy drops when killed
-    loot_table: tuple = (([], [], [], []), (range(0, 0), range(0, 0), range(0, 0)))
-    escape: bool = True
-    cur_lvl: int = 0  # Auto Generated the calculated temporary level of the enemy
-
-
 # Class instance for the creation of a NPC entity
 @dataclass()
 class NPCData:
@@ -94,8 +79,23 @@ class LT:
     super_rare_item_chance: int  # The chance of a random super rare item to be picked
 
 
+@dataclass()
+class EnemyData:
+    Entity_id: int  # The spawn id of the enemy
+    Name: str  # The display name of the enemy
+    Health: int  # The Health of the enemy
+    base_level: int  # Enemy base level
+    display_char: str
+    display_colour: colorama.Fore
+    Attacks: list  # Holds attack data from attack class
+    xp_drop: tuple  # The amount of xp that the enemy drops when killed
+    loot_table: LT   # Use Loot Table Class (LT)
+    escape: bool = True
+    cur_lvl: int = 0  # Auto Generated the calculated temporary level of the enemy
+
+
 class LootTables:
-    base_loot = []
+    base_loot = LT([6, 5, 12], [2, 0, 9], [], [], range(0, 80), range(80, 100))
     mid_level = []
     high_level = []
 
@@ -116,12 +116,26 @@ class StaticData:  # Core Game Data
             InvItem('Pretzel', 3, 1, 10, 1, health_regen=(2, 3), desc='It\'s gone a little stale.'),
             InvItem('Bread', 4, 1, 5, 2, health_regen=(4, 6), desc='This is a whole loaf of bread. '
                                                                    'At least its not moldy'),
-            InvItem('Meat', 5, 1, 5, 1, health_regen=(6, 8), desc='Keep in mind this dropped from a monster'),
-            InvItem('Moldy Bread', 6, 1, 3, 2, health_regen=(-2, 1), desc='A little penicillin (mostly) never hurts.'),
-            InvItem('Apple', 7, 1, 1, 1, health_regen=(4, 7), desc='Keeps the doctor away')
+            InvItem('Meat', 5, 1, 5, 1, type='weapon', health_regen=(6, 8), desc='Keep in mind this dropped from a monster'),
+            InvItem('Moldy Bread', 6, 1, 3, 2, type='weapon', health_regen=(-2, 1), desc='A little penicillin (mostly) never hurts.'),
+            InvItem('Apple', 7, 1, 1, 1, type='weapon', health_regen=(4, 7), desc='Keeps the doctor away'),
+            InvItem('Hero\'s Sword', 8, 1, 1, 3, type='weapon', damage=(500, 550), desc='That\'s a lot of damage'),
+            InvItem('Iron Broadsword', 9, 1, 1, 2, type='weapon', damage=(4, 6), desc='Pretty sharp for a hunk of raw metal'),
+            InvItem('Steel Broadsword', 10, 1, 1, 2, type='weapon', damage=(5, 7), desc='Nice sword bro'),
+            InvItem('Titanium Broadsword', 11, 1, 1, 2, type='weapon', damage=(8, 10), desc='Means business'),
+            InvItem('Wood Training Sword', 12, 1, 1, 2, type='weapon', damage=(1, 2), desc='Used for children to practice with'),
+            InvItem('Rusty Broadsword', 13, 1, 1, 2, type='weapon', damage=(2, 3), desc='It has alot of chips missing and most of the blade is rusted out too.'),
+            InvItem('Bandit Knife', 14, 1, 1, 1, type='weapon', damage=(4, 5), desc='Short enough to have in a belt loop and not appear suspicious'),
+            InvItem('Kitchen Cleaver', 15, 1, 1, 1, type='weapon', damage=(6, 8), desc='Is this from the butchers shop?'),
+            InvItem('Wooden Club', 16, 1, 1, 2, type='weapon', damage=(4, 7), desc='Is this a tree branch with a handle?'),
+            InvItem('Log', 17, 1, 1, 3, type='weapon', damage=(3, 4), desc='This is literally a branch from a tree'),
+            InvItem('Rusty Pole', 18, 1, 1, 2, type='weapon', damage=(3, 5), desc='Looks like reba-... Totally not rebar.'),
+            InvItem('Machete', 19, 1, 1, 2, type='weapon', damage=(32, 36), desc='Used by samurai in ancient times, how did it get here?'),
+            InvItem('null', 20, 0, 1, 0, type='weapon', damage=(9999, 9999), desc='Cut the Earth in half.')
         ]
         self.enemies = [
-            EnemyData(0, 'Slime', 3, 1, '◉', Fore.CYAN, [AttackData('Jump Attack', (2, 3))], (4, 6)),
+            EnemyData(0, 'Slime', 3, 1, '◉', Fore.CYAN, [AttackData('Jump Attack', (2, 3))], (4, 6),
+                      loot_table=LootTables.base_loot),
                         ]  # Holds enemy data
 
         # Questions are divided up into different difficulty tiers and have a corresponding timeouts
@@ -141,7 +155,7 @@ class SysData:
 @dataclass()
 class Event:
     object_id: int  # The ID of the door/item/npc to bind the event to when the map loads
-    event_dialogue: list  # Change events to be intractable in the future
+    event_dialogue: list  # Change events to be intractable in the future ("Text", Delay)
 
 
 class StoryData:  # Event trigger data
@@ -149,7 +163,7 @@ class StoryData:  # Event trigger data
     dungeon_final_boss = False
 
 
-class EventData:  # Event Dialogue Data
+class EventData:  # Event Dialogue Data  [Door_ID [(DIALOGUE)]]
     events = {
         "door": [Event(0, [("You found it", 1000), ("You actually found a new dungeon entrance, that looks "
                                                     "like it hasn't been touched in thousands of years!", 1000),
@@ -215,6 +229,7 @@ class InvItem:
     health_regen: tuple = (0, 0)
     stamina_regen: tuple = (0, 0)
     desc: str = None  # Description of item
+    death_drop: bool = True  # Can the item drop on death?
     InvID: int = 0  # Which column the item will appear in. [Auto-Generated]
 
 
@@ -257,7 +272,8 @@ class MainMap:  # Main starting area Map
         self.map_name = Fore.GREEN + "Main Area" + Style.RESET_ALL
         self.npc = []  # NPC DATA [NEED TO WORK ON]
         self.enemy = None  # No enemies can spawn on this map
-        self.door_data = [DoorData(0, 1, chr(9688), "-", Fore.BLUE, Fore.GREEN, True, [(9, 25)], (True, 0))]
+        self.door_data = [DoorData(0, 1, chr(9688), "-", Fore.BLUE, Fore.GREEN, True, [(9, 25)], (True, 0)),
+                          DoorData(1, 99, chr(9688), chr(9688), Fore.BLUE, Fore.BLUE, False, [(24, 7)])]
         self.map_array = [
             ["-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "", "", ""],
             ["-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "", "", "", ""],
@@ -277,7 +293,7 @@ class MainMap:  # Main starting area Map
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "1", "", "", "T", "", "O", "", "W", "", "N", "", "", "", "X"],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
@@ -296,8 +312,8 @@ class Floor0:
         self.map_name = Fore.GREEN + "Floor 0" + Style.RESET_ALL
         self.npc = []  # NPC DATA [NEED TO WORK ON]
         self.enemy = None  # No enemies can spawn on this map
-        self.door_data = [DoorData(1, 0, chr(9688), "-", Fore.BLUE, Fore.GREEN, False, [(0, 14)]),
-                          DoorData(2, 2, chr(9688), "", Fore.BLUE, Fore.BLACK, True, [(20, 11), (18, 15)], (True, 0))]
+        self.door_data = [DoorData(2, 0, chr(9688), "-", Fore.BLUE, Fore.GREEN, False, [(0, 14)]),
+                          DoorData(3, 2, chr(9688), "", Fore.BLUE, Fore.BLACK, True, [(20, 11), (18, 15)], (True, 0))]
         self.map_array = [
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
@@ -331,8 +347,8 @@ class Floor1:
         self.map_name = Fore.GREEN + "Floor 1" + Style.RESET_ALL
         self.npc = []  # NPC DATA [NEED TO WORK ON]
         self.enemy = [(0, (7, 16))]
-        self.door_data = [DoorData(3, 1, chr(9688), "-", Fore.BLUE, Fore.GREEN, False, [(0, 12)]),
-                          DoorData(4, 3, chr(9688), "", Fore.BLUE, Fore.BLACK, False, [(23, 11)], (True, 1))]
+        self.door_data = [DoorData(4, 1, chr(9688), "-", Fore.BLUE, Fore.GREEN, False, [(0, 12)]),
+                          DoorData(5, 3, chr(9688), "", Fore.BLUE, Fore.BLACK, False, [(23, 11)], (True, 1))]
         self.map_array = [
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],

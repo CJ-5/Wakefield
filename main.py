@@ -95,56 +95,17 @@ os.system("cls")
 #                    lib.ck(": KEEP THIS PROGRAM IN FULLSCREEN FOR THE ENTIRE PLAY THROUGH"
 #                           "(otherwise things will break, and I will be sad)\n"
 #                           "The script does everything for you, let it do it's thing\n")]), 0)
-# time.sleep(3.5)
-# lib.gprint(lib.MQ([lib.ck("Welcome to the game, I couldn't be bothered to name it so its called "),
-#                    lib.ck("Adventure Game", "green"), lib.ck(".")]))
-# time.sleep(1)
-# lib.gprint("Here is some info to help you get started")
-# time.sleep(1.5)
-#
-# lib.gprint(lib.MQ([
-#     lib.ck("- At anytime during the game if you want to see a list of all available actions simply type"),
-#     lib.ck(" help", "yellow"), lib.ck(" or "), lib.ck("?", "yellow")]))
-#
-# time.sleep(2)
-#
-# lib.gprint("Why don't you give that a try now?")
-# game_data.MapData.valid_cmd.append("help")
-# game_data.MapData.valid_cmd.append("?")
-# movement_engine.demo_prompt()
-# print()
-#
-# game_data.MapData.valid_cmd.clear()
-# lib.gprint("\nAs you can see here this list displays the info of all commands ")
-#
-# time.sleep(5)
-# lib.clear_line(6 + len(game_data.HelpPage().ind_def))
-# lib.gprint(lib.MQ([lib.ck("Now try the "), lib.ck("inventory", "yellow"),
-#                    lib.ck(" command to display your current items.")]))
-# game_data.MapData.valid_cmd.append("inventory")
-# movement_engine.demo_prompt()
-# game_data.MapData.valid_cmd.clear()
-#
-# time.sleep(2)
-# lib.clear_line(3 + game_data.PlayerData.cur_inv_display_size)
-# lib.gprint("")
-
 game_data.PlayerData.Inventory_Accessible = True
-lib.add_item(2)  # Add Bread
 game_data.Demo.inventory_demo = False
 game_data.Demo.help_demo = False
 game_data.Demo.item_info_demo = False
 game_data.MapData.valid_cmd = ["inventory", "item-info", "help"]
+lib.add_item(8)
+lib.add_item(0)
+lib.add_item(4)
 movement_engine.show_map(game_data.MapData.current_map)
 Thread(target=movement_engine.csq_watch_dog).start()
 movement_engine.kb_listener()
-
-#
-# map = game_data.MapData.current_map.map_array[::-1]
-# for yi, y in enumerate(map):
-#     for xi, char in enumerate(y):
-#         if char == "1":
-#             print(f"Found door at: {(xi, yi)}")
 
 while game_data.SysData.full_kill is False:  # Debug code to hold in place while testing
     time.sleep(0.1)
