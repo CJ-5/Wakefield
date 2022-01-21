@@ -40,7 +40,7 @@ class PlayerData:
     player_level = 0  # The players current level
     total_xp = 0
     exp_scaling = 6  # The scaling of exp required to advance to the next level
-    exp_lvl = player_level * exp_scaling  # XP required for next level
+    exp_lvl = 0  # XP required for next level  [Auto - Generated]
     level_cap = 10  # Player level cap
     Inventory_Space = 13  # Players current max inventory size
     Inventory_Accessible = False  # Is the players inventory currently accessible
@@ -90,6 +90,7 @@ class EnemyData:
     Attacks: list  # Holds attack data from attack class
     xp_drop: tuple  # The amount of xp that the enemy drops when killed
     loot_table: LT   # Use Loot Table Class (LT)
+    loot_range: range  # How many items the enemy will drop on death
     move: bool  # If the enemy can move
     escape: bool = True
     cur_lvl: int = 0  # Auto Generated the calculated temporary level of the enemy
@@ -160,7 +161,7 @@ class StaticData:  # Core Game Data
         ]  # Max ID: 31
         self.enemies = [
             EnemyData(0, 'Slime', 3, 1, '◉', Fore.CYAN, [AttackData('Jump Attack', (2, 3))], (4, 6),
-                      loot_table=LootTables.base_loot, move=True),
+                      loot_table=LootTables.base_loot, move=True, loot_range=range(1, 2))
                         ]  # Holds enemy data
 
         # Questions are divided up into different difficulty tiers and have a corresponding timeouts

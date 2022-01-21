@@ -271,7 +271,7 @@ def reset_sys_font(font_size: int = 18):
 
 def has_item(item_search: str, data_return: bool = False):
     # Check if the player has the item in their inventory
-    if item_search.isnumeric():  # Check if the player specified an id
+    if str(item_search).isnumeric():  # Check if the player specified an id
         for n in game_data.PlayerData.Inventory:
             if n.item_id == int(item_search):
                 if data_return:
@@ -290,15 +290,15 @@ def has_item(item_search: str, data_return: bool = False):
 
 
 def item_info(item: str):
-    if item.isnumeric():
+    if str(item).isnumeric():
         for i in movement_engine.Data.game_items:
             if i.item_id == int(item):
                 return i
         return False
     else:
         for i in movement_engine.Data.game_items:
-            if i.name == item:
-                return item  # Item found by name
+            if i.name.lower() == item.lower():
+                return i  # Item found by name
         return False  # Item not found
 
 
@@ -382,7 +382,8 @@ def display_stats():  # Display stats of system and player
 
 def display_item_info(item_data):  # Get raw item info and display it in formatted statement
     spacing = 30
-    item_has = item_data is not False
+
+    item_has = has_item(item_data.item_id)
     print('\n' * 3 + f'{item_data.name:-^20}')
     print(f'{Fore.YELLOW}{"Player has item:":<{spacing}}{[Fore.RED, Fore.GREEN][item_has]}{item_has}')
     print(f'{Fore.YELLOW}{"Item ID:":<{spacing}}{Fore.RESET}{item_data.item_id}')
@@ -392,17 +393,12 @@ def display_item_info(item_data):  # Get raw item info and display it in formatt
     print(f'{Fore.YELLOW}{"Damage: ":<{spacing}}{Fore.RESET}{item_data.damage[0]} {Fore.YELLOW}-> '
           f'{Fore.RESET}{item_data.damage[1]}')
     print(f'{Fore.YELLOW}{"Health Regeneration:":<{spacing}}{Fore.RESET}{item_data.health_regen}')
-    # print(f'{"Stamina Regeneration:":<{spacing}}{item_data.stamina_regen}')  # Not Integrated yet
-    print(f'{"Description:":<{spacing}}{item_data.desc}')
+    # print(f'{"Stamina Regeneration:":<{spacing}}{item_data.stamina_regen}')  # Not Implemented yet
+    print(f'{Fore.YELLOW}{"Description:":<{spacing}}{Fore.RESET}{item_data.desc}')
 
 
 def ck(text: str, color: str = None):  # Kind of useless
     return text, color
-
-
-def init_loot_tables():
-    # Initiate the template loot tables
-    game_data.LootTables.base_loot = game_data.LT([])
 
 
 def process_command(cmd_raw):
@@ -412,7 +408,6 @@ def process_command(cmd_raw):
             and game_data.MapData.valid_cmd.__contains__(cmd[0])) or cmd[0] == "exit":
 
         cmd_latter = " ".join(cmd[1:])  # Removes the command keyword
-        print(cmd_latter)
         system('cls')
         if cmd[0] == "help" or cmd[0] == "?":  # Print the help page
             if game_data.Demo.help_demo is True:
@@ -428,8 +423,9 @@ def process_command(cmd_raw):
             display_inv()
             gprint(game_data.MQ([ck("\nMove to exit...")]))
         elif cmd[0] == "item-info":  # Print the specified items info
+            # game_data.PlayerData.command_status = False  # Disable command input
             game_data.PlayerData.Inventory_Displayed = True
-            game_data.PlayerData.command_status = False  # Disable command input
+            game_data.PlayerData.command_status = False
             if game_data.Demo.item_info_demo is True:
                 game_data.Demo.item_info_demo = False
             display_item_info(item_info(cmd_latter))
@@ -533,7 +529,6 @@ def gprint(queue, speed: int = 25):
     colors_list = {"red": Fore.RED, "green": Fore.GREEN, "yellow": Fore.YELLOW, "blue": Fore.BLUE,
                    "magenta": Fore.MAGENTA, "cyan": Fore.CYAN, "white": Fore.WHITE}
     for msg in queue.messages:
-        msg = str(msg)  # because sometimes I forget how to format my own code
         if msg[1] is not None:
             # if color printing is specified
             print(colors_list[msg[1].lower()], end='')

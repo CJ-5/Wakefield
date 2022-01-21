@@ -433,6 +433,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                 # Recursive level up system
                 lvl_change = 0  # amount of times player leveled up
                 while True:
+                    game_data.PlayerData.exp_lvl = game_data.PlayerData.exp_scaling * game_data.PlayerData.player_level
                     if game_data.PlayerData.player_level >= game_data.PlayerData.level_cap:
                         break
                     elif game_data.PlayerData.total_xp > game_data.PlayerData.exp_lvl:
@@ -441,14 +442,16 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                     else:
                         break
 
+                os.system('cls')
                 if lvl_change > 0:
                     if lvl_change == 1:
                         lvl = "level"
                     else:
                         lvl = "levels"
                     script = [lib.ck("You leveled up ", 'green'), lib.ck(str(lvl_change), 'yellow'),
-                              lib.ck(f' {lvl} ', 'green'), lib.ck('you are now level ', 'green'),
-                              str(lib.ck(game_data.PlayerData.player_level), 'yellow')]
+                              lib.ck(f' {lvl}, ', 'green'), lib.ck('you are now level ', 'green'),
+                              lib.ck(str(game_data.PlayerData.player_level) + ['', ' (Max Level)']
+                              [game_data.PlayerData.player_level == game_data.PlayerData.level_cap], 'yellow')]
                     sl = 0
                     for i in script:
                         sl += len(str(i[0]))
@@ -456,8 +459,53 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                     lib.center_cursor(sl)
                     lib.gprint(game_data.MQ(script))
                     time.sleep(3)
-                # Loot Drop Calculations
 
+                # Loot Drop Calculations
+                rng_roll = random.randint(0, 100)
+                loot_drop = []
+                for m in range(0, random.choice(enemy.loot_range)):
+                    if rng_roll in enemy.loot_table.super_rare_item_chance:
+                        item = random.choice(enemy.loot_table.super_rare_items)
+                        loot_drop.append(item)
+                        lib.add_item(item)
+                    elif rng_roll in enemy.loot_table.rare_item_chance:
+                        item = random.choice(enemy.loot_table.rare_items)
+                        loot_drop.append(item)
+                        lib.add_item(item)
+                    elif rng_roll in enemy.loot_table.uncommon_item_chance:
+                        item = random.choice(enemy.loot_table.uncommon_items)
+                        loot_drop.append(item)
+                        lib.add_item(item)
+                    elif rng_roll in enemy.loot_table.common_item_chance:
+                        item = random.choice(enemy.loot_table.common_items)
+                        loot_drop.append(item)
+                        lib.add_item(item)
+                    else:
+                        # Choose random item from entire base table
+                        item = random.choice(Data.game_items).item_id
+                        loot_drop.append(item)
+                        lib.add_item(item)
+
+                os.system('cls')
+                # print(rng_roll)
+                # print(rng_roll in range(0, 80))
+                # print(rng_roll in game_data.LootTables.base_loot.common_item_chance)
+                # print(rng_roll in range(80, 100))
+                # print(rng_roll in game_data.LootTables.base_loot.uncommon_item_chance)
+                # print(loot_drop)
+                detail_comp = [x.name for x in (list(map(lib.item_info, loot_drop)))]
+
+                script = [lib.ck(enemy.Name, 'green'), lib.ck(' dropped ', 'yellow'),
+                          lib.ck(str(detail_comp), 'red')]
+
+                sl = 0
+                for x in script:
+                    sl += len(str(x))
+
+                lib.center_cursor(sl)
+                lib.gprint(game_data.MQ(script))
+
+                time.sleep(100)
                 game_data.PlayerData.in_battle = False
             else:
                 # Enemy Attack Turn
@@ -516,6 +564,7 @@ def coord_set(map_in, x_m, y_m):  # Main Movement Engine
 
                     else:
                         game_data.MapData.enemy_movement = True  # Run script on next turn
+
 
 def csq_watch_dog():  # Movement manager
     while True:
