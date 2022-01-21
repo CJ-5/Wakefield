@@ -291,10 +291,10 @@ def has_item(item_search: str, data_return: bool = False):
 
 def item_info(item: str):
     if item.isnumeric():
-        if not int(item) > len(movement_engine.Data.game_items) - 1:
-            return movement_engine.Data.game_items[int(item)]  # Item found by id
-        else:
-            return False  # Invalid item
+        for i in movement_engine.Data.game_items:
+            if i.item_id == int(item):
+                return i
+        return False
     else:
         for i in movement_engine.Data.game_items:
             if i.name == item:
@@ -533,6 +533,7 @@ def gprint(queue, speed: int = 25):
     colors_list = {"red": Fore.RED, "green": Fore.GREEN, "yellow": Fore.YELLOW, "blue": Fore.BLUE,
                    "magenta": Fore.MAGENTA, "cyan": Fore.CYAN, "white": Fore.WHITE}
     for msg in queue.messages:
+        msg = str(msg)  # because sometimes I forget how to format my own code
         if msg[1] is not None:
             # if color printing is specified
             print(colors_list[msg[1].lower()], end='')

@@ -73,10 +73,10 @@ class LT:
     uncommon_items: list  # Item IDs of uncommon items
     rare_items: list  # Item IDs of rare items
     super_rare_items: list  # Item IDs of super rare items
-    common_item_chance: int  # The chance of a random common item to be picked
-    uncommon_item_chance: int  # The chance of a random uncommon item to be picked
-    rare_item_chance: int  # The chance of a random rare item to be picked
-    super_rare_item_chance: int  # The chance of a random super rare item to be picked
+    common_item_chance: range = range(0, 0)   # The chance of a random common item to be picked
+    uncommon_item_chance: range = range(0, 0)   # The chance of a random uncommon item to be picked
+    rare_item_chance: range = range(0, 0)  # The chance of a random rare item to be picked
+    super_rare_item_chance: range = range(0, 0)  # The chance of a random super rare item to be picked
 
 
 @dataclass()
@@ -90,12 +90,13 @@ class EnemyData:
     Attacks: list  # Holds attack data from attack class
     xp_drop: tuple  # The amount of xp that the enemy drops when killed
     loot_table: LT   # Use Loot Table Class (LT)
+    move: bool  # If the enemy can move
     escape: bool = True
     cur_lvl: int = 0  # Auto Generated the calculated temporary level of the enemy
 
 
 class LootTables:
-    base_loot = LT([6, 5, 12], [2, 0, 9], [], [], range(0, 80), range(80, 100))
+    base_loot = LT([6, 5, 12], [2, 0, 9], [], [], common_item_chance=range(0, 80), uncommon_item_chance=range(80, 100))
     mid_level = []
     high_level = []
 
@@ -110,32 +111,56 @@ class StaticData:  # Core Game Data
         self.map_spacing = 2  # The amount of spacing between each character on the map
         self.lib_spacing_size = 160  # Equivalent to 1 inventory row worth of characters
         self.game_items = [  # The in game item data
-            InvItem('Small HP Potion', 0, 1, 5, 2, health_regen=(13, 15), desc='Small Healing Potion, increases hp.'),
-            InvItem('Medium HP Potion', 1, 1, 3, 2, health_regen=(22, 25), desc='Medium Healing Potion, increases hp.'),
-            InvItem('Sausage', 2, 1, 10, 1, health_regen=(5, 6), desc='Meat with questionable ingredients.'),
-            InvItem('Pretzel', 3, 1, 10, 1, health_regen=(2, 3), desc='It\'s gone a little stale.'),
-            InvItem('Bread', 4, 1, 5, 2, health_regen=(4, 6), desc='This is a whole loaf of bread. '
-                                                                   'At least its not moldy'),
-            InvItem('Meat', 5, 1, 5, 1, type='weapon', health_regen=(6, 8), desc='Keep in mind this dropped from a monster'),
-            InvItem('Moldy Bread', 6, 1, 3, 2, type='weapon', health_regen=(-2, 1), desc='A little penicillin (mostly) never hurts.'),
-            InvItem('Apple', 7, 1, 1, 1, type='weapon', health_regen=(4, 7), desc='Keeps the doctor away'),
+            InvItem('Small HP Potion', 0, 1, 5, 2, health_regen=(30, 35), desc='Small Healing Potion, increases hp.'),
+            InvItem('Medium HP Potion', 1, 1, 3, 2, health_regen=(40, 43), desc='Medium Healing Potion, increases hp.'),
+            InvItem('Sausage', 2, 1, 10, 1, health_regen=(15, 16), desc='Meat with questionable ingredients.'),
+            InvItem('Pretzel', 3, 1, 10, 1, health_regen=(12, 13), desc='It\'s gone a little stale.'),
+            InvItem('Bread', 4, 1, 5, 2, health_regen=(14, 16), desc='This is a whole loaf of bread. '
+                                                                     'At least its not moldy'),
+            InvItem('Meat', 5, 1, 5, 1, health_regen=(10, 14), desc='Keep in mind this dropped from a monster'),
+            InvItem('Moldy Bread', 6, 1, 3, 2, health_regen=(-2, 1), desc='A little penicillin (mostly) never hurts.'),
+            InvItem('Apple', 7, 1, 1, 1, health_regen=(12, 14), desc='Keeps the doctor away'),
+            InvItem('Meat Sandwich', 21, 1, 5, 1, health_regen=(16, 18), desc='Two pieces of bread with meat in between'),
+            InvItem('Veal', 22, 1, 3, 2, health_regen=(32, 42), desc='This poor deer...'),
+            InvItem('Carrot', 23, 1, 10, 1, health_regen=(3, 4), desc='Fresh from the ground'),
+            InvItem('Potato', 24, 1, 10, 1, health_regen=(2, 3), desc='One of the most versatile vegetables.'),
+            InvItem('Double Baked Potato', 25, 1, 10, 1, health_regen=(6, 7), desc='Baked not once... BUT TWICE!'),
+            InvItem('Bun', 26, 1, 8, 1, health_regen=(3, 5), desc='Fresh from the local dungeon floor'),
+            InvItem('Cheese Bread', 27, 1, 10, 1, health_regen=(25, 26), desc='Bread but with cheese'),
+            InvItem('Soup', 28, 1, 5, 1, health_regen=(22, 23), desc='Full of nutrients such as, such as potato, and '
+                                                                     'uh... Potato.'),
+            InvItem('Water Flask', 29, 1, 3, 1, health_regen=(12, 14), desc='A conveniently filled flask.'),
+            InvItem('Cheese Wheel', 30, 1, 2, 1, health_regen=(12, 14), desc='cheese.'),
+            InvItem('Rotten Meat', 31, 1, 5, 1, health_regen=(-13, 1), desc='You tore this from a monsters corpse. '
+                                                                            'Let that set in.'),
+
             InvItem('Hero\'s Sword', 8, 1, 1, 3, type='weapon', damage=(500, 550), desc='That\'s a lot of damage'),
-            InvItem('Iron Broadsword', 9, 1, 1, 2, type='weapon', damage=(4, 6), desc='Pretty sharp for a hunk of raw metal'),
+            InvItem('Iron Broadsword', 9, 1, 1, 2, type='weapon', damage=(4, 6), desc='Pretty sharp for a '
+                                                                                      'hunk of raw metal'),
             InvItem('Steel Broadsword', 10, 1, 1, 2, type='weapon', damage=(5, 7), desc='Nice sword bro'),
             InvItem('Titanium Broadsword', 11, 1, 1, 2, type='weapon', damage=(8, 10), desc='Means business'),
-            InvItem('Wood Training Sword', 12, 1, 1, 2, type='weapon', damage=(1, 2), desc='Used for children to practice with'),
-            InvItem('Rusty Broadsword', 13, 1, 1, 2, type='weapon', damage=(2, 3), desc='It has alot of chips missing and most of the blade is rusted out too.'),
-            InvItem('Bandit Knife', 14, 1, 1, 1, type='weapon', damage=(4, 5), desc='Short enough to have in a belt loop and not appear suspicious'),
+            InvItem('Wood Training Sword', 12, 1, 1, 2, type='weapon', damage=(1, 2), desc='Used for children to '
+                                                                                           'practice with'),
+            InvItem('Rusty Broadsword', 13, 1, 1, 2, type='weapon', damage=(2, 3), desc='It has a lot of chips in it, '
+                                                                                        'and most of the blade is '
+                                                                                        'rusted '
+                                                                                        'out too.'),
+            InvItem('Bandit Knife', 14, 1, 1, 1, type='weapon', damage=(4, 5), desc='Short enough to have in a belt '
+                                                                                    'loop '
+                                                                                    'and not appear suspicious'),
             InvItem('Kitchen Cleaver', 15, 1, 1, 1, type='weapon', damage=(6, 8), desc='Is this from the butchers shop?'),
-            InvItem('Wooden Club', 16, 1, 1, 2, type='weapon', damage=(4, 7), desc='Is this a tree branch with a handle?'),
+            InvItem('Wooden Club', 16, 1, 1, 2, type='weapon', damage=(4, 7), desc='Is this a tree branch with a '
+                                                                                   'handle?'),
             InvItem('Log', 17, 1, 1, 3, type='weapon', damage=(3, 4), desc='This is literally a branch from a tree'),
-            InvItem('Rusty Pole', 18, 1, 1, 2, type='weapon', damage=(3, 5), desc='Looks like reba-... Totally not rebar.'),
-            InvItem('Machete', 19, 1, 1, 2, type='weapon', damage=(32, 36), desc='Used by samurai in ancient times, how did it get here?'),
-            InvItem('null', 20, 0, 1, 0, type='weapon', damage=(9999, 9999), desc='Cut the Earth in half.')
-        ]
+            InvItem('Rusty Pole', 18, 1, 1, 2, type='weapon', damage=(3, 5), desc='Looks like reba-... Totally not '
+                                                                                  'rebar.'),
+            InvItem('Machete', 19, 1, 1, 2, type='weapon', damage=(32, 36), desc='Used by samurai in ancient times, '
+                                                                                 'how did it get here?'),
+            InvItem('null', 20, 0, 1, 0, type='weapon', damage=(9999, 9999), desc='Cut the Earth in half.'),
+        ]  # Max ID: 31
         self.enemies = [
             EnemyData(0, 'Slime', 3, 1, '◉', Fore.CYAN, [AttackData('Jump Attack', (2, 3))], (4, 6),
-                      loot_table=LootTables.base_loot),
+                      loot_table=LootTables.base_loot, move=True),
                         ]  # Holds enemy data
 
         # Questions are divided up into different difficulty tiers and have a corresponding timeouts
@@ -209,6 +234,7 @@ class MapData:
     # Note: ici is part of the gen 2 movement script aka 'move_char()'
     movement = []  # should contain tuples of movement to display, so it can be cleared and moved to a new location
     csq = []
+    enemy_movement = False  # Toggles to run enemy movement script every second player movement
 
 
 @dataclass()

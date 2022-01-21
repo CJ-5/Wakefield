@@ -81,7 +81,7 @@ init()  # initiate colorama
 movement_engine.Data = game_data.StaticData()   # Initialize static data
 
 # Initialize main map
-game_data.MapData.current_map = game_data.MainMap()
+game_data.MapData.current_map = game_data.Floor1()
 movement_engine.init_coord()
 movement_engine.init_door()
 os.system("cls")

@@ -115,7 +115,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
 
         # Fetch Enemy data using current coordinates
         map_data = game_data.MapData.current_map
-        if map_data.enemy is None:  # DEBUG CODE <<<<<<<<<<<<< REMOVE IN RELEASE VERSION
+        if map_data.enemy is None:
             # Clear the invalid enemy tile
             map_data.map_array[::-1][coord[1]][coord[0]] = ''
 
@@ -133,8 +133,8 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
         enemy.cur_lvl = \
             enemy.base_level + random.randint(0, game_data.MapData.current_map.map_id) * random.randint(0, 2)
         enemy.Health = enemy.Health + int((enemy.Health // 2) * enemy.cur_lvl - enemy.base_level)
-        enemy_cur_health = enemy.Health + (enemy.health * 0.15) * (enemy.cur_lvl - enemy.base_level)
-
+        enemy_curve_health = enemy.Health + round((enemy.Health * 0.15) * (enemy.cur_lvl - enemy.base_level))
+        enemy.Health = enemy_curve_health
         # Initiate battle script
         os.system("cls")
         time.sleep(1)
@@ -157,7 +157,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
             print(f"{f'  {Fore.YELLOW}{enemy.Name}{Fore.RESET}  ':-^{game_data.SysData.max_screen_size[0] // 2}}\n")
             print(f"{'':<{ss}}", f"{Fore.YELLOW}Turn{Fore.RESET}: {Fore.RED}{game_data.PlayerData.battle_turn}\n")
             print(f"{'':<{ss}}", f"{Fore.YELLOW}{f'Enemy Health{Fore.RESET}: ':<{ui_ss}} {Fore.RED}{enemy.Health}"
-                                 f"{Fore.YELLOW}/ {Fore.GREEN}{enemy_cur_health}")
+                                 f"{Fore.YELLOW}/ {Fore.GREEN}{enemy_curve_health}")
             print(f"{'':<{ss}}", f"{Fore.YELLOW}{f'Player Health{Fore.RESET}: ':<{ui_ss}} "
                                  f"{Fore.RED}{game_data.PlayerData.Health} {Fore.YELLOW}/{Fore.GREEN} "
                                  f"{game_data.PlayerData.Health_Max}")
@@ -249,13 +249,13 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
 
                             if critical:
                                 script = [lib.ck(f'Critical Hit!', 'yellow'), lib.ck(' Your ', 'red'),
-                                          lib.ck(item_data.name, 'yellow'), lib.ck(' dealt', 'red'),
+                                          lib.ck(str(item_data.name), 'yellow'), lib.ck(' dealt ', 'red'),
                                           lib.ck(str(damage), 'yellow'), lib.ck(' damage to ', 'red'),
                                           lib.ck(enemy.Name)]
                             else:
                                 script = [lib.ck(' Your ', 'red'),
-                                          lib.ck(item_data.name, 'yellow'), lib.ck(' dealt', 'red'),
-                                          lib.ck(damage, 'yellow'), lib.ck(' damage to ', 'red'),
+                                          lib.ck(item_data.name, 'yellow'), lib.ck(' dealt ', 'red'),
+                                          lib.ck(str(damage), 'yellow'), lib.ck(' damage to ', 'red'),
                                           lib.ck(enemy.Name)]
 
                             for i in script:  # Calculate offset
@@ -263,11 +263,11 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
 
                             # Position cursor
                             os.system('cls')
-                            print("\n" * game_data.SysData.max_screen_size[1] // 2 +
-                                  " " * game_data.SysData.max_screen_size[0] - (sl // 2), end='')
+                            lib.center_cursor(sl)
 
                             lib.gprint(game_data.MQ(script))
                             enemy.Health -= damage
+                            time.sleep(3)
                             pass
                         elif item_data.type == "consumable":
                             consume = False
@@ -427,6 +427,8 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                     sl += len(i[0])
 
                 lib.center_cursor(sl)
+                lib.gprint(lib.MQ(script))
+                time.sleep(2)
 
                 # Recursive level up system
                 lvl_change = 0  # amount of times player leveled up
@@ -444,17 +446,16 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                         lvl = "level"
                     else:
                         lvl = "levels"
-                    script = [lib.ck("You leveled up ", 'green'), lib.ck(str(lvl_change), 'yellow'), lib.ck(f' {lvl}'),
-                              lib.ck('you are now level ', 'green'),
-                              lib.ck(game_data.PlayerData.player_level, 'yellow')]
+                    script = [lib.ck("You leveled up ", 'green'), lib.ck(str(lvl_change), 'yellow'),
+                              lib.ck(f' {lvl} ', 'green'), lib.ck('you are now level ', 'green'),
+                              str(lib.ck(game_data.PlayerData.player_level), 'yellow')]
                     sl = 0
                     for i in script:
-                        sl += len(i[0])
+                        sl += len(str(i[0]))
 
-                    print("\n" * game_data.SysData.max_screen_size[1] // 2 +
-                          " " * game_data.SysData.max_screen_size[0] - (sl // 2), end='')
+                    lib.center_cursor(sl)
                     lib.gprint(game_data.MQ(script))
-
+                    time.sleep(3)
                 # Loot Drop Calculations
 
                 game_data.PlayerData.in_battle = False
@@ -503,6 +504,18 @@ def coord_set(map_in, x_m, y_m):  # Main Movement Engine
                     game_data.MapData.last_char = future_char
                     move_char()
 
+                    # Enemy movement calculations
+                    if game_data.MapData.enemy_movement:
+                        # Run movement calc
+
+                        game_data.MapData.enemy_movement = False  # Skip script on next turn
+                        for e in game_data.MapData.current_map.enemy:
+                            # Check each direction to get list of valid directions
+                            cur_coord = e[1]  # Current enemy coordinates
+                            valid_moves = []
+
+                    else:
+                        game_data.MapData.enemy_movement = True  # Run script on next turn
 
 def csq_watch_dog():  # Movement manager
     while True:
@@ -710,11 +723,13 @@ def on_press(key):  # For command processing
         # Pull keys
         try:
             if key == keyboard.Key.space:
+                if len(game_data.PlayerData.battle_action) == 0:
+                    return
                 key.char = " "
             if key == keyboard.Key.enter:
                 # Close listener and resume thread processing
                 game_data.PlayerData.battle_action_processing = False
-            elif key == keyboard.Key.backspace:
+            elif key == keyboard.Key.backspace and len(game_data.PlayerData.battle_action) > 0:
                 game_data.PlayerData.battle_action = game_data.PlayerData.battle_action[:-1]
                 print('\b \b', end='')
             else:
@@ -743,6 +758,8 @@ def on_press(key):  # For command processing
         try:
             if game_data.PlayerData.command_status:  # Checks if player is allowed to enter commands
                 if key == keyboard.Key.space:
+                    if len(game_data.MapData.current_command) == 0:
+                        return
                     key.char = " "
                 if key == keyboard.Key.enter:
                     lib.process_command(game_data.MapData.current_command)
