@@ -386,6 +386,8 @@ def display_item_info(item_data):  # Get raw item info and display it in formatt
     item_has = has_item(item_data.item_id)
     print('\n' * 3 + f'{item_data.name:-^20}')
     print(f'{Fore.YELLOW}{"Player has item:":<{spacing}}{[Fore.RED, Fore.GREEN][item_has]}{item_has}')
+    print(f'{Fore.YELLOW}{"Item: ":<{spacing}}{item_data.item_id}/{Fore.RED}{len(movement_engine.Data.game_items)}'
+          f'{Fore.RESET}')
     print(f'{Fore.YELLOW}{"Item ID:":<{spacing}}{Fore.RESET}{item_data.item_id}')
     print(f'{Fore.YELLOW}{"Item Type:":<{spacing}}{Fore.RESET}{item_data.type}')
     print(f'{Fore.YELLOW}{"Item Max Quantity:":<{spacing}}{Fore.RESET}{item_data.max_qty}')

@@ -11,6 +11,7 @@ from threading import Thread
 import time
 import lib
 import random
+import copy
 
 init()
 global Data  # Holds static system data (Initiated by the main file)
@@ -55,14 +56,16 @@ def enemy_move_calc(map_in):  # This was such a simple task, why did I add an en
 
 def map_check():
     # Map Specific events
-    if game_data.MapData.current_map.map_id == 0:  # Checks if the map is the main map
+    if game_data.MapData.current_map.map_id == 0\
+            and game_data.MapData.lmc != (0, 0):  # Checks if the map is the main map
         # Reset to the entrance position
-        lmc = game_data.MapData.lmc
-        cc = get_coord(game_data.MapData.current_map)
+        lmc = game_data.MapData.lmc  # Last Map Coordinate
+        cc = get_coord(game_data.MapData.current_map)  # Get coordinate of player
+        game_data.MapData.last_char = \
+            game_data.MapData.current_map.map_array[::-1][lmc[1]][lmc[0]]  # Set replacement char
         game_data.MapData.current_map.map_array[::-1][cc[1]][cc[0]] = ""
         game_data.MapData.current_map.map_array[::-1][lmc[1]][lmc[0]] = 'x'
-        init_coord()
-        game_data.MapData.last_char = '-'
+        init_coord()  # Reset the coordinate backend
 
 
 def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
@@ -81,6 +84,28 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                     lib.back_line(38)
                     game_data.MapData.map_idle = False
                     return
+
+                if d.floor_entrance:
+                    os.system('cls')
+                    script = [lib.ck('This door goes back to the main map. Do you want to continue? ', 'yellow'),
+                              lib.ck('['), lib.ck('Y / N', 'red'), lib.ck(']')]
+
+                    sl = 0
+                    for s in script:
+                        sl += len(s[0])
+
+                    lib.center_cursor(sl)
+                    lib.gprint(game_data.MQ(script))
+
+                    game_data.PlayerData.battle_run_warning = True  # Set to only accept Y / N
+                    any_key()
+
+                    while game_data.SysData.demo_listener.running:
+                        continue
+
+                    if not game_data.PlayerData.battle_run_response:
+                        show_map(game_data.MapData.current_map)
+                        return
 
                 old_coord = get_coord(game_data.MapData.current_map)
                 old_id = game_data.MapData.current_map.map_id
@@ -109,6 +134,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
         # Player Has encountered an enemy.
         game_data.MapData.map_idle = True
         enemy = None
+        enemy_data_pos = None
         ui_ss = 20  # UI Side Spacing
         ss = 5  # Side Spacing
         aso = 15  # Action Space Out
@@ -119,12 +145,13 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
             # Clear the invalid enemy tile
             map_data.map_array[::-1][coord[1]][coord[0]] = ''
 
-        for e in map_data.enemy:
+        for x, e in enumerate(map_data.enemy):
             if e[1] == coord:
                 for _e in Data.enemies:
                     if _e.Entity_id == e[0]:
                         # Enemy data found. Set Data
-                        enemy = _e
+                        enemy_data_pos = x
+                        enemy = copy.copy(_e)  # Create copy of local data without editing main copy
                         break
                 break
 
@@ -153,8 +180,10 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
         game_data.MapData.valid_cmd = ["inventory", "use", "item-info", 'run']
         game_data.PlayerData.in_battle = True
         while game_data.PlayerData.in_battle:
+            do_enemy_attack = False
             os.system("cls")
-            print(f"{f'  {Fore.YELLOW}{enemy.Name}{Fore.RESET}  ':-^{game_data.SysData.max_screen_size[0] // 2}}\n")
+            form = f'{enemy.Name} Lvl. {enemy.cur_lvl}'  # Because PEP-8 that's why
+            print(f"{f'{Fore.YELLOW}  {form}{Fore.RESET}  ':-^{game_data.SysData.max_screen_size[0] // 2}}\n")
             print(f"{'':<{ss}}", f"{Fore.YELLOW}Turn{Fore.RESET}: {Fore.RED}{game_data.PlayerData.battle_turn}\n")
             print(f"{'':<{ss}}", f"{Fore.YELLOW}{f'Enemy Health{Fore.RESET}: ':<{ui_ss}} {Fore.RED}{enemy.Health}"
                                  f"{Fore.YELLOW}/ {Fore.GREEN}{enemy_curve_health}")
@@ -200,6 +229,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                 lib.back_line(sl)
                 # Exits and returns to top of while loop
             elif action[0] == "use":
+                do_enemy_attack = True
                 if len(action) != 2:
                     os.system('cls')
                     print("\n" * (game_data.SysData.max_screen_size[1] // 2) +
@@ -487,30 +517,44 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                         lib.add_item(item)
 
                 os.system('cls')
-                # print(rng_roll)
-                # print(rng_roll in range(0, 80))
-                # print(rng_roll in game_data.LootTables.base_loot.common_item_chance)
-                # print(rng_roll in range(80, 100))
-                # print(rng_roll in game_data.LootTables.base_loot.uncommon_item_chance)
-                # print(loot_drop)
                 detail_comp = [x.name for x in (list(map(lib.item_info, loot_drop)))]
 
-                script = [lib.ck(enemy.Name, 'green'), lib.ck(' dropped ', 'yellow'),
-                          lib.ck(str(detail_comp), 'red')]
+                script = [lib.ck(enemy.Name, 'green'), lib.ck(' dropped ', 'yellow')]
+
+                # Add item list to print-out
+                for x, i in enumerate(detail_comp):
+                    script.append(lib.ck(i, 'red'))
+                    if x != len(detail_comp) - 1:
+                        script.append(lib.ck(', ', 'yellow'))
 
                 sl = 0
                 for x in script:
-                    sl += len(str(x))
+                    sl += len(str(x[0]))
 
                 lib.center_cursor(sl)
                 lib.gprint(game_data.MQ(script))
 
-                time.sleep(100)
+                time.sleep(2)
                 game_data.PlayerData.in_battle = False
-            else:
-                # Enemy Attack Turn
-                pass
+            elif do_enemy_attack:  # Avoids the attack script triggering on turn that was used for non-use action
+                attack = random.choice(enemy.Attacks)  # Choose random attack
+                attack_damage = random.choice(attack.damage)  # Random attack damage/
+                os.system('cls')
+                script = [lib.ck(enemy.Name, 'red'), lib.ck(' uses ', 'yellow'), lib.ck(attack.name),
+                          lib.ck(' attack deals ', 'yellow'), lib.ck(str(attack_damage), 'red'),
+                          lib.ck(' damage', 'yellow')]
 
+                sl = 0
+                for i in script:
+                    sl += len(i[0])
+
+                lib.center_cursor(sl)
+                lib.gprint(game_data.MQ(script))
+                game_data.PlayerData.Health -= attack_damage  # Deal enemy damage to player
+                time.sleep(3)
+
+        game_data.MapData.current_map.enemy.pop(enemy_data_pos)  # Remove data
+        game_data.MapData.current_map.map_array[::-1][coord[1]][coord[0]] = ' '  # Remove enemy from map
         game_data.MapData.map_idle = False
         show_map(game_data.MapData.current_map)
 
@@ -669,6 +713,7 @@ def show_map(map_in):
                             for _e in Data.enemies:
                                 if _e.Entity_id == e[0]:
                                     cur_char = f"{_e.display_colour}{_e.display_char:<{local_spacing}}{Fore.RESET}"
+                                    break
             elif cur_char == "1":
                 # Tile type is a door, check door data for that pos
                 data_fail = True
@@ -757,17 +802,18 @@ def on_press(key):  # For command processing
 
                 game_data.PlayerData.battle_run_warning = False
                 game_data.PlayerData.regen_max_warn = False
-                game_data.MapData.demo_kill = True
+                game_data.SysData.demo_listener.stop()
             elif key.char == 'n':
                 if game_data.PlayerData.regen_max_warn:
-                    game_data.PlayerData.regen_max_warn_response = True
+                    game_data.PlayerData.regen_max_warn_response = False
                 else:
-                    game_data.PlayerData.battle_run_response = True
+                    game_data.PlayerData.battle_run_response = False
+
                 game_data.PlayerData.battle_run_warning = False
                 game_data.PlayerData.regen_max_warn = False
-                game_data.MapData.demo_kill = True
+                game_data.SysData.demo_listener.stop()
         except:
-            pass
+            return
     elif game_data.PlayerData.battle_action_processing:
         # Pull keys
         try:
@@ -785,7 +831,7 @@ def on_press(key):  # For command processing
                 print(f"{Fore.LIGHTCYAN_EX}{key.char}{Fore.RESET}", end='')
                 game_data.PlayerData.battle_action += key.char
         except:
-            pass
+            return
     elif game_data.PlayerData.battle_inventory is True:
         game_data.PlayerData.battle_inventory = False
         game_data.SysData.demo_listener.stop()
@@ -801,7 +847,7 @@ def on_press(key):  # For command processing
                 print(f"{Fore.LIGHTCYAN_EX}{key.char}{Fore.RESET}", end='')
                 game_data.PlayerData.question_answer += key.char
         except AttributeError:
-            pass  # Special key was entered
+            return  # Special key was entered
 
     elif not game_data.MapData.map_idle:
         try:
@@ -820,7 +866,7 @@ def on_press(key):  # For command processing
                     print(f"{Fore.LIGHTCYAN_EX}{key.char}{Fore.RESET}", end='')
                     game_data.MapData.current_command += key.char
         except AttributeError:
-            pass  # Entered key was a special key
+            return  # Entered key was a special key
 
 
 # Keyboard Listeners  CLEAN THESE UP AND MERGE
