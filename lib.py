@@ -309,7 +309,7 @@ def cmove(num: int = 1, direction: str = 'A'):  # Dunno, seems kinda useless, bu
 
 def map_index(map_id: int):
     # Find and return the map data for the specified id
-    maps = [game_data.MainMap, game_data.Floor0, game_data.Floor1]
+    maps = [game_data.MainMap, game_data.Floor0, game_data.Floor1, game_data.Floor2, game_data.Floor3]
     if not map_id > len(maps) - 1:
         return maps[map_id]
     else:
@@ -386,7 +386,7 @@ def display_item_info(item_data):  # Get raw item info and display it in formatt
     item_has = has_item(item_data.item_id)
     print('\n' * 3 + f'{item_data.name:-^20}')
     print(f'{Fore.YELLOW}{"Player has item:":<{spacing}}{[Fore.RED, Fore.GREEN][item_has]}{item_has}')
-    print(f'{Fore.YELLOW}{"Item: ":<{spacing}}{item_data.item_id}/{Fore.RED}{len(movement_engine.Data.game_items)}'
+    print(f'{Fore.YELLOW}{"Item: ":<{spacing}}{item_data.item_id}/{Fore.RED}{len(movement_engine.Data.game_items) - 1}'
           f'{Fore.RESET}')
     print(f'{Fore.YELLOW}{"Item ID:":<{spacing}}{Fore.RESET}{item_data.item_id}')
     print(f'{Fore.YELLOW}{"Item Type:":<{spacing}}{Fore.RESET}{item_data.type}')
@@ -430,8 +430,12 @@ def process_command(cmd_raw):
             game_data.PlayerData.command_status = False
             if game_data.Demo.item_info_demo is True:
                 game_data.Demo.item_info_demo = False
-            display_item_info(item_info(cmd_latter))
-            gprint(game_data.MQ([ck("\nMove to exit...")]))
+            info = item_info(cmd_latter)
+            if info is False:
+                err_msg('Invalid Item')
+            else:
+                display_item_info(info)
+                gprint(game_data.MQ([ck("\nMove to exit...")]))
         elif cmd[0] == "stats":  # print system & player statistics
             if game_data.Demo.stats_demo is True:
                 game_data.MapData.map_idle = True
@@ -449,19 +453,21 @@ def process_command(cmd_raw):
             system('exit')
             game_data.SysData.full_kill = True
     else:
-        game_data.MapData.map_idle = True
-        game_data.PlayerData.command_status = False
-        system('cls')
-        script = "Invalid Command"
-        print('\n' * (game_data.SysData.max_screen_size[1] // 2) +
-              ' ' * (game_data.SysData.max_screen_size[0] // 2 - (len(script) // 2)), end='')
-        gprint(MQ([ck(script, "red")]))
-        time.sleep(2)
-        movement_engine.show_map(game_data.MapData.current_map)
-        game_data.MapData.map_idle = False
-        game_data.PlayerData.command_status = True
+        err_msg('Invalid Command')
     game_data.MapData.current_command = ""  # Reset the inputted command
 
+
+def err_msg(msg: str):
+    game_data.MapData.map_idle = True
+    game_data.PlayerData.command_status = False
+    system('cls')
+    print('\n' * (game_data.SysData.max_screen_size[1] // 2) +
+          ' ' * (game_data.SysData.max_screen_size[0] // 2 - (len(msg) // 2)), end='')
+    gprint(MQ([ck(msg, "red")]))
+    time.sleep(2)
+    movement_engine.show_map(game_data.MapData.current_map)
+    game_data.MapData.map_idle = False
+    game_data.PlayerData.command_status = True
 
 def center_cursor(x_offset: int, y_offset: int = 0):  # Move the cursor to the middle of the screen with optional offset
     # Maybe change to use /x1b[#A/B/C/D exit code to move cursor
@@ -469,22 +475,38 @@ def center_cursor(x_offset: int, y_offset: int = 0):  # Move the cursor to the m
           ' ' * ((game_data.SysData.max_screen_size[0] // 2) - (x_offset // 2)), end='')
 
 
-def event_handler(event_id: int, event_type: int):
+def event_handler(event_id: int, event_type: int, reset_map: bool = True):
     if event_id not in game_data.MapDataCache.event_cache:  # Make sure not to duplicate events
         game_data.MapData.map_idle = True  # Stop keyboard listener and printout
         game_data.PlayerData.command_status = False  # Disable command input
         system('cls')
         time.sleep(2)
+
+        # Pull event data
+        for x, m in enumerate(game_data.EventData.events[list(game_data.EventData.events.keys())[event_type]]):
+            if m.object_id == event_id:
+                event_id = x
+                break
+
         # Fetch event data
         for m in game_data.EventData.events[list(game_data.EventData.events.keys())
                                             [event_type]][event_id].event_dialogue:
-            gprint(m[0])  # Print specified dialogue
-            time.sleep(m[1] / 1000)  # Pause for specified delay in MS
-        time.sleep(3)
-        game_data.MapDataCache.event_cache.append(event_id)
-        movement_engine.show_map(game_data.MapData.current_map)
+            if type(m[1]) is tuple:
+                delay = m[1][0]
+                colour = m[1][1]
+            else:
+                delay = m[1]
+                colour = 'white'
+
+            center_cursor(len(m[0]))
+            gprint(game_data.MQ([ck(m[0], colour)]))  # Print specified dialogue
+            time.sleep(delay / 1000)  # Pause for specified delay in MS
+            system('cls')
+        game_data.MapDataCache.event_cache.append(event_id)  # Avoids the event being triggered again
         game_data.MapData.map_idle = False  # Resume the map listener
         game_data.PlayerData.command_status = True  # Re-Enable user command input
+        if reset_map:
+            movement_engine.show_map(game_data.MapData.current_map)
 
 
 def question_handler(question_diff: int):

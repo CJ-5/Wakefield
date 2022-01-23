@@ -77,6 +77,15 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
         for d in game_data.MapData.current_map.door_data:
             if d.pos == coord:  # Look for door with matching player current coordinate
                 # Door has been found
+                if len(game_data.MapData.current_map.enemy) > 0:
+                    game_data.MapData.map_idle = True
+                    lib.gprint(game_data.MQ([lib.ck("The door won't move, all enemies must be defeated first.",
+                                                    'yellow')]))
+                    time.sleep(1)
+                    lib.back_line(56)
+                    game_data.MapData.map_idle = False
+                    return
+
                 if not d.valid:
                     game_data.MapData.map_idle = True
                     lib.gprint(game_data.MQ([lib.ck("The door won't budge. Try Again Later?", 'yellow')]))
@@ -146,22 +155,33 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
             map_data.map_array[::-1][coord[1]][coord[0]] = ''
 
         for x, e in enumerate(map_data.enemy):
-            if e[1] == coord:
+            if e.pos == coord:
                 for _e in Data.enemies:
-                    if _e.Entity_id == e[0]:
+                    if _e.Entity_id == e.enemy_id:
                         # Enemy data found. Set Data
-                        enemy_data_pos = x
+                        enemy_data_pos = x  # used to remove the enemy entry from the list
                         enemy = copy.copy(_e)  # Create copy of local data without editing main copy
                         break
                 break
 
         if enemy is None:  # enemy was found in map data but the id referenced non-existent data
             map_data.map_array[::-1][coord[1]][coord[0]] = ''
+
+        # Enemy Level Curve
         enemy.cur_lvl = \
             enemy.base_level + random.randint(0, game_data.MapData.current_map.map_id) * random.randint(0, 2)
-        enemy.Health = enemy.Health + int((enemy.Health // 2) * enemy.cur_lvl - enemy.base_level)
+
+        # Enemy Health Curve
         enemy_curve_health = enemy.Health + round((enemy.Health * 0.15) * (enemy.cur_lvl - enemy.base_level))
         enemy.Health = enemy_curve_health
+
+        # Check Event data
+        enemy_events = [x.object_id for x in game_data.EventData.events['enemy']]
+        if enemy.Entity_id in enemy_events:
+            os.system('cls')
+            lib.event_handler(enemy.Entity_id, 3, False)  # Starts enemy type event
+            time.sleep(1)
+
         # Initiate battle script
         os.system("cls")
         time.sleep(1)
@@ -306,14 +326,15 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                             version 2 maybe. Stick with simplicity for now.
                             """
                             os.system('cls')
-                            if game_data.PlayerData.Health + item_data.health_regen > game_data.PlayerData.Health_Max:
+                            regen = random.randint(item_data.health_regen[0], item_data.health_regen[1])
+                            if (game_data.PlayerData.Health + regen) > game_data.PlayerData.Health_Max:
                                 # Ask the player if they still wish to use the item
                                 script = [lib.ck('Consuming a ', 'yellow'), lib.ck(item_data.name, 'red'),
                                           lib.ck(' will bring you over max health. Your health will be maxed at ',
                                                  'yellow'),
                                           lib.ck(str(game_data.PlayerData.Health_Max), 'red'), lib.ck(' and', 'yellow'),
-                                          lib.ck(' ' + str(game_data.PlayerData.Health + item_data.health_regen -
-                                                           game_data.PlayerData.Health_Max), "red"),
+                                          lib.ck(' ' + str(game_data.PlayerData.Health + (regen -
+                                                           game_data.PlayerData.Health_Max)), "red"),
                                           lib.ck(' HP will be wasted.',
                                                  "yellow")]
                                 sl = 0
@@ -338,7 +359,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                                 consume = True
 
                             if consume:
-                                game_data.PlayerData.Health += item_data.health_regen
+                                game_data.PlayerData.Health += regen
                                 os.system('cls')
                                 script = [lib.ck('You consume the ', 'yellow'), lib.ck(item_data.name, 'green'),
                                           lib.ck(' your health is now at ', 'yellow'),
@@ -347,6 +368,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                                 for i in script:
                                     sl += len(i[0])
 
+                                lib.remove_item(item_data.item_id)
                                 lib.center_cursor(sl)
                                 lib.gprint(game_data.MQ(script))
                                 time.sleep(2)
@@ -405,7 +427,6 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                         any_key()
                         while game_data.SysData.demo_listener.running is True:
                             continue
-                        print("Ended")
 
             elif action[0] == 'run':
                 os.system('cls')
@@ -438,13 +459,35 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                         init_door()
                         map_check()
                         game_data.PlayerData.in_battle = False
+                        return
 
             # End of game actions
             if game_data.PlayerData.Health <= 0:
                 """
                 Player has died, drop random item and return player to main map
                 """
-                pass
+                valid_items = [i for i in game_data.PlayerData.Inventory if i.death_drop is True]
+                item = random.choice(valid_items)
+                lib.remove_item(item.item_id)
+                os.system('cls')
+                script = [lib.ck('You have passed out. A passing adventurer drags your unconscious body out of the '
+                                 'dungeon, upon waking you discovered that you no longer have your ', 'yellow'),
+                          lib.ck(item.name, 'red')]
+
+                sl = 0
+                for i in script:
+                    sl += len(i[0])
+
+                lib.center_cursor(sl)
+                time.sleep(1)
+                lib.gprint(game_data.MQ(script))
+                time.sleep(3)
+                game_data.MapData.current_map = game_data.MainMap()
+                init_coord()
+                init_door()
+                map_check()
+                game_data.PlayerData.in_battle = False
+                return
             elif enemy.Health <= 0:  # Player won battle
                 # XP Calculation
                 xp = random.randint(enemy.xp_drop[0], enemy.xp_drop[1])  # add level advantage scaling
@@ -493,7 +536,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                 # Loot Drop Calculations
                 rng_roll = random.randint(0, 100)
                 loot_drop = []
-                for m in range(0, random.choice(enemy.loot_range)):
+                for m in range(0, random.choice(enemy.loot_range) + 1):
                     if rng_roll in enemy.loot_table.super_rare_item_chance:
                         item = random.choice(enemy.loot_table.super_rare_items)
                         loot_drop.append(item)
@@ -538,7 +581,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                 game_data.PlayerData.in_battle = False
             elif do_enemy_attack:  # Avoids the attack script triggering on turn that was used for non-use action
                 attack = random.choice(enemy.Attacks)  # Choose random attack
-                attack_damage = random.choice(attack.damage)  # Random attack damage/
+                attack_damage = random.choice(attack.damage)  # Random attack damage
                 os.system('cls')
                 script = [lib.ck(enemy.Name, 'red'), lib.ck(' uses ', 'yellow'), lib.ck(attack.name),
                           lib.ck(' attack deals ', 'yellow'), lib.ck(str(attack_damage), 'red'),
@@ -576,17 +619,19 @@ def coord_set(map_in, x_m, y_m):  # Main Movement Engine
     else:
         new_x = game_data.MapData.x + x_m
         new_y = game_data.MapData.y + y_m
+        y_max = len(map_in.map_array) - 1
+        x_max = len(map_in.map_array[0]) - 1
         # Out of boundary check
-        if not (new_x > len(map_in.map_array[0]) - 1 or new_x < 0 or new_y > len(map_in.map_array) - 1 or new_y < 0):
+        if not (new_x > x_max or new_x < 0 or new_y > y_max or new_y < 0):
             future_char = get_coord_char(map_in, new_x, new_y)
             # Collision Checking to see if the player is allowed to move into this area
             if not Data.movement_blacklist.__contains__(future_char):
                 if Data.tile_data.__contains__(future_char):
                     process_tile(future_char, (new_x, new_y))
                 else:
-                    # Add movement entry
-                    game_data.MapData.movement.append((((game_data.MapData.x, game_data.MapData.y), (new_x, new_y)),
-                                                       game_data.MapData.last_char))
+                    # Add movement entry  (Current Coordinates) (New Coordinates) (Old Characters)
+                    game_data.MapData.movement.append((((game_data.MapData.x, game_data.MapData.y),
+                                                        (new_x, new_y)), game_data.MapData.last_char, ('x', Fore.CYAN)))
 
                     internal_coordinates = [game_data.MapData.x, game_data.MapData.y_max - game_data.MapData.y]  # local
                     game_data.MapData.x += x_m  # Global
@@ -594,17 +639,43 @@ def coord_set(map_in, x_m, y_m):  # Main Movement Engine
                     map_in.map_array[internal_coordinates[1]][internal_coordinates[0]] = game_data.MapData.last_char
                     map_in.map_array[::-1][game_data.MapData.y][game_data.MapData.x] = "x"  # Enter new position
                     game_data.MapData.last_char = future_char
-                    move_char()
+                    move_char()  # Update movements
 
                     # Enemy movement calculations
                     if game_data.MapData.enemy_movement:
-                        # Run movement calc
 
-                        game_data.MapData.enemy_movement = False  # Skip script on next turn
+                        invalid = Data.tile_data + Data.movement_blacklist + ['x']
+                        game_data.MapData.enemy_movement = False  # Skip the script on next turn
+                        m = map_in.map_array[::-1]
                         for e in game_data.MapData.current_map.enemy:
                             # Check each direction to get list of valid directions
-                            cur_coord = e[1]  # Current enemy coordinates
-                            valid_moves = []
+
+                            valid_moves = []  # Compiled list of valid moves
+
+                            def check(x, y):
+                                if not ((e.pos[0] + x) > x_max or (e.pos[0] + x) < 0 or (e.pos[1] + y) > y_max
+                                        or (e.pos[1] + y) < 0):
+                                    if m[e.pos[1] + y][e.pos[0] + x] not in invalid:
+                                        valid_moves.append((e.pos[0] + x, e.pos[1] + y))  # Add valid move
+
+                            check(0, 1)  # Check Above
+                            check(0, -1)  # Check Below
+                            check(1, 0)  # Check Right
+                            check(-1, 0)  # Check Left
+                            check(1, 1)  # Check Above Right
+                            check(-1, 1)  # Check Above Left
+                            check(1, -1)  # Check Below Right
+                            check(-1, -1)  # Check Below Left
+
+                            if len(valid_moves) > 0:
+                                d = Data.enemies[e.enemy_id]
+                                _m = random.choice(valid_moves)  # Select Move
+                                game_data.MapData.movement.append((((e.pos[0], e.pos[1]), (_m[0], _m[1])), e.last_char,
+                                                                   (d.display_char, d.display_colour)))
+                                m[e.pos[1]][e.pos[0]] = e.last_char
+                                e.pos = _m  # Set the enemy's new position on backend
+                                e.old_char = m[_m[1]][_m[0]]
+                                m[_m[1]][_m[0]] = '2'  # Set the binder position
 
                     else:
                         game_data.MapData.enemy_movement = True  # Run script on next turn
@@ -632,6 +703,7 @@ def move_char():  # Map display script version 2
         elif last_char in game_data.MapData.ici.keys():
             last_colour = game_data.MapData.ici[last_char]
 
+        print('\033[?25l', end="")  # Hide Cursor
         print(f"\x1b[{game_data.MapData.space_buffer + m[0][0][1]}A", end='')
         print(f"\x1b[{m[0][0][0] * Data.map_spacing}C", end='')
         print(last_colour + last_char + Fore.RESET, end='')
@@ -640,7 +712,7 @@ def move_char():  # Map display script version 2
         # Enter new position
         print(f"\x1b[{game_data.MapData.space_buffer + m[0][1][1]}A", end='')
         print(f"\x1b[{m[0][1][0] * Data.map_spacing}C", end='')
-        print(f"{Fore.CYAN}x", end=Fore.RESET)
+        print(f"{m[2][1]}{m[2][0]}", end=Fore.RESET)
         print(f"\x1b[{game_data.MapData.space_buffer + m[0][1][1]}B", end='\r')  # Reset Cursor X
 
     # Door prox check
@@ -659,28 +731,33 @@ def move_char():  # Map display script version 2
     print(f"\x1b[1A", end=f"{' ' * game_data.SysData.max_screen_size[0]}\r")
     print(f"Your current position is {get_coord(game_data.MapData.current_map)} "
           f"(Represented by the {Fore.CYAN + 'x' + Style.RESET_ALL})")
+    print('\033[?25h', end="")  # Show Cursor
 
 
 def init_door():
-    # Sets the doors on the map
+    # Initiates door and enemy event data / core data
     map_in = game_data.MapData.current_map
-    for m in map_in.door_data:
-        for e in game_data.EventData.events["door"]:  # Event Binding
-            print(m.door_id)
-            if e.object_id == m.door_id:
+    if len(map_in.door_data) > 0 and map_in.door_data is not None:
+        door_events = [x.object_id for x in game_data.EventData.events['door']]
+        for m in map_in.door_data:
+            if m.door_id in door_events:
                 m.event = True
-                break
 
-        if len(m.pos) > 1:
-            m.multiple_pos = True  # Door has multiple positions, bypass the discovered door cache
-        pos = m.pos[random.randint(0, len(m.pos) - 1)]
-        m.pos = pos  # Overwrites coordinate list to selected coord
-        map_in.map_array[::-1][pos[1]][pos[0]] = "1"  # Sets the tile type as door data
-        if not m.floor_progress:
-            m.symbol_color = Fore.GREEN
-        if not lib.map_index(m.map_warp):
-            m.symbol_color = Fore.RED
-            m.valid = False
+            if len(m.pos) > 1:
+                m.multiple_pos = True  # Door has multiple positions, bypass the discovered door cache
+            m.pos = random.choice(m.pos)  # Select random pre-defined position
+            map_in.map_array[::-1][m.pos[1]][m.pos[0]] = "1"  # Sets the tile type as door data
+            if not m.floor_progress:  # if the door is an extra non progression floor
+                m.symbol_color = Fore.GREEN
+            if not lib.map_index(m.map_warp):
+                m.symbol_color = Fore.RED
+                m.valid = False
+
+    if len(map_in.enemy) > 0 and map_in.enemy is not None:
+        # Place enemy packages on map
+        for e in map_in.enemy:
+            e.pos = random.choice(e.pos)  # Overwrite multiple positions with selected one
+            map_in.map_array[::-1][e.pos[1]][e.pos[0]] = '2'  # Place enemy binder
 
 
 # Print the entire map
@@ -709,9 +786,9 @@ def show_map(map_in):
                 cur_coord = (xi, game_data.MapData.y_max - yi)
                 if map_in.enemy is not None:
                     for e in map_in.enemy:
-                        if e[1] == cur_coord:
+                        if e.pos == cur_coord:
                             for _e in Data.enemies:
-                                if _e.Entity_id == e[0]:
+                                if _e.Entity_id == e.enemy_id:
                                     cur_char = f"{_e.display_colour}{_e.display_char:<{local_spacing}}{Fore.RESET}"
                                     break
             elif cur_char == "1":
