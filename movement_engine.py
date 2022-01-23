@@ -42,18 +42,6 @@ def init_coord():
     game_data.MapData.y_max = len(game_data.MapData.current_map.map_array) - 1
 
 
-def enemy_move_calc(map_in):  # This was such a simple task, why did I add an enemy movement system?
-    """
-    Order of operations:
-         - Check if any enemy tiles are on the map, if there are none pull the enemy data configuration for the map
-        Spawning Script:
-            - Calculate valid positions for enemies to make sure enemy is not spawned within certain radius of main
-              door and does not spawn on top of player tile. Store list of invalid positions in cache data for map.
-            - For each entry of enemy data attempt to initialize the tile on the map in a valid position
-    """
-    pass
-
-
 def map_check():
     # Map Specific events
     if game_data.MapData.current_map.map_id == 0\
@@ -252,12 +240,17 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                 do_enemy_attack = True
                 if len(action) != 2:
                     os.system('cls')
-                    print("\n" * (game_data.SysData.max_screen_size[1] // 2) +
-                          " " * (game_data.SysData.max_screen_size[0] // 2 - (sl // 2)), end='')
-                    lib.gprint(game_data.MQ([lib.ck("Use", "yellow"), lib.ck(" requires ", "red"),
-                                             lib.ck("1", "yellow"), lib.ck(" argument. Usage: "),
-                                             lib.ck("use [item_name / item_id]")]))
+                    script = [lib.ck("Use", "yellow"), lib.ck(" requires ", "red"),
+                              lib.ck("1", "yellow"), lib.ck(" argument. Usage: "),
+                              lib.ck("use [item_name / item_id]")]
+                    sl = 0
+                    for i in script:
+                        sl += len(i[0])
+
+                    lib.center_cursor(sl)
+                    lib.gprint(game_data.MQ([script]))
                     time.sleep(5)
+                    do_enemy_attack = False
                 elif len(action[1]) > 15:
                     os.system('cls')
                     sl = "Stop, no item has a name that long"
@@ -265,6 +258,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                           " " * (game_data.SysData.max_screen_size[0] // 2 - (len(sl) // 2)), end='')
                     lib.gprint(sl)  # No Formatting used print raw without MQ class
                     time.sleep(2)
+                    do_enemy_attack = False
                 else:
                     # Fetch item data
                     item_data = lib.has_item(action[1], True)
@@ -285,6 +279,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                                             len(sl[0][0]) // 2), end='')
                         lib.gprint(game_data.MQ(sl))
                         time.sleep(3)
+                        do_enemy_attack = False
                     else:
                         # you have the item data do damage calculations
                         if item_data.type == "clothing":
@@ -292,6 +287,9 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                         elif item_data.type == "weapon":
                             critical = False
                             sl = 0
+
+                            # Critical hit is kind of OP, but I am going to be 100% honest. I don't care. Enjoy
+                            # 14000 damage on hero's sword :)
                             damage = random.randint(item_data.damage[0], item_data.damage[1])
                             if random.randint(0, 100) <= game_data.PlayerData.crit_chance:  # Calculate critical
                                 damage = damage + damage * game_data.PlayerData.crit_mod
@@ -650,32 +648,38 @@ def coord_set(map_in, x_m, y_m):  # Main Movement Engine
                         for e in game_data.MapData.current_map.enemy:
                             # Check each direction to get list of valid directions
 
-                            valid_moves = []  # Compiled list of valid moves
+                            if lib.get_distance((e.pos[0], e.pos[1]), (game_data.MapData.x, game_data.MapData.y)) > 2:
+                                valid_moves = []  # Compiled list of valid moves
 
-                            def check(x, y):
-                                if not ((e.pos[0] + x) > x_max or (e.pos[0] + x) < 0 or (e.pos[1] + y) > y_max
-                                        or (e.pos[1] + y) < 0):
-                                    if m[e.pos[1] + y][e.pos[0] + x] not in invalid:
-                                        valid_moves.append((e.pos[0] + x, e.pos[1] + y))  # Add valid move
+                                def check(x, y):
+                                    if not ((e.pos[0] + x) > x_max or (e.pos[0] + x) < 0 or (e.pos[1] + y) > y_max
+                                            or (e.pos[1] + y) < 0):
+                                        if m[e.pos[1] + y][e.pos[0] + x] not in invalid:
+                                            valid_moves.append((e.pos[0] + x, e.pos[1] + y))  # Add valid move
 
-                            check(0, 1)  # Check Above
-                            check(0, -1)  # Check Below
-                            check(1, 0)  # Check Right
-                            check(-1, 0)  # Check Left
-                            check(1, 1)  # Check Above Right
-                            check(-1, 1)  # Check Above Left
-                            check(1, -1)  # Check Below Right
-                            check(-1, -1)  # Check Below Left
+                                check(0, 1)  # Check Above
+                                check(0, -1)  # Check Below
+                                check(1, 0)  # Check Right
+                                check(-1, 0)  # Check Left
+                                check(1, 1)  # Check Above Right
+                                check(-1, 1)  # Check Above Left
+                                check(1, -1)  # Check Below Right
+                                check(-1, -1)  # Check Below Left
 
-                            if len(valid_moves) > 0:
-                                d = Data.enemies[e.enemy_id]
-                                _m = random.choice(valid_moves)  # Select Move
-                                game_data.MapData.movement.append((((e.pos[0], e.pos[1]), (_m[0], _m[1])), e.last_char,
-                                                                   (d.display_char, d.display_colour)))
-                                m[e.pos[1]][e.pos[0]] = e.last_char
-                                e.pos = _m  # Set the enemy's new position on backend
-                                e.old_char = m[_m[1]][_m[0]]
-                                m[_m[1]][_m[0]] = '2'  # Set the binder position
+                                if len(valid_moves) > 0:
+                                    d = Data.enemies[e.enemy_id]
+                                    if not d.Entity_id == e.enemy_id:  # Direct index invalid id failsafe
+                                        for f in Data.enemies:
+                                            if f.Entity_id == e.enemy_id:
+                                                d = f
+                                                break
+                                    _m = random.choice(valid_moves)  # Select Move
+                                    game_data.MapData.movement.append((((e.pos[0], e.pos[1]), (_m[0], _m[1])),
+                                                                       e.last_char, (d.display_char, d.display_colour)))
+                                    m[e.pos[1]][e.pos[0]] = e.last_char
+                                    e.pos = _m  # Set the enemy's new position on backend
+                                    e.old_char = m[_m[1]][_m[0]]
+                                    m[_m[1]][_m[0]] = '2'  # Set the binder position
 
                     else:
                         game_data.MapData.enemy_movement = True  # Run script on next turn

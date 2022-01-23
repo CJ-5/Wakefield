@@ -197,6 +197,10 @@ def display_help(cmd: str = None):
         pass
 
 
+def get_distance(object_pos0: tuple, object_pos1: tuple):
+    return math.sqrt(abs((object_pos0[0] - object_pos1[0]) ** 2 + (object_pos0[1] - object_pos1[1]) ** 2))
+
+
 def check_proximity(object_pos: tuple):
     # Return the distance of the player to an object
     return math.sqrt(abs((object_pos[0] - game_data.MapData.x) ** 2 + (object_pos[1] - game_data.MapData.y) ** 2)) <= \
