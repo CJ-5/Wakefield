@@ -1,7 +1,4 @@
 import sys
-
-import pynput.keyboard
-
 import game_data
 from colorama import init
 from colorama import Fore, Back, Style
@@ -49,11 +46,11 @@ def map_check():
         # Reset to the entrance position
         lmc = game_data.MapData.lmc  # Last Map Coordinate
         cc = get_coord(game_data.MapData.current_map)  # Get coordinate of player
-        game_data.MapData.last_char = \
-            game_data.MapData.current_map.map_array[::-1][lmc[1]][lmc[0]]  # Set replacement char
+        char_cache = game_data.MapData.current_map.map_array[::-1][lmc[1]][lmc[0]]  # Set replacement char
         game_data.MapData.current_map.map_array[::-1][cc[1]][cc[0]] = ""
         game_data.MapData.current_map.map_array[::-1][lmc[1]][lmc[0]] = 'x'
         init_coord()  # Reset the coordinate backend
+        game_data.MapData.last_char = char_cache
 
 
 def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
@@ -65,7 +62,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
         for d in game_data.MapData.current_map.door_data:
             if d.pos == coord:  # Look for door with matching player current coordinate
                 # Door has been found
-                if len(game_data.MapData.current_map.enemy) > 0:
+                if len(game_data.MapData.current_map.enemy) > 0 and d.floor_entrance is False:
                     game_data.MapData.map_idle = True
                     lib.gprint(game_data.MQ([lib.ck("The door won't move, all enemies must be defeated first.",
                                                     'yellow')]))
@@ -94,7 +91,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                     lib.center_cursor(sl)
                     lib.gprint(game_data.MQ(script))
 
-                    game_data.PlayerData.battle_run_warning = True  # Set to only accept Y / N
+                    game_data.PlayerData.battle_run_warning = True  # Set to only accept Y / N keys
                     any_key()
 
                     while game_data.SysData.demo_listener.running:
@@ -109,7 +106,6 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                 game_data.MapData.current_map = lib.map_index(d.map_warp)()  # Set new map and initialize
                 init_coord()  # initiate new coordinate values
                 init_door()  # initiate all door data
-                d.event = False  # Debug line REMOVE THIS LINE IN LIVE VERSION Overrides the event status
 
                 # Checks if this door leads to the next floor, if it does trigger the question system
                 if d.floor_progress[0] and len(Data.questions[0][d.floor_progress[1]]) > 0:
@@ -125,6 +121,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                 if old_id == 0:  # If the map the player is coming off of is the main map, pull the coordinates
                     game_data.MapData.lmc = (old_coord[0], old_coord[1])  # Set door entrance map coord
 
+                game_data.MapData.movement.clear()  # Avoids potentially printing calculated enemy movements to new map
                 show_map(game_data.MapData.current_map)
                 break  # Data has been found, no need to continue
     elif tile_char == "2":
@@ -185,7 +182,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
         time.sleep(0.5)
 
         # Set Valid Commands
-        game_data.MapData.valid_cmd = ["inventory", "use", "item-info", 'run']
+        game_data.MapData.valid_cmd = ["inventory", "use", "item-info", 'run', 'drop', 'help']
         game_data.PlayerData.in_battle = True
         while game_data.PlayerData.in_battle:
             do_enemy_attack = False
@@ -204,7 +201,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
             action_printout = ''
             for i, a in enumerate(game_data.MapData.valid_cmd):
                 action_printout += f'{a:^{aso}}'
-                if i == len(game_data.MapData.valid_cmd) - 1 or (i % 3 == 0 and i != 0):
+                if i == len(game_data.MapData.valid_cmd) - 1 or (i % 6 == 0 and i != 0):
                     action_printout += '\n\n'  # Create 2 New Lines
             print(f'{action_printout:^{game_data.SysData.max_screen_size[0] // 2}}')
             # I don't feel like getting this to be perfectly centered. Deal with it
@@ -357,7 +354,10 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                                 consume = True
 
                             if consume:
-                                game_data.PlayerData.Health += regen
+                                if game_data.PlayerData.regen_max_warn_response:
+                                    game_data.PlayerData.Health = game_data.PlayerData.Health_Max
+                                else:
+                                    game_data.PlayerData.Health += regen
                                 os.system('cls')
                                 script = [lib.ck('You consume the ', 'yellow'), lib.ck(item_data.name, 'green'),
                                           lib.ck(' your health is now at ', 'yellow'),
@@ -372,28 +372,84 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                                 time.sleep(2)
 
             elif action[0] == "inventory":
-                game_data.PlayerData.battle_inventory = True
                 lib.display_inv()
                 lib.gprint("\nPress any key to exit...")
                 any_key()
+                game_data.PlayerData.battle_inventory = True
                 while game_data.SysData.demo_listener.running is True:
                     continue
-            elif action[0] == "item-info":
-                # Display item info regardless of whether the player has the item
-                # Fetch item data
+            elif action[0] == 'drop':
                 if len(action) != 2:
                     os.system('cls')
-                    print("\n" * (game_data.SysData.max_screen_size[1] // 2) +
-                          " " * (game_data.SysData.max_screen_size[0] // 2 - (sl // 2)), end='')
-                    lib.gprint(game_data.MQ([lib.ck("item-info", "yellow"), lib.ck(" requires ", "red"),
-                                             lib.ck("1", "yellow"), lib.ck(" argument. Usage: ", "yellow"),
-                                             lib.ck("item-info [item_name / item_id]", "red")]))
+                    script = [lib.ck("drop", "yellow"), lib.ck(" requires ", "red"),
+                              lib.ck("1", "yellow"), lib.ck(" argument. Usage: ", "yellow"),
+                              lib.ck("drop [item name / item id]", "red")]
+                    sl = 0
+                    for i in script:
+                        sl += len(i[0])
+                    lib.center_cursor(sl)
+                    lib.gprint(game_data.MQ(script))
                     time.sleep(5)
                 elif len(action[1]) > 15:
                     os.system('cls')
                     sl = "Stop, no item has a name that long"
-                    print("\n" * (game_data.SysData.max_screen_size[1] // 2) +
-                          " " * (game_data.SysData.max_screen_size[0] // 2 - (len(sl) // 2)), end='')
+                    lib.center_cursor(len(sl))
+                    lib.gprint(sl)  # No Formatting used print raw without MQ class
+                    time.sleep(2)
+                else:
+                    # Drop the item
+                    item = lib.item_info(action[1])
+                    if item is False:  # Specified item does not exist
+                        script = [lib.ck('The item ', 'yellow'), lib.ck('['), lib.ck(action[1], 'red'), lib.ck(']'),
+                                  lib.ck(' does not exist', 'yellow')]
+                        sl = 0
+                        for i in script:
+                            sl += len(i[0])
+
+                        os.system('cls')
+                        lib.center_cursor(sl)
+                        lib.gprint(game_data.MQ(script))
+                        time.sleep(4)
+                    elif not lib.has_item(item.item_id):  # Item exists but player does not have it
+                        script = [lib.ck('You do not have the item ', 'yellow'), lib.ck('['), lib.ck(item.name, 'red'),
+                                  lib.ck(']')]
+                        sl = 0
+                        for i in script:
+                            sl += len(i[0])
+
+                        os.system('cls')
+                        lib.center_cursor(sl)
+                        lib.gprint(game_data.MQ(script))
+                        time.sleep(4)
+                    else:
+                        lib.remove_item(item.item_id)
+                        script = [lib.ck('Dropped', 'yellow'), lib.ck(' ['), lib.ck(item.name, 'yellow'), lib.ck(']')]
+                        sl = 0
+                        for i in script:
+                            sl += len(i[0])
+                        os.system('cls')
+                        lib.center_cursor(sl)
+                        lib.gprint(game_data.MQ(script))
+                        time.sleep(4)
+
+            elif action[0] == "item-info":
+                # Display item info regardless of whether the player has the item
+                # Fetch item data
+                if len(action) != 2:
+                    script = [lib.ck("item-info", "yellow"), lib.ck(" requires ", "red"),
+                              lib.ck("1", "yellow"), lib.ck(" argument. Usage: ", "yellow"),
+                              lib.ck("item-info [item_name / item_id]", "red")]
+                    sl = 0
+                    for i in script:
+                        sl += len(i[0])
+                    os.system('cls')
+                    lib.center_cursor(sl)
+                    lib.gprint(game_data.MQ(script))
+                    time.sleep(5)
+                elif len(action[1]) > 15:
+                    os.system('cls')
+                    sl = "Stop, no item has a name that long"
+                    lib.center_cursor(len(sl))
                     lib.gprint(sl)  # No Formatting used print raw without MQ class
                     time.sleep(2)
                 else:
@@ -445,9 +501,11 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                 if not enemy.escape:
                     time.sleep(2)
                 else:
+
                     game_data.PlayerData.battle_run_warning = True
                     any_key()
                     while game_data.SysData.demo_listener.running:
+                        time.sleep(0.1)
                         continue
 
                     if game_data.PlayerData.battle_run_response:
@@ -457,6 +515,8 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                         init_door()
                         map_check()
                         game_data.PlayerData.in_battle = False
+                        show_map(game_data.MapData.current_map)
+                        game_data.MapData.map_idle = False
                         return
 
             # End of game actions
@@ -534,49 +594,68 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                 # Loot Drop Calculations
                 rng_roll = random.randint(0, 100)
                 loot_drop = []
-                for m in range(0, random.choice(enemy.loot_range) + 1):
-                    if rng_roll in enemy.loot_table.super_rare_item_chance:
-                        item = random.choice(enemy.loot_table.super_rare_items)
-                        loot_drop.append(item)
-                        lib.add_item(item)
-                    elif rng_roll in enemy.loot_table.rare_item_chance:
-                        item = random.choice(enemy.loot_table.rare_items)
-                        loot_drop.append(item)
-                        lib.add_item(item)
-                    elif rng_roll in enemy.loot_table.uncommon_item_chance:
-                        item = random.choice(enemy.loot_table.uncommon_items)
-                        loot_drop.append(item)
-                        lib.add_item(item)
-                    elif rng_roll in enemy.loot_table.common_item_chance:
-                        item = random.choice(enemy.loot_table.common_items)
-                        loot_drop.append(item)
-                        lib.add_item(item)
-                    else:
-                        # Choose random item from entire base table
-                        item = random.choice(Data.game_items).item_id
-                        loot_drop.append(item)
-                        lib.add_item(item)
 
-                os.system('cls')
-                detail_comp = [x.name for x in (list(map(lib.item_info, loot_drop)))]
+                # Roll Calculations
+                roll_amt = random.choice(enemy.loot_range) + 1
+                _is = game_data.PlayerData.Inventory_Space
+                # Makes sure that the roll doesn't add more items than the player's inventory can hold
+                if (len(game_data.PlayerData.Inventory) + roll_amt) > _is:
+                    roll_amt = roll_amt - ((len(game_data.PlayerData.Inventory) + roll_amt) - _is)
 
-                script = [lib.ck(enemy.Name, 'green'), lib.ck(' dropped ', 'yellow')]
+                if roll_amt > 0:
+                    for m in range(0, roll_amt):
+                        if rng_roll in enemy.loot_table.super_rare_item_chance:
+                            item = random.choice(enemy.loot_table.super_rare_items)
+                            loot_drop.append(item)
+                            lib.add_item(item)
+                        elif rng_roll in enemy.loot_table.rare_item_chance:
+                            item = random.choice(enemy.loot_table.rare_items)
+                            loot_drop.append(item)
+                            lib.add_item(item)
+                        elif rng_roll in enemy.loot_table.uncommon_item_chance:
+                            item = random.choice(enemy.loot_table.uncommon_items)
+                            loot_drop.append(item)
+                            lib.add_item(item)
+                        elif rng_roll in enemy.loot_table.common_item_chance:
+                            item = random.choice(enemy.loot_table.common_items)
+                            loot_drop.append(item)
+                            lib.add_item(item)
+                        else:
+                            # Choose random item from entire base table
+                            item = random.choice(Data.game_items).item_id
+                            loot_drop.append(item)
+                            lib.add_item(item)
 
-                # Add item list to print-out
-                for x, i in enumerate(detail_comp):
-                    script.append(lib.ck(i, 'red'))
-                    if x != len(detail_comp) - 1:
-                        script.append(lib.ck(', ', 'yellow'))
+                    os.system('cls')
+                    detail_comp = [x.name for x in (list(map(lib.item_info, loot_drop)))]
 
-                sl = 0
-                for x in script:
-                    sl += len(str(x[0]))
+                    script = [lib.ck(enemy.Name, 'green'), lib.ck(' dropped ', 'yellow')]
 
-                lib.center_cursor(sl)
-                lib.gprint(game_data.MQ(script))
+                    # Add item list to print-out
+                    for x, i in enumerate(detail_comp):
+                        script.append(lib.ck(i, 'red'))
+                        if x != len(detail_comp) - 1:
+                            script.append(lib.ck(', ', 'yellow'))
 
-                time.sleep(2)
-                game_data.PlayerData.in_battle = False
+                    sl = 0
+                    for x in script:
+                        sl += len(str(x[0]))
+
+                    lib.center_cursor(sl)
+                    lib.gprint(game_data.MQ(script))
+
+                    time.sleep(2)
+                    game_data.PlayerData.in_battle = False
+                else:
+                    os.system('cls')
+                    script = [lib.ck('Your inventory is full. Please drop some items to be able to get more', 'yellow')]
+                    sl = 0
+                    for i in script:
+                        sl += len(i[0])
+                    lib.center_cursor(sl)
+                    lib.gprint(game_data.MQ(script))
+                    time.sleep(2)
+                    game_data.PlayerData.in_battle = False
             elif do_enemy_attack:  # Avoids the attack script triggering on turn that was used for non-use action
                 attack = random.choice(enemy.Attacks)  # Choose random attack
                 attack_damage = random.choice(attack.damage)  # Random attack damage
@@ -648,7 +727,8 @@ def coord_set(map_in, x_m, y_m):  # Main Movement Engine
                         for e in game_data.MapData.current_map.enemy:
                             # Check each direction to get list of valid directions
 
-                            if lib.get_distance((e.pos[0], e.pos[1]), (game_data.MapData.x, game_data.MapData.y)) > 2:
+                            if lib.get_distance((e.pos[0], e.pos[1]), (game_data.MapData.x, game_data.MapData.y)) > 2\
+                                    and e.move:
                                 valid_moves = []  # Compiled list of valid moves
 
                                 def check(x, y):

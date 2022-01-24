@@ -1,6 +1,5 @@
 from colorama import Fore, Back, Style
 from dataclasses import dataclass
-import lib
 import colorama
 
 
@@ -28,7 +27,7 @@ class PlayerData:
     battle_run_response = False  # Player Response
 
     item_info_displayed = False  # Whether the item info screen is displayed or not
-    cur_inv_display_size = 3  # The amount of characters that the current inventory display takes up
+    # cur_inv_display_size = 3  # The amount of characters that the current inventory display takes up
     Health = 100  # Players current health
     Health_Max = 100  # The player's max health
     regen_max_warn = False  # HP over max regen consumable warning
@@ -39,15 +38,13 @@ class PlayerData:
     defense = None  # To be implemented
     player_level = 0  # The players current level
     total_xp = 0
-    exp_scaling = 6  # The scaling of exp required to advance to the next level
+    exp_scaling = 10  # The scaling of exp required to advance to the next level
     exp_lvl = 0  # XP required for next level  [Auto - Generated]
-    level_cap = 10  # Player level cap
-    Inventory_Space = 13  # Players current max inventory size
+    level_cap = 30  # Player level cap
+    Inventory_Space = 23  # Players current max inventory size
     Inventory_Accessible = False  # Is the players inventory currently accessible
     command_status = False  # Whether the player is allowed to enter commands
     Inventory = []  # Players current inventory populated with InvItem Objects
-    Inv0 = []
-    Inv1 = []
     Detection_Distance = 3  # The distance that the player needs to be within in order to see hidden objects
 
 
@@ -143,24 +140,24 @@ class StaticData:  # Core Game Data
                                                                             'Let that set in.'),
 
             InvItem('Hero\'s Sword', 8, 1, 1, 3, type='weapon', damage=(500, 550), desc='That\'s a lot of damage'),
-            InvItem('Iron Broadsword', 9, 1, 1, 2, type='weapon', damage=(4, 6), desc='Pretty sharp for a '
+            InvItem('Iron Broadsword', 9, 1, 1, 2, type='weapon', damage=(14, 16), desc='Pretty sharp for a '
                                                                                       'hunk of raw metal'),
-            InvItem('Steel Broadsword', 10, 1, 1, 2, type='weapon', damage=(5, 7), desc='Nice sword bro'),
+            InvItem('Steel Broadsword', 10, 1, 1, 2, type='weapon', damage=(15, 17), desc='Nice sword bro'),
             InvItem('Titanium Broadsword', 11, 1, 1, 2, type='weapon', damage=(8, 10), desc='Means business'),
             InvItem('Wood Training Sword', 12, 1, 1, 2, type='weapon', damage=(1, 2), desc='Used for children to '
                                                                                            'practice with'),
-            InvItem('Rusty Broadsword', 13, 1, 1, 2, type='weapon', damage=(2, 3), desc='It has a lot of chips in it, '
+            InvItem('Rusty Broadsword', 13, 1, 1, 2, type='weapon', damage=(8, 11), desc='It has a lot of chips in it, '
                                                                                         'and most of the blade is '
                                                                                         'rusted out too.'),
-            InvItem('Bandit Knife', 14, 1, 1, 1, type='weapon', damage=(4, 5), desc='Short enough to have in a belt '
+            InvItem('Bandit Knife', 14, 1, 1, 1, type='weapon', damage=(6, 9), desc='Short enough to have in a belt '
                                                                                     'loop '
                                                                                     'and not appear suspicious'),
             InvItem('Kitchen Cleaver', 15, 1, 1, 1, type='weapon', damage=(6, 8),
                     desc='Is this from the butchers shop?'),
             InvItem('Wooden Club', 16, 1, 1, 2, type='weapon', damage=(4, 7), desc='Is this a tree branch with a '
                                                                                    'handle?'),
-            InvItem('Log', 17, 1, 1, 3, type='weapon', damage=(3, 4), desc='This is literally a branch from a tree'),
-            InvItem('Rusty Pole', 18, 1, 1, 2, type='weapon', damage=(3, 5), desc='Looks like reba-... Totally not '
+            InvItem('Log', 17, 1, 1, 3, type='weapon', damage=(5, 6), desc='This is literally a branch from a tree'),
+            InvItem('Rusty Pole', 18, 1, 1, 2, type='weapon', damage=(4, 5), desc='Looks like reba-... Totally not '
                                                                                   'rebar.'),
             InvItem('Machete', 19, 1, 1, 2, type='weapon', damage=(18, 20), desc='Cut down your way through jungles.'),
             InvItem('Katana', 32, 1, 1, 2, type='weapon', damage=(32, 36), desc='Used by samurai in ancient times, '
@@ -171,7 +168,7 @@ class StaticData:  # Core Game Data
         self.enemies = [
             EnemyData(0, 'Slime', 3, 1, '◉', Fore.WHITE, [AttackData('Jump Attack', range(2, 3))], (4, 6),
                       loot_table=LootTables.base_loot, move=True, loot_range=range(1, 2)),
-            EnemyData(1, 'Ghost', 5, 2, 'ฅ', Fore.WHITE, [AttackData('Phase', range(4, 6)),
+            EnemyData(1, 'Ghost', 5, 2, '•', Fore.WHITE, [AttackData('Phase', range(4, 6)),
                                                           AttackData('Haunt', range(5, 8))], (3, 7),
                       loot_table=LootTables.base_loot, move=True, loot_range=range(2, 3)),
             EnemyData(2, 'Undead', 4, 2, 'µ', Fore.WHITE, [AttackData('Flail', range(3, 7)),
@@ -180,13 +177,13 @@ class StaticData:  # Core Game Data
             EnemyData(3, 'Shade', 5, 4, 'Ä', Fore.WHITE, [AttackData('Summon', range(6, 8)),
                                                           AttackData('Phase', range(8, 10))], (6, 9),
                       loot_table=LootTables.mid_level, move=True, loot_range=range(1, 3)),
-            EnemyData(4, 'Brute', 8, 4, 'ᴥ', Fore.WHITE, [AttackData('Smash', range(8, 10)),
+            EnemyData(4, 'Brute', 8, 4, '*', Fore.WHITE, [AttackData('Smash', range(8, 10)),
                                                           AttackData('Rage', range(12, 13))], (8, 11),
                       loot_table=LootTables.mid_level, move=True, loot_range=range(2, 4)),
-            EnemyData(5, 'Reaper', 24, 8, '❂', Fore.CYAN, [AttackData('Slash', range(12, 15)),
+            EnemyData(5, 'Reaper', 24, 8, '>', Fore.CYAN, [AttackData('Slash', range(12, 15)),
                                                            AttackData('Death Incarnate', range(20, 25))], (9, 10),
                       loot_table=LootTables.high_level, move=True, loot_range=range(2, 5)),
-            EnemyData(6, 'Giant', 20, 10, 'G', Fore.CYAN, [AttackData('Rock Throw', range(14, 22)),
+            EnemyData(6, 'Giant', 20, 10, '=', Fore.CYAN, [AttackData('Rock Throw', range(14, 22)),
                                                            AttackData('Tree Javelin', range(15, 22))], (10, 13),
                       loot_table=LootTables.high_level, move=True, loot_range=range(2, 5)),
             EnemyData(7, 'Gate Keeper', 100, 30, '╬', Fore.RED, [AttackData('Opera Singer Summons', range(30, 50)),
@@ -245,7 +242,7 @@ class EventData:  # Event Dialogue Data  [Door_ID [(DIALOGUE)]]
                            ('The legend of the hero is unknown', 1300),
                            ('You carry the burden of the hero with this pristine blade.', 1100),
                            ('Take care of it', 1300)])],
-        "enemy": [Event(8, [('A formidable foe stands in your way', (1600, 'yellow')),
+        "enemy": [Event(7, [('A formidable foe stands in your way', (1600, 'yellow')),
                             ('\"I am the Gatekeeper\"', (1800, 'red')),
                             ('\"I am the protector of the final room\"', (1800, 'red')),
                             ('\"I have defeated all who have come before you... You will be no exception...\"',
@@ -328,8 +325,8 @@ class DoorData:
     # int represents the difficulty of the question
     multiple_pos: bool = False  # Auto generated by the door init function, no need to manually assign
     floor_entrance: bool = False  # Triggers run warn script
-    event: bool = False  # Whether the door has an event bound to it (Automatically assigned)
-    valid: bool = True  # Declares if the player can access this door
+    event: bool = False  # [AUTO GENERATED] Whether the door has an event bound to it (Automatically assigned)
+    valid: bool = True  # [AUTO GENERATED] Declares if the player can access this door
 
 
 class HelpPage:
@@ -338,11 +335,12 @@ class HelpPage:
     # cmd_list: Command List
     # ind_def: Individual Definitions
     def __init__(self):
-        self.cmd_list = ["help", "?", "inventory", "item-info", "stats"]
+        self.cmd_list = ["help", "?", "inventory", "item-info", "drop"]
         self.ind_def = {"use": "Usage (use [item name / item id]): Uses the specified item "
                                "(if it is valid for the situation)",
                         "inventory / inv": "Usage (inventory) | (inv): Displays your current inventory",
-                        "item-info": "Usage (item-info [item name / item id] | Displays info on the specified item"}
+                        "item-info": "Usage (item-info [item name / item id] | Displays info on the specified item",
+                        "drop": 'Usage (drop [item name / item id] | Removes the specified item from your inventory'}
 
 
 class MainMap:  # Main starting area Map
@@ -353,7 +351,7 @@ class MainMap:  # Main starting area Map
         self.map_desc = "The main area of Wakefield!"
         self.map_name = Fore.GREEN + "Main Area" + Style.RESET_ALL
         self.npc = []  # NPC DATA [NEED TO WORK ON]
-        self.enemy = None  # No enemies can spawn on this map
+        self.enemy = []  # No enemies can spawn on this map
         self.door_data = [DoorData(0, 1, chr(9688), "-", Fore.BLUE, Fore.GREEN, True, [(9, 25)], (True, 0)),
                           DoorData(1, 99, chr(9688), chr(9688), Fore.BLUE, Fore.BLUE, False, [(24, 7)])]
         self.map_array = [
@@ -367,7 +365,7 @@ class MainMap:  # Main starting area Map
             ["-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["-", "-", "-", "-", "-", "-", "-", "-", "-", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["-", "-", "-", "-", "", "", "", "", "", "", "", "x", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["-", "-", "-", "-", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X"],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
@@ -375,14 +373,14 @@ class MainMap:  # Main starting area Map
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "1", "" "", "T", "", "O", "", "W", "", "N", "", "", "", "X"],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "1", "", "", "T", "", "O", "", "W", "", "N", "", "", "", "X"],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
             ["X", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X"],
-            ["X", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X"]]
+            ["X", "X", "x", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X"]]
 
 
 class Floor0:
@@ -393,7 +391,7 @@ class Floor0:
         self.map_desc = "Dungeon Floor 1"
         self.map_name = Fore.GREEN + "Floor 0" + Style.RESET_ALL
         self.npc = []  # NPC DATA [NEED TO WORK ON]
-        self.enemy = None  # No enemies can spawn on this map
+        self.enemy = []  # No enemies can spawn on this map
         self.door_data = [DoorData(2, 0, chr(9688), "-", Fore.BLUE, Fore.GREEN, False, [(0, 14)], floor_entrance=True),
                           DoorData(3, 2, chr(9688), "", Fore.BLUE, Fore.BLACK, True, [(20, 11), (18, 15)], (True, 0))]
         self.map_array = [
@@ -466,9 +464,12 @@ class Floor2:
         self.npc = []  # NPC DATA [NEED TO WORK ON]
         self.enemy = [EP(0, [(1, 9)]), EP(1, [(6, 11)]), EP(2, [(6, 2)]),
                       EP(4, [(16, 6)]), EP(6, [(19, 12)])]
-        self.door_data = []
+        self.door_data = [DoorData(7, 0, chr(9688), chr(9688), Fore.BLUE, Fore.BLUE, False, [(11, 19)],
+                                   floor_entrance=True),
+                          DoorData(8, 4, chr(9688), '', Fore.BLUE, Fore.WHITE, True, [(3, 0), (1, 10), (3, 9)],
+                                   (True, 1), True)]
         self.map_array = [
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "1", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["", "", "X", "X", "", "", "", "", "", "", "", "x", "", "", "", "", "", "", "", "X", "", "", "", ""],
             ["", "X", "X", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "X", "X", "", "", ""],
             ["", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "X", "X", "X", "X", "", ""],
@@ -490,67 +491,76 @@ class Floor2:
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]]
 
 
-class Floor3:  # Template Floor
+class Floor3:
     __slots__ = ('map_name', 'map_array', 'map_desc', 'npc', 'enemy', 'map_id', 'door_data')
 
+    # x: 23 y: 19
     def __init__(self):
         self.map_id = 4
         self.map_desc = ""
-        self.map_name = Fore.GREEN + "" + Style.RESET_ALL
+        self.map_name = Fore.GREEN + "Dungeon Floor 4" + Style.RESET_ALL
         self.npc = []  # NPC DATA [NEED TO WORK ON]
-        self.enemy = []
-        self.door_data = []
+        self.enemy = [EP(6, [(1, 4)]), EP(5, [(2, 18)]), EP(3, [(20, 3)]), EP(4, [(10, 2)]), EP(4, [(20, 19)])]
+        self.door_data = [DoorData(10, 0, chr(9688), chr(9688), Fore.BLUE, Fore.BLUE, False, [(10, 19)],
+                                   floor_entrance=True),
+                          DoorData(11, 5, chr(9688), chr(9688), Fore.BLUE, Fore.BLUE, False, [(1, 3), (22, 8)],
+                                   (True, 2), True)]
         self.map_array = [
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]]
+            ["", "", "", "", "", "", "", "", "", "", "1", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "x", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "X", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "X", "X", "X", "X", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["X", "X", "X", "X", "X", "", "", "", "", "X", "X", "", "", "", "", "", "X", "", "", "", "", "", "", ""],
+            ["X", "X", "X", "X", "X", "X", "", "", "", "X", "X", "", "", "", "", "X", "X", "", "", "", "", "", "", ""],
+            ["", "X", "X", "X", "X", "X", "", "", "", "X", "X", "X", "", "", "", "X", "X", "X", "", "", "", "", "", ""],
+            ["", "", "X", "X", "X", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", ""],
+            ["", "", "X", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "X", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "X", "X", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", ""],
+            ["", "", "", "", "", "", "X", "X", "", "", "", "", "", "", "", "", "", "X", "X", "", "", "", "", ""],
+            ["", "", "", "", "", "X", "X", "X", "", "", "", "", "", "", "", "", "X", "X", "X", "X", "", "", "", ""],
+            ["", "", "", "", "X", "X", "X", "X", "X", "", "", "", "", "", "", "X", "X", "X", "X", "X", "", "", "", ""],
+            ["", "", "", "", "X", "X", "X", "X", "", "", "", "", "", "", "", "", "X", "X", "", "", "", "", "", ""],
+            ["", "", "", "", "", "X", "X", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "X", "", "", "", "X", "", "", "", "", "", "X", "X", "", "", "", "", "", "", "", "X", "X", "", ""],
+            ["", "X", "X", "", "", "", "", "", "", "", "", "X", "X", "X", "", "", "", "", "", "", "X", "X", "", ""],
+            ["X", "", "", "", "", "", "", "", "", "", "", "", "X", "X", "", "", "", "", "", "", "", "X", "", ""]]
 
 
 class Floor4:  # Template Floor
     __slots__ = ('map_name', 'map_array', 'map_desc', 'npc', 'enemy', 'map_id', 'door_data')
 
+    # x: 23 y: 17
     def __init__(self):
         self.map_id = 5
         self.map_desc = ""
-        self.map_name = Fore.GREEN + "" + Style.RESET_ALL
+        self.map_name = Fore.GREEN + "Dungeon Floor 6" + Style.RESET_ALL
         self.npc = []  # NPC DATA [NEED TO WORK ON]
-        self.enemy = []
-        self.door_data = []
+        self.enemy = [EP(6, [(5, 5), (2, 3)]), EP(5, [(10, 5), (5, 17)]), EP(5, [(9, 17), (8, 15)]),
+                      EP(4, [(20, 5), (15, 5)]), EP(3, [(1, 1), (20, 10)])]
+        self.door_data = [DoorData(12, 0, chr(9688), chr(9688), Fore.BLUE, Fore.BLUE, False, [(23, 12)],
+                                   floor_entrance=True),
+                          DoorData(13, 6, chr(9688), '', Fore.BLUE, Fore.WHITE, True, [(0, 17), (15, 0), (10, 17)],
+                                   (True, 2), True)]
         self.map_array = [
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "X", "", "", "", "", "", ""],
+            ["", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "X", "X", "X", "", "", "", "", "", ""],
+            ["", "", "X", "X", "X", "", "", "", "", "", "", "", "", "", "X", "X", "X", "X", "", "", "", "", "x", "1"],
+            ["", "", "X", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", ""],
+            ["", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "X", "X", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "X", "X", "X", "", "", "", "", ""],
+            ["", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", ""],
+            ["", "", "", "", "", "X", "X", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "X", "X", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]]
 
 
@@ -559,11 +569,11 @@ class GateKeeper:  # Gate Keeper's Floor
 
     def __init__(self):
         self.map_id = 6
-        self.map_desc = "Dungeon Floor 2"
-        self.map_name = Fore.GREEN + "Floor 2" + Style.RESET_ALL
+        self.map_desc = "Dungeon Floor 7"
+        self.map_name = Fore.GREEN + "Gate Keepers Floor" + Style.RESET_ALL
         self.npc = []  # NPC DATA [NEED TO WORK ON]
         self.enemy = [EP(7, [(12, 11)])]
-        self.door_data = [DoorData(6, 5, chr(9688), chr(9688), Fore.LIGHTMAGENTA_EX, Fore.WHITE, False, [(12, 0)],
+        self.door_data = [DoorData(6, 7, chr(9688), chr(9688), Fore.LIGHTMAGENTA_EX, Fore.WHITE, False, [(12, 0)],
                                    floor_progress=(True, 2))]
         self.map_array = [
             ["", "", "", "", "", "", "", "", "", "X", "X", "X", "x", "X", "X", "", "", "", "", "", "", "", "", ""],
@@ -590,19 +600,20 @@ class GateKeeper:  # Gate Keeper's Floor
             ["", "", "", "", "", "", "", "", "", "", "", "", "1", "", "", "", "", "", "", "", "", "", "", ""]]
 
 
-class FinalFloor:  # Template Floor
+class FinalFloor:  # Final Floor
     __slots__ = ('map_name', 'map_array', 'map_desc', 'npc', 'enemy', 'map_id', 'door_data')
 
     def __init__(self):
         self.map_id = 7
-        self.map_desc = ""
-        self.map_name = Fore.GREEN + "" + Style.RESET_ALL
+        self.map_desc = "The Final Floor"
+        self.map_name = Fore.GREEN + "Finale" + Style.RESET_ALL
         self.npc = []  # NPC DATA [NEED TO WORK ON]
-        self.enemy = []
-        self.door_data = []
+        self.enemy = [EP(8, [(12, 5)])]
+        self.door_data = [DoorData(9, 0, chr(9688), chr(9688), Fore.BLUE, Fore.BLUE, False, [(11, 11)],
+                                   floor_entrance=True)]
         self.map_array = [
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "1", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "x", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],

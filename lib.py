@@ -1,9 +1,10 @@
 #  Holds the main functions that operate the backend of the game (e.g battle system)
 import os
 from os import system
+
+import lib
 import movement_engine
 import time
-from dataclasses import dataclass
 from colorama import Fore, Style
 import game_data
 import random
@@ -243,6 +244,7 @@ def remove_item(item_id: int, qty: int = 1):
                     i.qty -= qty
                 else:
                     game_data.PlayerData.Inventory.remove(i)
+                break
 
 
 def reset_sys_font(font_size: int = 18):
@@ -313,7 +315,9 @@ def cmove(num: int = 1, direction: str = 'A'):  # Dunno, seems kinda useless, bu
 
 def map_index(map_id: int):
     # Find and return the map data for the specified id
-    maps = [game_data.MainMap, game_data.Floor0, game_data.Floor1, game_data.Floor2, game_data.Floor3]
+    maps = [game_data.MainMap, game_data.Floor0, game_data.Floor1, game_data.Floor2, game_data.Floor3,
+            game_data.Floor4, game_data.GateKeeper, game_data.FinalFloor]
+
     if not map_id > len(maps) - 1:
         return maps[map_id]
     else:
@@ -323,8 +327,6 @@ def map_index(map_id: int):
 def display_inv():
     # if the map is displayed, clear the map and then display the inventory
     # Display the inventory
-    game_data.PlayerData.Inventory_Displayed = True
-    game_data.PlayerData.command_status = False  # Disable command input
     os.system("cls")
     item_spacing = 25
     side_spacing = 5
@@ -342,7 +344,7 @@ def display_inv():
 
     # Initialize the inventory columns
     for x, i in enumerate(game_data.PlayerData.Inventory):
-        if x > row1:
+        if x > row1 - 1:
             inv1.append(i)
         else:
             inv0.append(i)
@@ -368,7 +370,7 @@ def display_inv():
             # Print second row, check to see if requested item exists if so print
             # Check to see if the second column has anything to print
 
-            if i > len(inv1) - 1:
+            if sub_key_num > len(inv1) - 1:
                 print(f"{Style.BRIGHT}{Fore.BLACK}{'*':^{item_spacing}}{'*':^{item_spacing}}{'*':^{item_spacing}}"
                       f"{Fore.RESET}", end='')
             else:
@@ -378,6 +380,11 @@ def display_inv():
             element_num = 1  # Set to first column
             print(f"{Fore.RESET}\n", end='')
     print(Fore.RESET + Style.RESET_ALL)  # Create newline at end of printout
+    # print([x.name for x in game_data.PlayerData.Inventory])
+    # print([x.name for x in inv0])
+    # print([x.name for x in inv1])
+    game_data.PlayerData.Inventory_Displayed = True
+    game_data.PlayerData.command_status = False  # Disable command input
 
 
 def display_stats():  # Display stats of system and player
@@ -414,14 +421,16 @@ def process_command(cmd_raw):
             and game_data.MapData.valid_cmd.__contains__(cmd[0])) or cmd[0] == "exit":
 
         cmd_latter = " ".join(cmd[1:])  # Removes the command keyword
-        system('cls')
         if cmd[0] == "help" or cmd[0] == "?":  # Print the help page
+            system('cls')
+            game_data.PlayerData.Inventory_Displayed = True
             if game_data.Demo.help_demo is True:
                 game_data.MapData.map_idle = True
                 game_data.Demo.help_demo = False
                 print()
             display_help(cmd_latter)
         elif cmd[0] == "inventory":  # print the players inventory
+            system('cls')
             if game_data.Demo.inventory_demo is True:
                 game_data.MapData.map_idle = True
                 game_data.Demo.inventory_demo = False
@@ -429,6 +438,7 @@ def process_command(cmd_raw):
             display_inv()
             gprint(game_data.MQ([ck("\nMove to exit...")]))
         elif cmd[0] == "item-info":  # Print the specified items info
+            system('cls')
             # game_data.PlayerData.command_status = False  # Disable command input
             game_data.PlayerData.Inventory_Displayed = True
             game_data.PlayerData.command_status = False
@@ -441,11 +451,30 @@ def process_command(cmd_raw):
                 display_item_info(info)
                 gprint(game_data.MQ([ck("\nMove to exit...")]))
         elif cmd[0] == "stats":  # print system & player statistics
+            system('cls')
             if game_data.Demo.stats_demo is True:
                 game_data.MapData.map_idle = True
                 game_data.Demo.stats_demo = False
                 print("STATS DISPLAY")
             display_stats()
+        elif cmd[0] == 'drop':  # Remove the specified item from the players inventory
+            item = item_info(cmd_latter)
+            if item is False:
+                err_msg('Invalid Item')
+            elif not has_item(item.item_id):
+                err_msg('You don\'t have this item')
+            else:  # Remove the item from players inventory
+                remove_item(item.item_id)
+                script = [ck('Dropped', 'yellow'), ck('['), ck(item.name, 'red'), ck(']')]
+                sl = 0
+                for i in script:
+                    sl += len(i[0])
+
+                game_data.MapData.map_idle = True
+                gprint(game_data.MQ(script))
+                time.sleep(1)
+                back_line(sl)
+                game_data.MapData.map_idle = False
         elif cmd[0] == "exit":
             game_data.MapData.map_kill = True  # Exit listener thread
             os.system('cls')
@@ -465,16 +494,17 @@ def err_msg(msg: str):
     game_data.MapData.map_idle = True
     game_data.PlayerData.command_status = False
     system('cls')
-    print('\n' * (game_data.SysData.max_screen_size[1] // 2) +
-          ' ' * (game_data.SysData.max_screen_size[0] // 2 - (len(msg) // 2)), end='')
+    center_cursor(len(msg))
     gprint(MQ([ck(msg, "red")]))
     time.sleep(2)
     movement_engine.show_map(game_data.MapData.current_map)
     game_data.MapData.map_idle = False
     game_data.PlayerData.command_status = True
 
+
 def center_cursor(x_offset: int, y_offset: int = 0):  # Move the cursor to the middle of the screen with optional offset
     # Maybe change to use /x1b[#A/B/C/D exit code to move cursor
+    game_data.MapData.current_command = ""
     print('\n' * ((game_data.SysData.max_screen_size[1] // 2) - y_offset) +
           ' ' * ((game_data.SysData.max_screen_size[0] // 2) - (x_offset // 2)), end='')
 
@@ -521,7 +551,7 @@ def question_handler(question_diff: int):
         3. Ask and open input (kb_listener on_press thread will handle question accumulation)
         4. if the user got the question right progress to the next map (return True), if the user got it wrong
            give them the option to retry or to leave (leaving will leave them on the same floor, adds number of tries
-           to total to avoid a leave and retry loophole) 3 wrong questions spawns them outside of the mine
+           to total to avoid a leave and retry loophole) 3 wrong questions spawns them outside the mine
     """
 
     question = movement_engine.Data.questions[0][question_diff][
