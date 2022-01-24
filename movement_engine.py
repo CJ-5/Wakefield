@@ -727,8 +727,7 @@ def coord_set(map_in, x_m, y_m):  # Main Movement Engine
                         for e in game_data.MapData.current_map.enemy:
                             # Check each direction to get list of valid directions
 
-                            if lib.get_distance((e.pos[0], e.pos[1]), (game_data.MapData.x, game_data.MapData.y)) > 2\
-                                    and e.move:
+                            if lib.get_distance((e.pos[0], e.pos[1]), (game_data.MapData.x, game_data.MapData.y)) > 2:
                                 valid_moves = []  # Compiled list of valid moves
 
                                 def check(x, y):
@@ -750,7 +749,9 @@ def coord_set(map_in, x_m, y_m):  # Main Movement Engine
                                     d = Data.enemies[e.enemy_id]
                                     if not d.Entity_id == e.enemy_id:  # Direct index invalid id failsafe
                                         for f in Data.enemies:
-                                            if f.Entity_id == e.enemy_id:
+                                            if not f.move:
+                                                break
+                                            elif f.Entity_id == e.enemy_id:
                                                 d = f
                                                 break
                                     _m = random.choice(valid_moves)  # Select Move

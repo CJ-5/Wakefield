@@ -215,7 +215,7 @@ class SysData:
 class EP:  # Enemy Package
     enemy_id: int  # The id of the enemy that is to be spawned
     pos: list  # The positions on the map that the player can spawn on
-    last_char: str = ''  # The display char of the spot the enemy is on before it moved there
+    last_char: str = ''  # [Auto Generated] The display char of the spot the enemy is on before it moved there
 
 
 @dataclass()
