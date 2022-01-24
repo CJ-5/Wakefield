@@ -177,6 +177,10 @@ lib.center_cursor(len(script[0][0]))
 lib.gprint(game_data.MQ(script))
 time.sleep(1)
 
+lib.add_item(9)
+lib.add_item(0)
+lib.add_item(6)
+
 game_data.PlayerData.Inventory_Accessible = True
 game_data.Demo.inventory_demo = False
 game_data.Demo.help_demo = False
