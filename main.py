@@ -37,10 +37,10 @@ except ModuleNotFoundError:
     ri = input("Would you like to install the required packages (yes / no): ")
 
     if ri.lower() == "yes":
-        os.system("pip install colorama")
-        os.system("pip install pynput")
-        os.system("pip install dataclasses")
-        os.system("pip install pywin32")
+        os.system("python -m pip install colorama")
+        os.system("python -m pip install pynput")
+        os.system("python -m pip install dataclasses")
+        os.system("python -m pip install pywin32")
         time.sleep(2)
         print("Please restart the program... Exiting...")
         time.sleep(2)
@@ -104,14 +104,14 @@ lib.print_logo()
 time.sleep(1)
 print('\n\n')
 lib.gprint('Welcome to the game... oddly enough I decided after putting all of this work into it that I would not'
-           'bother giving it a name...')
+           ' bother giving it a name...')
 time.sleep(1.5)
 lib.gprint('Hence the name Adventure Game Stuck.')
 time.sleep(2)
 os.system('cls')
 lib.print_logo()
 print('\n\n')
-lib.gprint('Originally I would have wrote a fully interactive tutorial script that had you enter all of the different'
+lib.gprint('Originally I would have wrote a fully interactive tutorial script that had you enter all of the different '
            'commands and it would be all cool and fancy, but then I realised...')
 time.sleep(1)
 lib.gprint('I can just give you a help command that shows tells you the exact same thing!')
@@ -119,7 +119,7 @@ time.sleep(1)
 lib.gprint('So.')
 time.sleep(1)
 lib.gprint(game_data.MQ([lib.ck('At any time '), lib.ck('(terms and conditions apply)', 'yellow'),
-                         lib.ck(', use the "'), lib.ck('help', 'yellow'), lib.ck('" command to see a list of commands'
+                         lib.ck(', use the "'), lib.ck('help', 'yellow'), lib.ck('" command to see a list of commands '
                                                                                  'and their individual usages')]))
 time.sleep(2)
 os.system('cls')
@@ -162,7 +162,7 @@ lib.gprint('Winning a battle will give you a random (within defined range) amoun
            'weapons and consumables that can be used in battle.')
 time.sleep(2)
 lib.gprint(game_data.MQ([lib.ck('To use a item, you can use the "use" '
-                                'command which is combined with a item id / item name like so', 'yellow'),
+                                'command which is combined with a item id / item name like so'),
                          lib.ck(' use item-name   |   use 0', 'yellow')]))
 time.sleep(3)
 os.system('cls')
