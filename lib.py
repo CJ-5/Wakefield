@@ -238,7 +238,7 @@ def add_item(item_id: int):
 
 def remove_item(item_id: int, qty: int = 1):
     if game_data.PlayerData.Inventory_Accessible:
-        for i in game_data.PlayerData.Inventory:
+        for i in game_data.PlayerData.Inventory[::-1]:  # Reverse order search
             if i.item_id == item_id:
                 if i.qty > 1:
                     i.qty -= qty
@@ -424,17 +424,9 @@ def process_command(cmd_raw):
         if cmd[0] == "help" or cmd[0] == "?":  # Print the help page
             system('cls')
             game_data.PlayerData.Inventory_Displayed = True
-            if game_data.Demo.help_demo is True:
-                game_data.MapData.map_idle = True
-                game_data.Demo.help_demo = False
-                print()
             display_help(cmd_latter)
         elif cmd[0] == "inventory":  # print the players inventory
             system('cls')
-            if game_data.Demo.inventory_demo is True:
-                game_data.MapData.map_idle = True
-                game_data.Demo.inventory_demo = False
-                print()
             display_inv()
             gprint(game_data.MQ([ck("\nMove to exit...")]))
         elif cmd[0] == "item-info":  # Print the specified items info
@@ -442,8 +434,6 @@ def process_command(cmd_raw):
             # game_data.PlayerData.command_status = False  # Disable command input
             game_data.PlayerData.Inventory_Displayed = True
             game_data.PlayerData.command_status = False
-            if game_data.Demo.item_info_demo is True:
-                game_data.Demo.item_info_demo = False
             info = item_info(cmd_latter)
             if info is False:
                 err_msg('Invalid Item')
@@ -452,10 +442,6 @@ def process_command(cmd_raw):
                 gprint(game_data.MQ([ck("\nMove to exit...")]))
         elif cmd[0] == "stats":  # print system & player statistics
             system('cls')
-            if game_data.Demo.stats_demo is True:
-                game_data.MapData.map_idle = True
-                game_data.Demo.stats_demo = False
-                print("STATS DISPLAY")
             display_stats()
         elif cmd[0] == 'drop':  # Remove the specified item from the players inventory
             item = item_info(cmd_latter)
@@ -471,10 +457,12 @@ def process_command(cmd_raw):
                     sl += len(i[0])
 
                 game_data.MapData.map_idle = True
+                system('cls')
+                lib.center_cursor(sl)
                 gprint(game_data.MQ(script))
                 time.sleep(1)
-                back_line(sl)
                 game_data.MapData.map_idle = False
+                movement_engine.show_map(game_data.MapData.current_map)
         elif cmd[0] == "exit":
             game_data.MapData.map_kill = True  # Exit listener thread
             os.system('cls')

@@ -101,6 +101,77 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                         show_map(game_data.MapData.current_map)
                         return
 
+                if d.floor_progress[0] and len(Data.questions[0][d.floor_progress[1]]) > 0:
+                    # Trigger Question System
+                    question = random.choice(Data.questions[0][0])
+                    """
+                    Yes I know that this code now makes the question difficulty redundant, but also
+                    you have to understand that there are better things to do than to write out
+                    50 different questions for the system and then rank them. There just is not
+                    enough time left for me to do that.
+                    """
+
+                    # Display Question
+                    game_data.PlayerData.question_status = True
+                    while game_data.PlayerData.question_status:
+                        if game_data.PlayerData.question_attempt > 2:
+                            script = [lib.ck('Looks like you are out of question attempts. Out you go.')]
+                            sl = 0
+                            for i in script:
+                                sl += len(i[0])
+
+                            os.system('cls')
+                            lib.center_cursor(sl)
+                            lib.gprint(game_data.MQ(script))
+
+                            game_data.PlayerData.question_answer = ''  # Reset the question accumulation
+                            game_data.PlayerData.question_status = False  # Exit Question system
+                            game_data.PlayerData.question_attempt = 0  # Reset the question attempt count
+                            d.event = False  # Skip event if there is one
+                            time.sleep(1)
+                            d.map_warp = 0  # set to main map
+                            break
+
+                        # Ask Question
+                        os.system('cls')
+                        print(question.question.replace('/', '\n  '))
+
+                        print('\n\n>: ', end='')
+                        game_data.PlayerData.question_processing = True
+                        while game_data.PlayerData.question_processing:
+                            time.sleep(0.1)
+                            continue
+
+                        # Question Checking
+                        os.system('cls')
+                        if game_data.PlayerData.question_answer.lower() in question.answer:
+                            # Player Got The Question right
+                            script = [lib.ck('Correct!', 'green')]
+                            sl = 0
+                            for i in script:
+                                sl += len(i[0])
+
+                            lib.center_cursor(sl)
+                            lib.gprint(game_data.MQ(script))
+                            game_data.PlayerData.question_answer = ''  # Reset the question accumulation
+                            game_data.PlayerData.question_status = False  # Exit Question system
+                            game_data.PlayerData.question_attempt = 0  # Reset the question attempt count
+                            time.sleep(1)
+
+                        else:
+                            script = [lib.ck('Incorrect, Try Again...', 'red')]
+
+                            sl = 0
+                            for i in script:
+                                sl += len(i[0])
+
+                            lib.center_cursor(sl)
+                            lib.gprint(game_data.MQ(script))
+                            game_data.PlayerData.question_attempt += 1
+                            time.sleep(1.5)
+
+                        game_data.PlayerData.question_answer = ''  # Reset the question accumulation
+
                 old_coord = get_coord(game_data.MapData.current_map)
                 old_id = game_data.MapData.current_map.map_id
                 game_data.MapData.current_map = lib.map_index(d.map_warp)()  # Set new map and initialize
@@ -108,10 +179,6 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                 init_door()  # initiate all door data
 
                 # Checks if this door leads to the next floor, if it does trigger the question system
-                if d.floor_progress[0] and len(Data.questions[0][d.floor_progress[1]]) > 0:
-                    # Trigger the floor progression question system
-                    lib.question_handler(d.floor_progress[1])
-
                 if d.event:
                     lib.event_handler(d.door_id, 0)  # Process door event type with event id of door
                 else:
@@ -131,7 +198,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
         enemy_data_pos = None
         ui_ss = 20  # UI Side Spacing
         ss = 5  # Side Spacing
-        aso = 15  # Action Space Out
+        aso = 8  # Action Space Out
 
         # Fetch Enemy data using current coordinates
         map_data = game_data.MapData.current_map
@@ -170,8 +237,8 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
         # Initiate battle script
         os.system("cls")
         time.sleep(1)
-        script = [lib.ck('A wild Lvl.'), lib.ck(f"{enemy.cur_lvl} {enemy.Name}", "yellow"),
-                  lib.ck(" has appeared")]
+        script = [lib.ck('A Lvl.'), lib.ck(f"{enemy.cur_lvl} {enemy.Name}", "yellow"),
+                  lib.ck(" stands before you.")]
         sl = len(script[0][0]) + len(script[1][0]) + len(script[2][0])
         print("\n" * (game_data.SysData.max_screen_size[1] // 2) +  # Text Centering Vertical
               " " * ((game_data.SysData.max_screen_size[0] // 2) - (sl // 2)), end='')  # Text Centering Horizontal
@@ -272,8 +339,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                         sl = [lib.ck("When trying to use an item with a space " +
                                      "in its name replace the space with a dash", "yellow")]
 
-                        print("\n" + " " * (game_data.SysData.max_screen_size[0] // 2 -
-                                            len(sl[0][0]) // 2), end='')
+                        lib.center_cursor(len(sl[0][0]))
                         lib.gprint(game_data.MQ(sl))
                         time.sleep(3)
                         do_enemy_attack = False
@@ -358,10 +424,13 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                                     game_data.PlayerData.Health = game_data.PlayerData.Health_Max
                                 else:
                                     game_data.PlayerData.Health += regen
+
                                 os.system('cls')
                                 script = [lib.ck('You consume the ', 'yellow'), lib.ck(item_data.name, 'green'),
+                                          lib.ck(' you gain ', 'yellow'), lib.ck(str(regen) + ' HP', 'green'),
                                           lib.ck(' your health is now at ', 'yellow'),
-                                          lib.ck(str(game_data.PlayerData.Health), 'green'), lib.ck(' HP')]
+                                          lib.ck(str(game_data.PlayerData.Health) + ' HP', 'green')]
+
                                 sl = 0
                                 for i in script:
                                     sl += len(i[0])
@@ -657,20 +726,34 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                     time.sleep(2)
                     game_data.PlayerData.in_battle = False
             elif do_enemy_attack:  # Avoids the attack script triggering on turn that was used for non-use action
-                attack = random.choice(enemy.Attacks)  # Choose random attack
-                attack_damage = random.choice(attack.damage)  # Random attack damage
-                os.system('cls')
-                script = [lib.ck(enemy.Name, 'red'), lib.ck(' uses ', 'yellow'), lib.ck(attack.name),
-                          lib.ck(' attack deals ', 'yellow'), lib.ck(str(attack_damage), 'red'),
-                          lib.ck(' damage', 'yellow')]
+                # Attack Fail RNG
+                if not random.randint(0, 100) <= game_data.PlayerData.jinx_mod:
+                    attack = random.choice(enemy.Attacks)  # Choose random attack
+                    attack_damage = random.choice(attack.damage)  # Random attack damage
+                    os.system('cls')
+                    script = [lib.ck(enemy.Name, 'red'), lib.ck(' uses ', 'yellow'), lib.ck(attack.name),
+                              lib.ck(', attack deals ', 'yellow'), lib.ck(str(attack_damage), 'red'),
+                              lib.ck(' damage', 'yellow')]
 
-                sl = 0
-                for i in script:
-                    sl += len(i[0])
+                    sl = 0
+                    for i in script:
+                        sl += len(i[0])
 
-                lib.center_cursor(sl)
-                lib.gprint(game_data.MQ(script))
-                game_data.PlayerData.Health -= attack_damage  # Deal enemy damage to player
+                    lib.center_cursor(sl)
+                    lib.gprint(game_data.MQ(script))
+                    game_data.PlayerData.Health -= attack_damage  # Deal enemy damage to player
+                else:
+                    # Attack Failure
+                    attack = random.choice(enemy.Attacks)
+                    os.system('cls')
+                    script = [lib.ck(enemy.Name, 'red'), lib.ck(' uses ', 'yellow'), lib.ck(attack.name),
+                              lib.ck(' attack misses!', 'yellow')]
+                    sl = 0
+                    for i in script:
+                        sl += len(i[0])
+
+                    lib.center_cursor(sl)
+                    lib.gprint(game_data.MQ(script))
                 time.sleep(3)
 
         game_data.MapData.current_map.enemy.pop(enemy_data_pos)  # Remove data
@@ -747,20 +830,25 @@ def coord_set(map_in, x_m, y_m):  # Main Movement Engine
 
                                 if len(valid_moves) > 0:
                                     d = Data.enemies[e.enemy_id]
+                                    _move = True
                                     if not d.Entity_id == e.enemy_id:  # Direct index invalid id failsafe
                                         for f in Data.enemies:
-                                            if not f.move:
-                                                break
-                                            elif f.Entity_id == e.enemy_id:
+                                            if f.Entity_id == e.enemy_id:
                                                 d = f
                                                 break
-                                    _m = random.choice(valid_moves)  # Select Move
-                                    game_data.MapData.movement.append((((e.pos[0], e.pos[1]), (_m[0], _m[1])),
-                                                                       e.last_char, (d.display_char, d.display_colour)))
-                                    m[e.pos[1]][e.pos[0]] = e.last_char
-                                    e.pos = _m  # Set the enemy's new position on backend
-                                    e.old_char = m[_m[1]][_m[0]]
-                                    m[_m[1]][_m[0]] = '2'  # Set the binder position
+
+                                    if d.move is False:
+                                        _move = False
+
+                                    if _move:
+                                        _m = random.choice(valid_moves)  # Select Move
+                                        game_data.MapData.movement.append((((e.pos[0], e.pos[1]), (_m[0], _m[1])),
+                                                                           e.last_char, (d.display_char,
+                                                                                         d.display_colour)))
+                                        m[e.pos[1]][e.pos[0]] = e.last_char
+                                        e.pos = _m  # Set the enemy's new position on backend
+                                        e.old_char = m[_m[1]][_m[0]]
+                                        m[_m[1]][_m[0]] = '2'  # Set the binder position
 
                     else:
                         game_data.MapData.enemy_movement = True  # Run script on next turn
@@ -1001,8 +1089,7 @@ def on_press(key):  # For command processing
         # The question system is active, pass all input to this handler
         try:
             if key == keyboard.Key.enter:
-                # Check if answer is valid
-                pass
+                game_data.PlayerData.question_processing = False
             elif key == keyboard.Key.backspace:
                 game_data.PlayerData.question_answer = game_data.PlayerData.question_answer[:-1]
             else:

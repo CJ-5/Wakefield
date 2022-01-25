@@ -8,14 +8,15 @@ import colorama
 
 # Coordinates with player stats
 class PlayerData:
-    Inventory_Displayed = False  # Is the inventory currently displayed on screen [Redundant]
     question_answer = ""  # The accumulated answer
     question_status = False  # Is the player currently answering a question
+    question_processing = False
     question_attempt = 0  # The amount of times the player has tried to answer the question
 
+    # Battle Data
     battles_won = 0  # How many battles have been won
     battles_lost = 0  # How many battles have been lost
-    battles = battles_won + battles_lost  # The total amount of battles played
+    battles = battles_won + battles_lost  # The total amount of battles played  [Needs to be called recursively]
     battle_turn = 0  # How many turns are in the current battle
     in_battle = False  # Whether the player is in a battle
     battle_action: str = ''  # The current action to be processed
@@ -26,14 +27,15 @@ class PlayerData:
     battle_run_warning = False  # Listener Lock
     battle_run_response = False  # Player Response
 
+    Inventory_Displayed = False  # Is the inventory currently displayed on screen [Redundant]
     item_info_displayed = False  # Whether the item info screen is displayed or not
-    # cur_inv_display_size = 3  # The amount of characters that the current inventory display takes up
     Health = 100  # Players current health
     Health_Max = 100  # The player's max health
-    regen_max_warn = False  # HP over max regen consumable warning
-    regen_max_warn_response = False  # Whether to continue or not with the item use
+    regen_max_warn = False  # Trigger regen over max warning
+    regen_max_warn_response = False  # regen over max warning response
     health_recovery = 5  # The amount of hp that the player recovers per move (out of battle)
-    crit_mod = 25  # Critical Modifier increases damage by x % when attacking
+    jinx_mod = 25  # % Chance of the enemy's attack failing (Nice)
+    crit_mod = 10  # Critical Attack modifier. Yes its is overpowered, but I am the developer and you are not. -_-
     crit_chance = 12  # The percent chance of hitting a critical attack
     defense = None  # To be implemented
     player_level = 0  # The players current level
@@ -123,7 +125,7 @@ class StaticData:  # Core Game Data
                                                                      'At least its not moldy'),
             InvItem('Meat', 5, 1, 5, 1, health_regen=(10, 14), desc='Keep in mind this dropped from a monster'),
             InvItem('Moldy Bread', 6, 1, 3, 2, health_regen=(-2, 1), desc='A little penicillin (mostly) never hurts.'),
-            InvItem('Apple', 7, 1, 1, 1, health_regen=(12, 14), desc='Keeps the doctor away'),
+            InvItem('Apple', 7, 1, 8, 1, health_regen=(12, 14), desc='Keeps the doctor away'),
             InvItem('Meat Sandwich', 21, 1, 5, 1, health_regen=(16, 18), desc='Two pieces of bread '
                                                                               'with raw meat in between'),
             InvItem('Veal', 22, 1, 3, 2, health_regen=(32, 42), desc='This poor deer...'),
@@ -143,7 +145,7 @@ class StaticData:  # Core Game Data
             InvItem('Iron Broadsword', 9, 1, 1, 2, type='weapon', damage=(14, 16), desc='Pretty sharp for a '
                                                                                       'hunk of raw metal'),
             InvItem('Steel Broadsword', 10, 1, 1, 2, type='weapon', damage=(15, 17), desc='Nice sword bro'),
-            InvItem('Titanium Broadsword', 11, 1, 1, 2, type='weapon', damage=(8, 10), desc='Means business'),
+            InvItem('Titanium Broadsword', 11, 1, 1, 2, type='weapon', damage=(18, 25), desc='Means business'),
             InvItem('Wood Training Sword', 12, 1, 1, 2, type='weapon', damage=(1, 2), desc='Used for children to '
                                                                                            'practice with'),
             InvItem('Rusty Broadsword', 13, 1, 1, 2, type='weapon', damage=(8, 11), desc='It has a lot of chips in it, '
@@ -160,9 +162,9 @@ class StaticData:  # Core Game Data
             InvItem('Rusty Pole', 18, 1, 1, 2, type='weapon', damage=(4, 5), desc='Looks like reba-... Totally not '
                                                                                   'rebar.'),
             InvItem('Machete', 19, 1, 1, 2, type='weapon', damage=(18, 20), desc='Cut down your way through jungles.'),
-            InvItem('Katana', 32, 1, 1, 2, type='weapon', damage=(32, 36), desc='Used by samurai in ancient times, '
-                                                                                'how did it get here?'),
-            InvItem('null', 20, 0, 1, 0, type='weapon', damage=(9999, 9999), desc='Cut the Earth in half.'),
+            InvItem('Katana', 32, 1, 1, 2, type='weapon', damage=(80, 150), desc='Used by samurai in ancient times, '
+                                                                                 'how did it get here?'),
+            InvItem('null', 20, 0, 1, 0, type='weapon', damage=(8888, 9999), desc='Cut the Earth in half.'),
         ]  # Max ID: 32
 
         self.enemies = [
@@ -186,20 +188,43 @@ class StaticData:  # Core Game Data
             EnemyData(6, 'Giant', 20, 10, '=', Fore.CYAN, [AttackData('Rock Throw', range(14, 22)),
                                                            AttackData('Tree Javelin', range(15, 22))], (10, 13),
                       loot_table=LootTables.high_level, move=True, loot_range=range(2, 5)),
-            EnemyData(7, 'Gate Keeper', 100, 30, '╬', Fore.RED, [AttackData('Opera Singer Summons', range(30, 50)),
-                                                                 AttackData('Pop Quiz', range(40, 45)),
-                                                                 AttackData('Paper Cut', range(10, 15))], (160, 200),
+            EnemyData(7, 'Gate Keeper', 100, 30, '╬', Fore.RED, [AttackData('Block', range(40, 50)),
+                                                                 AttackData('Shield', range(40, 45)),
+                                                                 AttackData('Slash', range(10, 15))], (80, 100),
                       escape=False, loot_table=LootTables.boss, move=False, loot_range=range(0, 1)),
-            EnemyData(8, 'Pozzebun', 110, 25, 'Д', Fore.BLUE, [AttackData('Opera Singer Summons', range(30, 50)),
-                                                               AttackData('Pop Quiz', range(40, 45)),
-                                                               AttackData('Paper Cut', range(10, 15))], (300, 600),
+            EnemyData(8, 'Pozzebun', 110, 25, 'Д', Fore.GREEN, [AttackData('Opera Singer Summons', range(30, 50)),
+                                                                AttackData('Pop Quiz', range(60, 70)),
+                                                                AttackData('Paper Cut', range(30, 45)),
+                                                                AttackData('Cipher', range(35, 40))], (300, 600),
                       escape=False, move=False, loot_table=LT([], [], [], [8], super_rare_item_chance=range(0, 100)),
                       loot_range=range(0, 1))
         ]  # Holds enemy data
 
         # Questions are divided up into different difficulty tiers and have a corresponding timeouts
         # Questions should be in tuples that list the answer(s)
-        self.questions = ([[], [], []], [15000, 10000, 6000])
+        self.questions = ([[Q('How many bits is in a byte? / A. 10 / B. 1024 / C. 8', ['c', '8']),
+                            Q('What does cpu stand for? / A. Center Process Unit / B. Central Processing Unit / '
+                              'C. No Meaning', ['b', 'central processing unit']),
+                            Q('What does DPI stand for? / A. Dots Per Increment / B. Dots Per Inch / C. No Meaning',
+                              ['b', 'dots per inch']),
+                            Q('What are hard drives used for? / A. Storing Short Term Data / B. Instruction Execution /'
+                              ' C. Storing Long Term Data', ['c', 'storing long term data']),
+                            Q('A Motherboard is used to. / A. House Components / B. Act as the data highway between '
+                              'components / C. Make Computer function faster',
+                              ['a', 'b', 'house components', 'act as the data highway between components']),
+                            Q('Mac OS was created by. / A. Tim Apple / B. Nerds / C. Tim Cook / D. Steve Jobs',
+                              ['b', 'nerds']),
+                            Q('ISP Stands for. / A. Internet Still Paid / B. Internet Service Provider / C.'
+                              ' Internet Stands Perpetual', ['b', 'internet service provider']),
+                            Q('What is a URL. / A. a virtual address that directs a computer on where '
+                              'to find a resource online / B. Random scary thing in my browser',
+                              ['a', 'a virtual address that directs a computer on where '
+                               'to find a resource online']),
+                            Q('How do dial up connections connect to the internet? / A. Demonic Sounds / '
+                              'B. By using audio signals to decode \\ encode data. / C. Black Magic',
+                              ['b', 'By using audio signals to decode / encode data']),
+                            Q('An example of malware is. / A. This program / B. System 32 / C. Rat',
+                              ['c', 'rat'])], [], []], [15000, 10000, 6000])  # I never want to write this again
 
 
 class SysData:
@@ -209,6 +234,12 @@ class SysData:
     main_listener = None
     demo_listener = None
     question_listener = None
+
+
+@dataclass()
+class Q:
+    question: str
+    answer: list[str]
 
 
 @dataclass()
@@ -226,7 +257,7 @@ class Event:
 
 class StoryData:  # Event trigger data
     town_entered = False
-    dungeon_final_boss = False
+    dungeon_final_boss = False  # Will stop the final boss from spawning again after it has been defeated.
 
 
 class EventData:  # Event Dialogue Data  [Door_ID [(DIALOGUE)]]
@@ -244,18 +275,13 @@ class EventData:  # Event Dialogue Data  [Door_ID [(DIALOGUE)]]
                            ('Take care of it', 1300)])],
         "enemy": [Event(7, [('A formidable foe stands in your way', (1600, 'yellow')),
                             ('\"I am the Gatekeeper\"', (1800, 'red')),
-                            ('\"I am the protector of the final room\"', (1800, 'red')),
+                            ('\"I am the protector of the final room\"', (2100, 'red')),
                             ('\"I have defeated all who have come before you... You will be no exception...\"',
-                             (2300, 'red'))])]
+                             (2300, 'red'))]),
+                  Event(8, [('The final floor, the final boss', 1800), ('This is it.', 2300),
+                            ('After this boss has been defeated you are able to restart the game by going through'
+                             ' the door after the boss has been defeated', 2100)])]
     }
-
-
-class Demo:
-    demo_mode = True  # If program is in demo mode
-    help_demo = True  # If the help command demo has been completed
-    inventory_demo = True
-    item_info_demo = True
-    stats_demo = True
 
 
 class MapDataCache:
@@ -434,10 +460,10 @@ class Floor1:
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["", "", "", "", "", "", "", "2", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", "x", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "", "", "", "", "", "", ""],
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "X", "X", "X", "", "", "", "", "", ""],
             ["", "", "", "X", "", "", "", "", "", "", "", "", "", "", "", "X", "X", "", "", "", "", "", "", ""],
-            ["1", "", "", "X", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+            ["1", "x", "", "X", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["", "", "", "X", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "1"],
             ["", "", "X", "X", "X", "X", "", "", "2", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["", "X", "X", "X", "X", "X", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
