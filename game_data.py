@@ -160,8 +160,8 @@ class StaticData:  # Core Game Data
             InvItem('Log', 17, 1, 1, 3, type='weapon', damage=(5, 6), desc='This is literally a branch from a tree'),
             InvItem('Rusty Pole', 18, 1, 1, 2, type='weapon', damage=(4, 5), desc='Looks like reba-... Totally not '
                                                                                   'rebar.'),
-            InvItem('Machete', 19, 1, 1, 2, type='weapon', damage=(18, 20), desc='Cut down your way through jungles.'),
-            InvItem('Katana', 32, 1, 1, 2, type='weapon', damage=(80, 150), desc='Used by samurai in ancient times, '
+            InvItem('Machete', 19, 1, 1, 2, type='weapon', damage=(20, 32), desc='Cut down your way through jungles.'),
+            InvItem('Katana', 32, 1, 1, 2, type='weapon', damage=(70, 85), desc='Used by samurai in ancient times, '
                                                                                  'how did it get here?'),
             InvItem('null', 20, 0, 1, 0, type='weapon', damage=(8888, 9999), desc='Cut the Earth in half.'),
         ]  # Max ID: 32
