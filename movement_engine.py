@@ -101,7 +101,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                         show_map(game_data.MapData.current_map)
                         return
 
-                if d.floor_progress[0] and len(Data.questions[0][d.floor_progress[1]]) > 0:
+                if d.floor_progress[0]:
                     # Trigger Question System
                     question = random.choice(Data.questions[0][0])
                     """
@@ -339,7 +339,9 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                         sl = [lib.ck("When trying to use an item with a space " +
                                      "in its name replace the space with a dash", "yellow")]
 
-                        lib.center_cursor(len(sl[0][0]))
+                        print("\n" + " " * (game_data.SysData.max_screen_size[0] // 2 -
+                                            len(sl[0][0]) // 2), end='')
+
                         lib.gprint(game_data.MQ(sl))
                         time.sleep(3)
                         do_enemy_attack = False
@@ -416,13 +418,12 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
 
                                 if game_data.PlayerData.regen_max_warn_response:
                                     consume = True
+                                game_data.PlayerData.Health = game_data.PlayerData.Health_Max
                             else:
                                 consume = True
 
                             if consume:
-                                if game_data.PlayerData.regen_max_warn_response:
-                                    game_data.PlayerData.Health = game_data.PlayerData.Health_Max
-                                else:
+                                if not game_data.PlayerData.regen_max_warn_response:
                                     game_data.PlayerData.Health += regen
 
                                 os.system('cls')

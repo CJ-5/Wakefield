@@ -103,8 +103,7 @@ class LootTables:
     high_level = LT(base_loot.common_items, mid_level.uncommon_items, mid_level.rare_items + [14, 11, 27, 28],
                     [], common_item_chance=range(0, 30), uncommon_item_chance=range(30, 80),
                     rare_item_chance=range(80, 100))
-    boss = LT([], [], high_level.rare_items, [32],
-              rare_item_chance=range(0, 20), super_rare_item_chance=range(20, 100))
+    boss = LT([], [], [], [32], super_rare_item_chance=range(20, 100))
 
 
 class StaticData:  # Core Game Data
