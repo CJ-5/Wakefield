@@ -8,7 +8,8 @@
 to function properly. Check if you can run ``py -m pip --version``
 
 ## Setup:
-- Keep all files in the **same** directory.
+- Download the Wakefield release in your preferred format.
+- Unzip and keep all files in the **same** directory.
 Launch ***main.py*** through python interpreter or command prompt
 
 ## Info:
@@ -17,6 +18,13 @@ that will optimize the screen size for your monitor and resize
 the console accordingly. It will also check if all the required
 packages are installed, if they aren't it will install them
 automatically.
+
+- If for whatever reason the package install fails due to an issue with pip
+please install the following packages:
+1. Colorama
+2. Pynput
+3. dataclasses
+4. pywin32
 
 - The program does not currently have a save file... if it closes
 **all data** will be lost, and you will start from the beginning.
