@@ -588,35 +588,37 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                         show_map(game_data.MapData.current_map)
                         game_data.MapData.map_idle = False
                         return
-
+            def player_death_check:
             # End of game actions
-            if game_data.PlayerData.Health <= 0:
-                """
-                Player has died, drop random item and return player to main map
-                """
-                valid_items = [i for i in game_data.PlayerData.Inventory if i.death_drop is True]
-                item = random.choice(valid_items)
-                lib.remove_item(item.item_id)
-                os.system('cls')
-                script = [lib.ck('You have passed out. A passing adventurer drags your unconscious body out of the '
-                                 'dungeon, upon waking you discovered that you no longer have your ', 'yellow'),
-                          lib.ck(item.name, 'red')]
+                if game_data.PlayerData.Health <= 0:
+                    """
+                    Player has died, drop random item and return player to main map
+                    """
+                    valid_items = [i for i in game_data.PlayerData.Inventory if i.death_drop is True]
+                    item = random.choice(valid_items)
+                    lib.remove_item(item.item_id)
+                    os.system('cls')
+                    script = [lib.ck('You have passed out. A passing adventurer drags your unconscious body out of the \n'
+                                     'dungeon, upon waking you discovered that you no longer have your ', 'yellow'),
+                              lib.ck(item.name, 'red')]
 
-                sl = 0
-                for i in script:
-                    sl += len(i[0])
+                    sl = 0
+                    for i in script:
+                        sl += len(i[0])
 
-                lib.center_cursor(sl)
-                time.sleep(1)
-                lib.gprint(game_data.MQ(script))
-                time.sleep(3)
-                game_data.MapData.current_map = game_data.MainMap()
-                init_coord()
-                init_door()
-                map_check()
-                game_data.PlayerData.in_battle = False
-                return
-            elif enemy.Health <= 0:  # Player won battle
+                    lib.center_cursor(sl)
+                    time.sleep(1)
+                    lib.gprint(game_data.MQ(script))
+                    time.sleep(3)
+                    game_data.MapData.current_map = game_data.MainMap()
+                    init_coord()
+                    init_door()
+                    map_check()
+                    game_data.PlayerData.in_battle = False
+                    return
+            player_death_check()
+
+            if enemy.Health <= 0:  # Player won battle
                 # XP Calculation
                 xp = random.randint(enemy.xp_drop[0], enemy.xp_drop[1])  # add level advantage scaling
                 game_data.PlayerData.total_xp += xp
@@ -756,6 +758,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                     lib.center_cursor(sl)
                     lib.gprint(game_data.MQ(script))
                 time.sleep(3)
+                player_death_check()
 
         game_data.MapData.current_map.enemy.pop(enemy_data_pos)  # Remove data
         game_data.MapData.current_map.map_array[::-1][coord[1]][coord[0]] = ' '  # Remove enemy from map
@@ -1043,80 +1046,83 @@ def on_release(key):  # For movement processing
 
 # CLEAN THIS UP
 def on_press(key):  # For command processing
-    if game_data.PlayerData.regen_max_warn or game_data.PlayerData.battle_run_warning:
-        try:
-            if key.char == 'y':
-                if game_data.PlayerData.regen_max_warn:
-                    game_data.PlayerData.regen_max_warn_response = True
-                else:
-                    game_data.PlayerData.battle_run_response = True
+    try:
+        if game_data.PlayerData.regen_max_warn or game_data.PlayerData.battle_run_warning:
+            try:
+                if key.char == 'y':
+                    if game_data.PlayerData.regen_max_warn:
+                        game_data.PlayerData.regen_max_warn_response = True
+                    else:
+                        game_data.PlayerData.battle_run_response = True
 
-                game_data.PlayerData.battle_run_warning = False
-                game_data.PlayerData.regen_max_warn = False
-                game_data.SysData.demo_listener.stop()
-            elif key.char == 'n':
-                if game_data.PlayerData.regen_max_warn:
-                    game_data.PlayerData.regen_max_warn_response = False
-                else:
-                    game_data.PlayerData.battle_run_response = False
+                    game_data.PlayerData.battle_run_warning = False
+                    game_data.PlayerData.regen_max_warn = False
+                    game_data.SysData.demo_listener.stop()
+                elif key.char == 'n':
+                    if game_data.PlayerData.regen_max_warn:
+                        game_data.PlayerData.regen_max_warn_response = False
+                    else:
+                        game_data.PlayerData.battle_run_response = False
 
-                game_data.PlayerData.battle_run_warning = False
-                game_data.PlayerData.regen_max_warn = False
-                game_data.SysData.demo_listener.stop()
-        except:
-            return
-    elif game_data.PlayerData.battle_action_processing:
-        # Pull keys
-        try:
-            if key == keyboard.Key.space:
-                if len(game_data.PlayerData.battle_action) == 0:
-                    return
-                key.char = " "
-            if key == keyboard.Key.enter:
-                # Close listener and resume thread processing
-                game_data.PlayerData.battle_action_processing = False
-            elif key == keyboard.Key.backspace and len(game_data.PlayerData.battle_action) > 0:
-                game_data.PlayerData.battle_action = game_data.PlayerData.battle_action[:-1]
-                print('\b \b', end='')
-            else:
-                print(f"{Fore.LIGHTCYAN_EX}{key.char}{Fore.RESET}", end='')
-                game_data.PlayerData.battle_action += key.char
-        except:
-            return
-    elif game_data.PlayerData.battle_inventory is True:
-        game_data.PlayerData.battle_inventory = False
-        game_data.SysData.demo_listener.stop()
-    elif game_data.PlayerData.question_status is True:
-        # The question system is active, pass all input to this handler
-        try:
-            if key == keyboard.Key.enter:
-                game_data.PlayerData.question_processing = False
-            elif key == keyboard.Key.backspace:
-                game_data.PlayerData.question_answer = game_data.PlayerData.question_answer[:-1]
-            else:
-                print(f"{Fore.LIGHTCYAN_EX}{key.char}{Fore.RESET}", end='')
-                game_data.PlayerData.question_answer += key.char
-        except AttributeError:
-            return  # Special key was entered
-
-    elif not game_data.MapData.map_idle:
-        try:
-            if game_data.PlayerData.command_status:  # Checks if player is allowed to enter commands
+                    game_data.PlayerData.battle_run_warning = False
+                    game_data.PlayerData.regen_max_warn = False
+                    game_data.SysData.demo_listener.stop()
+            except:
+                return
+        elif game_data.PlayerData.battle_action_processing:
+            # Pull keys
+            try:
                 if key == keyboard.Key.space:
-                    if len(game_data.MapData.current_command) == 0:
+                    if len(game_data.PlayerData.battle_action) == 0:
                         return
                     key.char = " "
                 if key == keyboard.Key.enter:
-                    lib.process_command(game_data.MapData.current_command)
-                elif key == keyboard.Key.backspace:
-                    # Remove last character of both printed message, and the current command string
-                    game_data.MapData.current_command = game_data.MapData.current_command[:-1]
-                    sys.stdout.write('\b \b')
+                    # Close listener and resume thread processing
+                    game_data.PlayerData.battle_action_processing = False
+                elif key == keyboard.Key.backspace and len(game_data.PlayerData.battle_action) > 0:
+                    game_data.PlayerData.battle_action = game_data.PlayerData.battle_action[:-1]
+                    print('\b \b', end='')
                 else:
                     print(f"{Fore.LIGHTCYAN_EX}{key.char}{Fore.RESET}", end='')
-                    game_data.MapData.current_command += key.char
-        except AttributeError:
-            return  # Entered key was a special key
+                    game_data.PlayerData.battle_action += key.char
+            except:
+                return
+        elif game_data.PlayerData.battle_inventory is True:
+            game_data.PlayerData.battle_inventory = False
+            game_data.SysData.demo_listener.stop()
+        elif game_data.PlayerData.question_status is True:
+            # The question system is active, pass all input to this handler
+            try:
+                if key == keyboard.Key.enter:
+                    game_data.PlayerData.question_processing = False
+                elif key == keyboard.Key.backspace:
+                    game_data.PlayerData.question_answer = game_data.PlayerData.question_answer[:-1]
+                else:
+                    print(f"{Fore.LIGHTCYAN_EX}{key.char}{Fore.RESET}", end='')
+                    game_data.PlayerData.question_answer += key.char
+            except AttributeError:
+                return  # Special key was entered
+
+        elif not game_data.MapData.map_idle:
+            try:
+                if game_data.PlayerData.command_status:  # Checks if player is allowed to enter commands
+                    if key == keyboard.Key.space:
+                        if len(game_data.MapData.current_command) == 0:
+                            return
+                        key.char = " "
+                    if key == keyboard.Key.enter:
+                        lib.process_command(game_data.MapData.current_command)
+                    elif key == keyboard.Key.backspace:
+                        # Remove last character of both printed message, and the current command string
+                        game_data.MapData.current_command = game_data.MapData.current_command[:-1]
+                        sys.stdout.write('\b \b')
+                    else:
+                        print(f"{Fore.LIGHTCYAN_EX}{key.char}{Fore.RESET}", end='')
+                        game_data.MapData.current_command += key.char
+            except AttributeError:
+                return  # Entered key was a special key
+    except:
+        pass
 
 
 # Keyboard Listeners  CLEAN THESE UP AND MERGE

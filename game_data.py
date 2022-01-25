@@ -16,7 +16,6 @@ class PlayerData:
     # Battle Data
     battles_won = 0  # How many battles have been won
     battles_lost = 0  # How many battles have been lost
-    battles = battles_won + battles_lost  # The total amount of battles played  [Needs to be called recursively]
     battle_turn = 0  # How many turns are in the current battle
     in_battle = False  # Whether the player is in a battle
     battle_action: str = ''  # The current action to be processed
