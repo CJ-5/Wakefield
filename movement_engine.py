@@ -588,7 +588,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                         show_map(game_data.MapData.current_map)
                         game_data.MapData.map_idle = False
                         return
-            def player_death_check:
+            def player_death_check():
             # End of game actions
                 if game_data.PlayerData.Health <= 0:
                     """
