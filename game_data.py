@@ -47,9 +47,11 @@ class PlayerData:
     command_status = False  # Whether the player is allowed to enter commands
     Inventory = []  # Players current inventory populated with InvItem Objects
     Detection_Distance = 3  # The distance that the player needs to be within in order to see hidden objects
+    tutorial_skip = True
 
     # Multiplayer Objects
-    
+    mp_join = False   # Listener switch
+    mp_server_address = None  # User inputted server address
 
 
 # Class instance for the creation of a NPC entity
@@ -365,12 +367,13 @@ class HelpPage:
     # cmd_list: Command List
     # ind_def: Individual Definitions
     def __init__(self):
-        self.cmd_list = ["help", "?", "inventory", "item-info", "drop"]
+        self.cmd_list = ["help", "?", "inventory", "item-info", "drop", 'mp']
         self.ind_def = {"use": "Usage (use [item name / item id]): Uses the specified item "
                                "(if it is valid for the situation)",
                         "inventory / inv": "Usage (inventory) | (inv): Displays your current inventory",
                         "item-info": "Usage (item-info [item name / item id] | Displays info on the specified item",
-                        "drop": 'Usage (drop [item name / item id] | Removes the specified item from your inventory'}
+                        "drop": 'Usage (drop [item name / item id] | Removes the specified item from your inventory',
+                        "mp": 'Usage (mp join / start / stop / info) | Manage Multiplayer Instance'}
 
 
 class MainMap:  # Main starting area Map

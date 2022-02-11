@@ -1,6 +1,8 @@
 #  Holds the main functions that operate the backend of the game (e.g battle system)
 import os
 from os import system
+
+import lib
 import movement_engine
 import time
 from colorama import Fore, Style
@@ -421,7 +423,7 @@ def process_command(cmd_raw):
     if (len(cmd_raw) > 0 and game_data.HelpPage().cmd_list.__contains__(cmd[0])
             and game_data.MapData.valid_cmd.__contains__(cmd[0])) or cmd[0] == "exit":
 
-        cmd_latter = " ".join(cmd[1:])  # Removes the command keyword
+        cmd_latter = " ".join(cmd[1:])  # Isolates content after command header
         if cmd[0] == "help" or cmd[0] == "?":  # Print the help page
             system('cls')
             game_data.PlayerData.Inventory_Displayed = True
@@ -475,9 +477,41 @@ def process_command(cmd_raw):
             system('exit')
             game_data.SysData.full_kill = True
         elif cmd[0] == "mp":  # Multiplayer command header
-            # Ask user for the server address they want to connect to
+            operations = ["start", "stop", "join", "info"]
+            os.system('cls')
+            if cmd_latter not in operations:
+                script = [ck('Invalid operation.', 'red'), ck(' valid operations are: '),
+                          ck(', '.join([x[0] for x in operations]))]
+                center_cursor(len(''.join([x[0] for x in operations])))
+                gprint(game_data.MQ([script]))
+
+            # Lock Down
             game_data.MapData.map_idle = True  # Pause map activity
 
+            # Operation Switch
+            if cmd_latter == "start":
+                # Prompt user for the server address
+
+                gprint(game_data.MQ([ck("Please enter the server address...")]))
+                print(f"\n  {Fore.CYAN}>{Fore.GREEN}: {Fore.RESET}")
+                game_data.PlayerData.mp_join = True  # Switch to prompt for server address
+                while game_data.PlayerData.mp_join:
+                    continue
+
+                os.system("cls")
+                script = [ck('Attempting connection to'), ck(game_data.PlayerData.mp_server_address, 'cyan')]
+                lib.center_cursor(len(''.join([x[0] for x in script])))
+                gprint(game_data.MQ(script))
+                time.sleep(0.4)
+
+                # Add Error Handling and connection confirmation
+                open_socket(game_data.PlayerData.mp_server_address)
+            elif cmd_latter == "stop":
+                pass
+            elif cmd_latter == "join":
+                pass
+            elif cmd_latter == "info":
+                pass
 
     else:
         err_msg('Invalid Command')
