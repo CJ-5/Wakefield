@@ -103,99 +103,99 @@ lib.gprint(game_data.MQ([lib.ck("PATCH", "yellow"), lib.ck(": "),
 time.sleep(5)
 
 # Tutorial Script
-os.system('cls')
-lib.print_logo()
-time.sleep(1)
-print('\n\n')
-lib.gprint('Welcome to the game.')
-time.sleep(0.4)
-lib.gprint('oddly enough I decided after putting all of this work into it that I would not'
-           ' bother giving it a name...')
-time.sleep(2)
-lib.gprint('Hence the name Adventure Game Stuck.')
-time.sleep(2)
-os.system('cls')
-lib.print_logo()
-print('\n\n')
-lib.gprint('Originally I would have wrote a fully interactive tutorial script that had you enter all of the different '
-           'commands and it would be all cool and fancy, but then I realised...')
-time.sleep(1)
-lib.gprint('I can just give you a help command that shows tells you the exact same thing!')
-time.sleep(1)
-lib.gprint('So.')
-time.sleep(1)
-lib.gprint(game_data.MQ([lib.ck('At any time '), lib.ck('(terms and conditions apply)', 'yellow'),
-                         lib.ck(', use the "'), lib.ck('help', 'yellow'), lib.ck('" command to see a list of commands '
-                                                                                 'and their individual usages')]))
-time.sleep(2)
-os.system('cls')
-lib.print_logo()
-print('\n\n')
-lib.gprint('The game is simple.')
-time.sleep(1)
-lib.gprint('You are an adventurer in the magical land of Wakefield.')
-time.sleep(2)
-lib.gprint('All local dungeons have dried up and cleared out ages ago.')
-time.sleep(2)
-lib.gprint('You thought adventuring would be a sustainable, stable job. Now you realise that it wasn\'t')
-time.sleep(1)
-lib.gprint('Your only hope now is to find a dungeon that you can clear by yourself and use the loot to sell \nand support'
-           ' yourself.')
-time.sleep(3)
-os.system('cls')
-lib.print_logo()
-print('\n\n')
-lib.gprint('Now then, lets get started...')
-time.sleep(2)
-lib.gprint('Ill be nice and give you some starter gear.')
-time.sleep(1.5)
-lib.gprint('Hmm...', 200)
-time.sleep(1)
-lib.gprint('How about your grandfathers old broadsword... a Small HP potion, and....... Moldy Bread...')
-time.sleep(1.5)
-lib.gprint('Generous aren\'t I?')
-time.sleep(3)
-os.system('cls')
-lib.print_logo()
-print('\n\n')
-lib.gprint('Alright now for controls. Its simple, use arrow keys to move, moving onto a door will activate it,\n '
-           'all enemies must be cleared to progress to the next floor, once enemies are cleared a question will be \n'
-           'asked and if you get the answer wrong more than 3 times or the time runs out once you will be returned to\n'
-           'the main map')
-time.sleep(3)
-lib.gprint('\nEnemies will move every second time you move but will not move when you are near. Moving onto an enemy\n'
-           'will start a battle,  if you lose the battle and die you will be returned to the main map losing 1 random'
-           ' \nitem (some items are immune to this).')
-time.sleep(2)
-lib.gprint('Winning a battle will give you a random (within defined range) amount of exp which will, over time, level\n'
-           'you up. Levels don\'t really do much... On top of the exp you will also get some loot, this includes\n'
-           'weapons and consumables that can be used in battle.')
-time.sleep(2)
-lib.gprint(game_data.MQ([lib.ck('To use a item, you can use the "use" '
-                                'command which is combined with a item id / item name like so'),
-                         lib.ck(' use item-name   |   use 0', 'yellow')]))
-time.sleep(3)
-os.system('cls')
-lib.print_logo()
-print('\n\n')
-lib.gprint('If you want to play the game with other players in a private / public session use the "MP" command'
-           'and follow the prompts')
-
-lib.gprint('Alright! Now since you are a pro and know everything about the game because of my masterful teaching,\n'
-           'I am going to drop you onto the map.')
-time.sleep(3)
-os.system('cls')
-script = [lib.ck('Good luck! and may the RNG God be with you. Oh and small detail, there are no save files. :)')]
-lib.center_cursor(len(script[0][0]))
-lib.gprint(game_data.MQ(script))
-time.sleep(1)
+if not game_data.PlayerData.tutorial_skip:
+    os.system('cls')
+    lib.print_logo()
+    time.sleep(1)
+    print('\n\n')
+    lib.gprint('Welcome to the game.')
+    time.sleep(0.4)
+    lib.gprint('oddly enough I decided after putting all of this work into it that I would not'
+               ' bother giving it a name...')
+    time.sleep(2)
+    lib.gprint('Hence the name Adventure Game Stuck.')
+    time.sleep(2)
+    os.system('cls')
+    lib.print_logo()
+    print('\n\n')
+    lib.gprint('Originally I would have wrote a fully interactive tutorial script that had you enter all of the different '
+               'commands and it would be all cool and fancy, but then I realised...')
+    time.sleep(1)
+    lib.gprint('I can just give you a help command that shows tells you the exact same thing!')
+    time.sleep(1)
+    lib.gprint('So.')
+    time.sleep(1)
+    lib.gprint(game_data.MQ([lib.ck('At any time '), lib.ck('(terms and conditions apply)', 'yellow'),
+                             lib.ck(', use the "'), lib.ck('help', 'yellow'), lib.ck('" command to see a list of commands '
+                                                                                     'and their individual usages')]))
+    time.sleep(2)
+    os.system('cls')
+    lib.print_logo()
+    print('\n\n')
+    lib.gprint('The game is simple.')
+    time.sleep(1)
+    lib.gprint('You are an adventurer in the magical land of Wakefield.')
+    time.sleep(2)
+    lib.gprint('All local dungeons have dried up and cleared out ages ago.')
+    time.sleep(2)
+    lib.gprint('You thought adventuring would be a sustainable, stable job. Now you realise that it wasn\'t')
+    time.sleep(1)
+    lib.gprint('Your only hope now is to find a dungeon that you can clear by yourself and use the loot to sell \nand support'
+               ' yourself.')
+    time.sleep(3)
+    os.system('cls')
+    lib.print_logo()
+    print('\n\n')
+    lib.gprint('Now then, lets get started...')
+    time.sleep(2)
+    lib.gprint('Ill be nice and give you some starter gear.')
+    time.sleep(1.5)
+    lib.gprint('Hmm...', 200)
+    time.sleep(1)
+    lib.gprint('How about your grandfathers old broadsword... a Small HP potion, and....... Moldy Bread...')
+    time.sleep(1.5)
+    lib.gprint('Generous aren\'t I?')
+    time.sleep(3)
+    os.system('cls')
+    lib.print_logo()
+    print('\n\n')
+    lib.gprint('Alright now for controls. Its simple, use arrow keys to move, moving onto a door will activate it,\n '
+               'all enemies must be cleared to progress to the next floor, once enemies are cleared a question will be \n'
+               'asked and if you get the answer wrong more than 3 times or the time runs out once you will be returned to\n'
+               'the main map')
+    time.sleep(3)
+    lib.gprint('\nEnemies will move every second time you move but will not move when you are near. Moving onto an enemy\n'
+               'will start a battle,  if you lose the battle and die you will be returned to the main map losing 1 random'
+               ' \nitem (some items are immune to this).')
+    time.sleep(2)
+    lib.gprint('Winning a battle will give you a random (within defined range) amount of exp which will, over time, level\n'
+               'you up. Levels don\'t really do much... On top of the exp you will also get some loot, this includes\n'
+               'weapons and consumables that can be used in battle.')
+    time.sleep(2)
+    lib.gprint(game_data.MQ([lib.ck('To use a item, you can use the "use" '
+                                    'command which is combined with a item id / item name like so'),
+                             lib.ck(' use item-name   |   use 0', 'yellow')]))
+    time.sleep(3)
+    os.system('cls')
+    lib.print_logo()
+    print('\n\n')
+    lib.gprint('If you want to play the game with other players in a private / public session use the "MP" command'
+               'and simply follow the prompts')
+    time.sleep(3)
+    os.system('cls')
+    lib.print_logo()
+    print('\n\n')
+    lib.gprint('Alright! Now since you are a pro and know everything about the game because of my masterful teaching,\n'
+               'I am going to drop you onto the map.')
+    time.sleep(3)
+    os.system('cls')
+    script = [lib.ck('Good luck! and may the RNG God be with you. Oh and small detail, there are no save files. :)')]
+    lib.center_cursor(len(script[0][0]))
+    lib.gprint(game_data.MQ(script))
+    time.sleep(1)
 
 game_data.PlayerData.Inventory_Accessible = True
-# Redundant
-# game_data.Demo.inventory_demo = False
-# game_data.Demo.help_demo = False
-# game_data.Demo.item_info_demo = False
-game_data.MapData.valid_cmd = ["inventory", "item-info", "help", 'drop']
+game_data.MapData.valid_cmd = ["inventory", "item-info", "help", 'drop', 'mp']
 
 # Add Starter Items
 lib.add_item(9)
