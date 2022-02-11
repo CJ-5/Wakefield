@@ -48,6 +48,9 @@ class PlayerData:
     Inventory = []  # Players current inventory populated with InvItem Objects
     Detection_Distance = 3  # The distance that the player needs to be within in order to see hidden objects
 
+    # Multiplayer Objects
+    
+
 
 # Class instance for the creation of a NPC entity
 @dataclass()
@@ -232,6 +235,9 @@ class SysData:
     main_listener = None
     demo_listener = None
     question_listener = None
+    multiplayer_socket = None
+    system_patch_version = "v1.3"
+    system_patch_name = "Multiplayer Update"
 
 
 @dataclass()

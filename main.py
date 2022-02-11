@@ -41,6 +41,7 @@ except ModuleNotFoundError:
         os.system("python -m pip install pynput")
         os.system("python -m pip install dataclasses")
         os.system("python -m pip install pywin32")
+        os.system("python -m pip install websocket-client")
         time.sleep(2)
         print("Please restart the program... Exiting...")
         time.sleep(2)
@@ -95,6 +96,9 @@ lib.gprint(game_data.MQ([lib.ck("WARNING", "yellow"),
                          lib.ck(": KEEP THIS PROGRAM IN FULLSCREEN FOR THE ENTIRE PLAY THROUGH"
                                 "(otherwise things will break, and I will be sad)\n"
                                 "The script does everything for you, let it do it's thing\n")]), 0)
+lib.gprint(game_data.MQ([lib.ck("PATCH", "yellow"), lib.ck(": "),
+                         lib.ck(f"{game_data.SysData.system_patch_version} "
+                                f"\"{game_data.SysData.system_patch_name}\"", "green")]), 0)
 
 time.sleep(5)
 
@@ -174,6 +178,9 @@ time.sleep(3)
 os.system('cls')
 lib.print_logo()
 print('\n\n')
+lib.gprint('If you want to play the game with other players in a private / public session use the "MP" command'
+           'and follow the prompts')
+
 lib.gprint('Alright! Now since you are a pro and know everything about the game because of my masterful teaching,\n'
            'I am going to drop you onto the map.')
 time.sleep(3)

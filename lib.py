@@ -1,8 +1,6 @@
 #  Holds the main functions that operate the backend of the game (e.g battle system)
 import os
 from os import system
-
-import lib
 import movement_engine
 import time
 from colorama import Fore, Style
@@ -14,6 +12,9 @@ import msvcrt
 import subprocess
 from ctypes import wintypes
 from game_data import MQ, InvItem
+import websocket
+import _thread
+
 
 
 class Logo:
@@ -458,7 +459,7 @@ def process_command(cmd_raw):
 
                 game_data.MapData.map_idle = True
                 system('cls')
-                lib.center_cursor(sl)
+                center_cursor(sl)
                 gprint(game_data.MQ(script))
                 time.sleep(1)
                 game_data.MapData.map_idle = False
@@ -473,6 +474,11 @@ def process_command(cmd_raw):
             time.sleep(1)
             system('exit')
             game_data.SysData.full_kill = True
+        elif cmd[0] == "mp":  # Multiplayer command header
+            # Ask user for the server address they want to connect to
+            game_data.MapData.map_idle = True  # Pause map activity
+
+
     else:
         err_msg('Invalid Command')
     game_data.MapData.current_command = ""  # Reset the inputted command
@@ -587,3 +593,32 @@ def gprint(queue, speed: int = 25):
                 print(char, end='')
                 time.sleep(delay)
     print()  # Create new line
+
+
+# Multiplayer Connection Backend
+def socket_message(ws, message):  # Socket has received message
+    pass
+
+
+def socket_error(ws, error):  # Socket has encountered error
+    pass
+
+
+def socket_close(ws, close_status_code, close_msg):  # Socket has closed
+    pass
+
+
+def socket_open(ws):  # Socket has opened
+    pass
+
+
+def open_socket(ws_addr):
+    # websocket.enableTrace(True)
+    game_data.SysData.multiplayer_socket = websocket.WebSocketApp(ws_addr,
+                                                                  on_open=socket_open,
+                                                                  on_message=socket_message,
+                                                                  on_close=socket_close,
+                                                                  on_error=socket_error)
+
+    game_data.SysData.multiplayer_socket.run_forever()
+
