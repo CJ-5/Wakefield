@@ -721,10 +721,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                 else:
                     os.system('cls')
                     script = [lib.ck('Your inventory is full. Please drop some items to be able to get more', 'yellow')]
-                    sl = 0
-                    for i in script:
-                        sl += len(i[0])
-                    lib.center_cursor(sl)
+                    lib.center_cursor(len(''.join([x[0] for x in script])))
                     lib.gprint(game_data.MQ(script))
                     time.sleep(2)
                     game_data.PlayerData.in_battle = False
@@ -738,11 +735,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                               lib.ck(', attack deals ', 'yellow'), lib.ck(str(attack_damage), 'red'),
                               lib.ck(' damage', 'yellow')]
 
-                    sl = 0
-                    for i in script:
-                        sl += len(i[0])
-
-                    lib.center_cursor(sl)
+                    lib.center_cursor(len(''.join([x[0] for x in script])))
                     lib.gprint(game_data.MQ(script))
                     game_data.PlayerData.Health -= attack_damage  # Deal enemy damage to player
                 else:
@@ -751,11 +744,7 @@ def process_tile(tile_char: str, coord: tuple):  # Process the specified tile
                     os.system('cls')
                     script = [lib.ck(enemy.Name, 'red'), lib.ck(' uses ', 'yellow'), lib.ck(attack.name),
                               lib.ck(' attack misses!', 'yellow')]
-                    sl = 0
-                    for i in script:
-                        sl += len(i[0])
-
-                    lib.center_cursor(sl)
+                    lib.center_cursor(len(''.join([x[0] for x in script])))
                     lib.gprint(game_data.MQ(script))
                 time.sleep(3)
                 player_death_check()
@@ -1047,7 +1036,25 @@ def on_release(key):  # For movement processing
 # CLEAN THIS UP
 def on_press(key):  # For command processing
     try:
-        if game_data.PlayerData.regen_max_warn or game_data.PlayerData.battle_run_warning:
+        if game_data.PlayerData.mp_join:
+            try:
+                if key == keyboard.Key.space:
+                    if len(game_data.PlayerData.mp_server_address) == 0:
+                        return
+                    key.char = " "
+                if key == keyboard.Key.enter:
+                    # Close listener and resume thread processing
+                    game_data.PlayerData.mp_join = False
+                elif key == keyboard.Key.backspace and len(game_data.PlayerData.mp_server_address) > 0:
+                    game_data.PlayerData.mp_server_address = game_data.PlayerData.mp_server_address[:-1]
+                    print('\b \b', end='')
+                else:
+                    print(f"{Fore.LIGHTCYAN_EX}{key.char}{Fore.RESET}", end='')
+                    game_data.PlayerData.mp_server_address += key.char
+            except AttributeError:
+                return
+
+        elif game_data.PlayerData.regen_max_warn or game_data.PlayerData.battle_run_warning:
             try:
                 if key.char == 'y':
                     if game_data.PlayerData.regen_max_warn:
@@ -1085,7 +1092,7 @@ def on_press(key):  # For command processing
                 else:
                     print(f"{Fore.LIGHTCYAN_EX}{key.char}{Fore.RESET}", end='')
                     game_data.PlayerData.battle_action += key.char
-            except:
+            except AttributeError:
                 return
         elif game_data.PlayerData.battle_inventory is True:
             game_data.PlayerData.battle_inventory = False
