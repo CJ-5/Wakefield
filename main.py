@@ -88,7 +88,8 @@ movement_engine.init_door()
 os.system("cls")
 
 # Basic Controls tutorial
-lib.print_logo()
+if not game_data.PlayerData.tutorial_skip:
+    lib.print_logo()
 lib.gprint(game_data.MQ([lib.ck("WARNING", "yellow"),
                         lib.ck(": This program should only be ran in the python 3.9+ interpreter\n"
                                "and keep in mind that ALL keyboard input is listened to (for game commands)\n")]), 0)

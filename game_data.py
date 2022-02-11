@@ -51,6 +51,7 @@ class PlayerData:
 
     # Multiplayer Objects
     mp_join = False   # Listener switch
+    mp_address_capture = False  # The status of the listener
     mp_server_address = None  # User inputted server address
 
 

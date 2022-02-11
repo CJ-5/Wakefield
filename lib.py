@@ -477,6 +477,7 @@ def process_command(cmd_raw):
             system('exit')
             game_data.SysData.full_kill = True
         elif cmd[0] == "mp":  # Multiplayer command header
+
             operations = ["start", "stop", "join", "info"]
             os.system('cls')
             if cmd_latter not in operations:
@@ -484,38 +485,57 @@ def process_command(cmd_raw):
                           ck(', '.join([x[0] for x in operations]))]
                 center_cursor(len(''.join([x[0] for x in operations])))
                 gprint(game_data.MQ([script]))
+                return
 
             # Lock Down
-            game_data.MapData.map_idle = True  # Pause map activity
 
             # Operation Switch
             if cmd_latter == "start":
-                # Prompt user for the server address
+                """
+                Order of operations:
+                    - Pause Map Activity
+                    - Switch Listener to prompt user to enter server address
+                    - Attempt connection to server
+                """
 
+                # Prompt user for the server address
                 gprint(game_data.MQ([ck("Please enter the server address...")]))
-                print(f"\n  {Fore.CYAN}>{Fore.GREEN}: {Fore.RESET}")
+                print(f"\n  {Fore.CYAN}>{Fore.GREEN}: {Fore.RESET}", end=' ')
+                time.sleep(0.1)
+
+                # Try to hijack main listener capabilities
+                game_data.MapData.map_idle = True
                 game_data.PlayerData.mp_join = True  # Switch to prompt for server address
-                while game_data.PlayerData.mp_join:
+
+                while game_data.PlayerData.mp_join is True:
                     continue
 
                 os.system("cls")
-                script = [ck('Attempting connection to'), ck(game_data.PlayerData.mp_server_address, 'cyan')]
-                lib.center_cursor(len(''.join([x[0] for x in script])))
+                script = [ck('Attempting connection to '), ck(game_data.PlayerData.mp_server_address, 'cyan')]
+                center_cursor(len(''.join([x[0] for x in script])))
                 gprint(game_data.MQ(script))
                 time.sleep(0.4)
+                # TODO: Add Error Handling and connection confirmation
+                # Setup Cookies
 
-                # Add Error Handling and connection confirmation
                 open_socket(game_data.PlayerData.mp_server_address)
-            elif cmd_latter == "stop":
+            elif cmd_latter == "stop":  # Stop the public / private session
                 pass
-            elif cmd_latter == "join":
+            elif cmd_latter == "leave":  # Leave the global session
                 pass
-            elif cmd_latter == "info":
+            elif cmd_latter == "join":  # Join the specified session (sessions can be viewed via the 'mp list' command)
+                pass
+            elif cmd_latter == "info":  # View info on the current connection
+                pass
+            elif cmd_latter == "list":  # View the list of publicly hosted sessions
                 pass
 
     else:
         err_msg('Invalid Command')
     game_data.MapData.current_command = ""  # Reset the inputted command
+
+def connection_prompt():
+    pass
 
 
 def err_msg(msg: str):
