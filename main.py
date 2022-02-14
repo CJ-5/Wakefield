@@ -1,4 +1,6 @@
 # Import Failsafe
+import threading
+
 try:
     import time
     import os
@@ -101,7 +103,7 @@ lib.gprint(game_data.MQ([lib.ck("PATCH", "yellow"), lib.ck(": "),
                          lib.ck(f"{game_data.SysData.system_patch_version} "
                                 f"\"{game_data.SysData.system_patch_name}\"", "green")]), 0)
 
-time.sleep(5)
+time.sleep(3)
 
 # Tutorial Script
 if not game_data.PlayerData.tutorial_skip:
@@ -202,8 +204,9 @@ game_data.MapData.valid_cmd = ["inventory", "item-info", "help", 'drop', 'mp']
 lib.add_item(9)
 lib.add_item(0)
 lib.add_item(6)
-
+print(threading.active_count())
 movement_engine.show_map(game_data.MapData.current_map)
+Thread(target=lib.management_thread).start()  # Management Thread
 Thread(target=movement_engine.csq_watch_dog).start()  # Movement listener (Async)
 movement_engine.kb_listener()
 

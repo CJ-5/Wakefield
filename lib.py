@@ -14,6 +14,8 @@ import msvcrt
 import subprocess
 from ctypes import wintypes
 from game_data import MQ, InvItem
+import threading
+from threading import Thread
 import websocket
 import _thread
 
@@ -488,53 +490,76 @@ def process_command(cmd_raw):
                 return
 
             # Lock Down
+            game_data.MapData.map_idle = True
 
             # Operation Switch
-            if cmd_latter == "start":
-                """
-                Order of operations:
-                    - Pause Map Activity
-                    - Switch Listener to prompt user to enter server address
-                    - Attempt connection to server
-                """
-
-                # Prompt user for the server address
-                gprint(game_data.MQ([ck("Please enter the server address...")]))
-                print(f"\n  {Fore.CYAN}>{Fore.GREEN}: {Fore.RESET}", end=' ')
-                time.sleep(0.1)
-
-                # Try to hijack main listener capabilities
-                game_data.MapData.map_idle = True
-                game_data.PlayerData.mp_join = True  # Switch to prompt for server address
-
-                while game_data.PlayerData.mp_join is True:
-                    continue
-
-                os.system("cls")
-                script = [ck('Attempting connection to '), ck(game_data.PlayerData.mp_server_address, 'cyan')]
-                center_cursor(len(''.join([x[0] for x in script])))
-                gprint(game_data.MQ(script))
-                time.sleep(0.4)
-                # TODO: Add Error Handling and connection confirmation
-                # Setup Cookies
-
-                open_socket(game_data.PlayerData.mp_server_address)
-            elif cmd_latter == "stop":  # Stop the public / private session
-                pass
-            elif cmd_latter == "leave":  # Leave the global session
-                pass
-            elif cmd_latter == "join":  # Join the specified session (sessions can be viewed via the 'mp list' command)
-                pass
-            elif cmd_latter == "info":  # View info on the current connection
-                pass
-            elif cmd_latter == "list":  # View the list of publicly hosted sessions
-                pass
-
+            game_data.SysData.management_operation.append(("con_start", cmd_latter))
     else:
         err_msg('Invalid Command')
     game_data.MapData.current_command = ""  # Reset the inputted command
 
-def connection_prompt():
+
+def management_thread():
+    # I probably could have used this many months ago ._.
+    operation_index = {
+        "con_start": connection_prompt,
+    }
+    while True:
+        if len(game_data.SysData.management_operation) > 0:
+            for x in game_data.SysData.management_operation:
+                if x[0] in operation_index.keys():
+                    Thread(target=operation_index[x[0]](x[1])).start()  # Run function
+            game_data.SysData.management_operation.clear()
+        time.sleep(0.1)
+
+
+def connection_prompt(cmd_latter):
+    if cmd_latter == "start":
+        """
+        Order of operations:
+            - Pause Map Activity
+            - Switch Listener to prompt user to enter server address
+            - Attempt connection to server
+        """
+
+        game_data.PlayerData.mp_join = True
+        # Prompt user for the server address
+        gprint(game_data.MQ([ck("Please enter the server address...")]))
+        print(f"\n  {Fore.CYAN}>{Fore.GREEN}: {Fore.RESET}", end=' ')
+        time.sleep(0.1)
+
+        # Try to hijack main listener capabilities
+        game_data.PlayerData.mp_server_address = ""
+
+        while game_data.PlayerData.mp_join:
+            time.sleep(0.1)
+            continue
+
+        os.system("cls")
+        script = [ck('Attempting connection to '), ck(game_data.PlayerData.mp_server_address, 'cyan')]
+        center_cursor(len(''.join([x[0] for x in script])))
+        gprint(game_data.MQ(script))
+        time.sleep(0.4)
+        game_data.multiplayer.socket_initial_connect = True
+        Thread(target=open_socket, args=(game_data.PlayerData.mp_server_address,)).start()
+        while game_data.multiplayer.socket_open_message_status is False:
+            continue
+
+        # Socket connection has finished, check to see if the client is connected if not display error message
+        if game_data.multiplayer.socket_timeout:
+            err_msg("Error: Could not connect to specified server. "
+                    "Please check your connection and the server's status")
+    elif cmd_latter == "stop":  # Stop the public / private session
+        pass
+    elif cmd_latter == "leave":  # Leave the global session
+        pass
+    elif cmd_latter == "join":  # Join the specified session (sessions can be viewed via the 'mp list' command)
+        pass
+    elif cmd_latter == "info":  # View info on the current connection
+        pass
+    elif cmd_latter == "list":  # View the list of publicly hosted sessions
+        pass
+
     pass
 
 
@@ -651,28 +676,37 @@ def gprint(queue, speed: int = 25):
 
 # Multiplayer Connection Backend
 def socket_message(ws, message):  # Socket has received message
-    pass
+    print('Message')
 
 
 def socket_error(ws, error):  # Socket has encountered error
-    pass
+    print(error)
 
 
 def socket_close(ws, close_status_code, close_msg):  # Socket has closed
-    pass
+    if game_data.multiplayer.socket_initial_connect:
+        game_data.multiplayer.socket_timeout = True
+        game_data.multiplayer.socket_initial_connect = False
 
 
 def socket_open(ws):  # Socket has opened
-    pass
+    if game_data.SysData.connection_status is False:
+        game_data.SysData.connection_status = True
+        game_data.SysData.multiplayer_socket = ws
+        os.system('cls')
+        script = [ck('Server Connection Successfully Established')]
+        lib.center_cursor(len(''.join([x[0] for x in script])))
+        lib.gprint(game_data.MQ(script))
+
 
 
 def open_socket(ws_addr):
-    # websocket.enableTrace(True)
+    websocket.enableTrace(True)
     game_data.SysData.multiplayer_socket = websocket.WebSocketApp(ws_addr,
                                                                   on_open=socket_open,
                                                                   on_message=socket_message,
                                                                   on_close=socket_close,
-                                                                  on_error=socket_error)
-
+                                                                  on_error=socket_error,)
+    websocket.setdefaulttimeout(2)
     game_data.SysData.multiplayer_socket.run_forever()
 

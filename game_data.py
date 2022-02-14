@@ -52,7 +52,7 @@ class PlayerData:
     # Multiplayer Objects
     mp_join = False   # Listener switch
     mp_address_capture = False  # The status of the listener
-    mp_server_address = None  # User inputted server address
+    mp_server_address = ""  # User inputted server address
 
 
 # Class instance for the creation of a NPC entity
@@ -239,8 +239,16 @@ class SysData:
     demo_listener = None
     question_listener = None
     multiplayer_socket = None
+    connection_status = False
+    management_operation = []  # Management thread operation queue
+    management_args = ""
     system_patch_version = "v1.3"
     system_patch_name = "Multiplayer Update"
+
+class multiplayer:
+    socket_initial_connect = False
+    socket_open_message_status = False
+    socket_timeout = False
 
 
 @dataclass()

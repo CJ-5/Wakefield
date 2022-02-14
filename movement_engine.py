@@ -1035,103 +1035,101 @@ def on_release(key):  # For movement processing
 
 # CLEAN THIS UP
 def on_press(key):  # For command processing
-    print('hit1')
-    # try:
-    if game_data.PlayerData.mp_join is True:
-        print('hit0')
-        # try:
-        #     if key == keyboard.Key.space:
-        #         if len(game_data.PlayerData.mp_server_address) == 0:
-        #             return
-        #         key.char = " "
-        #     if key == keyboard.Key.enter:
-        #         # Close listener and resume thread processing
-        #         game_data.PlayerData.mp_join = False
-        #     elif key == keyboard.Key.backspace and len(game_data.PlayerData.mp_server_address) > 0:
-        #         game_data.PlayerData.mp_server_address = game_data.PlayerData.mp_server_address[:-1]
-        #         print('\b \b', end='')
-        #     else:
-        #         print(f"{Fore.LIGHTCYAN_EX}{key.char}{Fore.RESET}", end='')
-        #         game_data.PlayerData.mp_server_address += key.char
-        # except AttributeError:
-        #     print('error')
-
-    elif game_data.PlayerData.regen_max_warn or game_data.PlayerData.battle_run_warning:
-        try:
-            if key.char == 'y':
-                if game_data.PlayerData.regen_max_warn:
-                    game_data.PlayerData.regen_max_warn_response = True
-                else:
-                    game_data.PlayerData.battle_run_response = True
-
-                game_data.PlayerData.battle_run_warning = False
-                game_data.PlayerData.regen_max_warn = False
-                game_data.SysData.demo_listener.stop()
-            elif key.char == 'n':
-                if game_data.PlayerData.regen_max_warn:
-                    game_data.PlayerData.regen_max_warn_response = False
-                else:
-                    game_data.PlayerData.battle_run_response = False
-
-                game_data.PlayerData.battle_run_warning = False
-                game_data.PlayerData.regen_max_warn = False
-                game_data.SysData.demo_listener.stop()
-        except:
-            return
-    elif game_data.PlayerData.battle_action_processing:
-        # Pull keys
-        try:
-            if key == keyboard.Key.space:
-                if len(game_data.PlayerData.battle_action) == 0:
-                    return
-                key.char = " "
-            if key == keyboard.Key.enter:
-                # Close listener and resume thread processing
-                game_data.PlayerData.battle_action_processing = False
-            elif key == keyboard.Key.backspace and len(game_data.PlayerData.battle_action) > 0:
-                game_data.PlayerData.battle_action = game_data.PlayerData.battle_action[:-1]
-                print('\b \b', end='')
-            else:
-                print(f"{Fore.LIGHTCYAN_EX}{key.char}{Fore.RESET}", end='')
-                game_data.PlayerData.battle_action += key.char
-        except AttributeError:
-            return
-    elif game_data.PlayerData.battle_inventory is True:
-        game_data.PlayerData.battle_inventory = False
-        game_data.SysData.demo_listener.stop()
-    elif game_data.PlayerData.question_status is True:
-        # The question system is active, pass all input to this handler
-        try:
-            if key == keyboard.Key.enter:
-                game_data.PlayerData.question_processing = False
-            elif key == keyboard.Key.backspace:
-                game_data.PlayerData.question_answer = game_data.PlayerData.question_answer[:-1]
-            else:
-                print(f"{Fore.LIGHTCYAN_EX}{key.char}{Fore.RESET}", end='')
-                game_data.PlayerData.question_answer += key.char
-        except AttributeError:
-            return  # Special key was entered
-
-    elif not game_data.MapData.map_idle:
-        try:
-            if game_data.PlayerData.command_status:  # Checks if player is allowed to enter commands
+    try:
+        if game_data.PlayerData.mp_join is True:
+            try:
                 if key == keyboard.Key.space:
-                    if len(game_data.MapData.current_command) == 0:
+                    if len(game_data.PlayerData.mp_server_address) == 0:
                         return
                     key.char = " "
                 if key == keyboard.Key.enter:
-                    lib.process_command(game_data.MapData.current_command)
-                elif key == keyboard.Key.backspace:
-                    # Remove last character of both printed message, and the current command string
-                    game_data.MapData.current_command = game_data.MapData.current_command[:-1]
-                    sys.stdout.write('\b \b')
+                    # Close listener and resume thread processing
+                    game_data.PlayerData.mp_join = False
+                elif key == keyboard.Key.backspace and len(game_data.PlayerData.mp_server_address) > 0:
+                    game_data.PlayerData.mp_server_address = game_data.PlayerData.mp_server_address[:-1]
+                    print('\b \b', end='')
                 else:
                     print(f"{Fore.LIGHTCYAN_EX}{key.char}{Fore.RESET}", end='')
-                    game_data.MapData.current_command += key.char
-        except AttributeError:
-            return  # Entered key was a special key
-    # except Exception:
-    #     pass
+                    game_data.PlayerData.mp_server_address += key.char
+            except AttributeError:
+                return
+
+        elif game_data.PlayerData.regen_max_warn or game_data.PlayerData.battle_run_warning:
+            try:
+                if key.char == 'y':
+                    if game_data.PlayerData.regen_max_warn:
+                        game_data.PlayerData.regen_max_warn_response = True
+                    else:
+                        game_data.PlayerData.battle_run_response = True
+
+                    game_data.PlayerData.battle_run_warning = False
+                    game_data.PlayerData.regen_max_warn = False
+                    game_data.SysData.demo_listener.stop()
+                elif key.char == 'n':
+                    if game_data.PlayerData.regen_max_warn:
+                        game_data.PlayerData.regen_max_warn_response = False
+                    else:
+                        game_data.PlayerData.battle_run_response = False
+
+                    game_data.PlayerData.battle_run_warning = False
+                    game_data.PlayerData.regen_max_warn = False
+                    game_data.SysData.demo_listener.stop()
+            except AttributeError:
+                return
+        elif game_data.PlayerData.battle_action_processing:
+            # Pull keys
+            try:
+                if key == keyboard.Key.space:
+                    if len(game_data.PlayerData.battle_action) == 0:
+                        return
+                    key.char = " "
+                if key == keyboard.Key.enter:
+                    # Close listener and resume thread processing
+                    game_data.PlayerData.battle_action_processing = False
+                elif key == keyboard.Key.backspace and len(game_data.PlayerData.battle_action) > 0:
+                    game_data.PlayerData.battle_action = game_data.PlayerData.battle_action[:-1]
+                    print('\b \b', end='')
+                else:
+                    print(f"{Fore.LIGHTCYAN_EX}{key.char}{Fore.RESET}", end='')
+                    game_data.PlayerData.battle_action += key.char
+            except AttributeError:
+                return
+        elif game_data.PlayerData.battle_inventory is True:
+            game_data.PlayerData.battle_inventory = False
+            game_data.SysData.demo_listener.stop()
+        elif game_data.PlayerData.question_status is True:
+            # The question system is active, pass all input to this handler
+            try:
+                if key == keyboard.Key.enter:
+                    game_data.PlayerData.question_processing = False
+                elif key == keyboard.Key.backspace:
+                    game_data.PlayerData.question_answer = game_data.PlayerData.question_answer[:-1]
+                else:
+                    print(f"{Fore.LIGHTCYAN_EX}{key.char}{Fore.RESET}", end='')
+                    game_data.PlayerData.question_answer += key.char
+            except AttributeError:
+                return  # Special key was entered
+
+        elif not game_data.MapData.map_idle:
+            try:
+                if game_data.PlayerData.command_status:  # Checks if player is allowed to enter commands
+                    if key == keyboard.Key.space:
+                        if len(game_data.MapData.current_command) == 0:
+                            return
+                        key.char = " "
+                    if key == keyboard.Key.enter:
+                        lib.process_command(game_data.MapData.current_command)
+                    elif key == keyboard.Key.backspace:
+                        # Remove last character of both printed message, and the current command string
+                        game_data.MapData.current_command = game_data.MapData.current_command[:-1]
+                        sys.stdout.write('\b \b')
+                    else:
+                        print(f"{Fore.LIGHTCYAN_EX}{key.char}{Fore.RESET}", end='')
+                        game_data.MapData.current_command += key.char
+            except AttributeError:
+                return  # Entered key was a special key
+    except Exception:
+        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
 
 
 # Keyboard Listeners  CLEAN THESE UP AND MERGE
