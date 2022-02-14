@@ -520,8 +520,9 @@ def process_command(cmd_raw):
 
                 open_socket(game_data.PlayerData.mp_server_address)
             elif cmd_latter == "stop":  # Stop the public / private session
-                pass
+                game_data.SysData.multiplayer_socket.close()
             elif cmd_latter == "leave":  # Leave the global session
+                # Leave the global session but stay connected to the orient server
                 pass
             elif cmd_latter == "join":  # Join the specified session (sessions can be viewed via the 'mp list' command)
                 pass
@@ -535,6 +536,11 @@ def process_command(cmd_raw):
     game_data.MapData.current_command = ""  # Reset the inputted command
 
 def connection_prompt():
+    pass
+
+
+def ws_send(content: str):
+    game_data.SysData.multiplayer_socket.send(content)
     pass
 
 
@@ -649,9 +655,15 @@ def gprint(queue, speed: int = 25):
     print()  # Create new line
 
 
+def websocket_recv_process(data: str):
+    # Main socket processing function
+    split = data.split('[')  # Divides main parts of the message
+
+
 # Multiplayer Connection Backend
 def socket_message(ws, message):  # Socket has received message
-    pass
+    # Pass the message to the processing script
+    websocket_recv_process(message)
 
 
 def socket_error(ws, error):  # Socket has encountered error
