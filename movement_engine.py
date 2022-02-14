@@ -855,6 +855,7 @@ def csq_watch_dog():  # Movement manager
         time.sleep(0.001)  # do not remove this
 
 
+# TODO: Add handler for multiplayer movement packages
 def move_char():  # Map display script version 2
     # Isolates movements down into individual requests rather than reprinting the entire map every time.
     # All backend calculations remain the same, that way the ability to perform collision checking and prox checks

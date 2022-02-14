@@ -117,7 +117,7 @@ class StaticData:  # Core Game Data
 
     def __init__(self):
         self.tile_data = ["1", "2"]  # Specifies which tile types have data
-        self.movement_blacklist = ["X", "0"]  # The spots the player is not allowed to move onto
+        self.movement_blacklist = ["X", "0", ""]  # The spots the player is not allowed to move onto
         self.map_spacing = 2  # The amount of spacing between each character on the map
         self.lib_spacing_size = 160  # Equivalent to 1 inventory row worth of characters
         self.game_items = [  # The in game item data
