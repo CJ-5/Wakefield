@@ -1,12 +1,15 @@
 from colorama import Fore, Back, Style
 from dataclasses import dataclass
 import colorama
-
+import game_data
 
 # Because who needs a config file right?
 
 
 # Coordinates with player stats
+
+
+
 class PlayerData:
     question_answer = ""  # The accumulated answer
     question_status = False  # Is the player currently answering a question
@@ -245,10 +248,31 @@ class SysData:
     system_patch_version = "v1.3"
     system_patch_name = "Multiplayer Update"
 
-class multiplayer:
-    socket_initial_connect = False
-    socket_open_message_status = False
-    socket_timeout = False
+
+class Multiplayer:
+    connected = False  # Connection status to server
+    chat_status = False  # Chat management thread / chat server connection status
+    host_status = False  # If the server has selected this client as the host client
+    session = None
+    socket_initial_connect = False  # If the client is initially connecting manually for the first time
+    socket_open_message_status = False  # If the client is processing the open message
+    chat_print_queue = []  # Chat message queue
+
+
+@dataclass()
+class Session:
+    session_id: str  # The id of the session
+    session_nick: str  # The nickname of the session
+    session_population: int  # The amount of people connected to the session
+    session_chat_enabled: bool  # If chat is enabled on this session
+    session_user_id: str  # The server assigned ID of this client
+
+
+@dataclass()
+class Message:
+    user_id: str  # The backend id of the user
+    user_nick: str  # The users set nickname
+    message_content: str  # The content of the message
 
 
 @dataclass()

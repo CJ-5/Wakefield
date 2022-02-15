@@ -18,6 +18,7 @@ import threading
 from threading import Thread
 import websocket
 import _thread
+import base64
 
 
 
@@ -540,15 +541,13 @@ def connection_prompt(cmd_latter):
         center_cursor(len(''.join([x[0] for x in script])))
         gprint(game_data.MQ(script))
         time.sleep(0.4)
-        game_data.multiplayer.socket_initial_connect = True
+        game_data.Multiplayer.socket_initial_connect = True
+        time.sleep(0.3)
         Thread(target=open_socket, args=(game_data.PlayerData.mp_server_address,)).start()
-        while game_data.multiplayer.socket_open_message_status is False:
+        while game_data.Multiplayer.socket_open_message_status is False:
+            time.sleep(0.1)
             continue
 
-        # Socket connection has finished, check to see if the client is connected if not display error message
-        if game_data.multiplayer.socket_timeout:
-            err_msg("Error: Could not connect to specified server. "
-                    "Please check your connection and the server's status")
     elif cmd_latter == "stop":  # Stop the public / private session
         pass
     elif cmd_latter == "leave":  # Leave the global session
@@ -559,8 +558,6 @@ def connection_prompt(cmd_latter):
         pass
     elif cmd_latter == "list":  # View the list of publicly hosted sessions
         pass
-
-    pass
 
 
 def err_msg(msg: str):
@@ -674,19 +671,88 @@ def gprint(queue, speed: int = 25):
     print()  # Create new line
 
 
+def message_process(msg):
+    # TODO: Add deobfuscation script if added in main server
+    """
+    :param msg: The incoming message sent from the server to be processed
+    Package Format: header_key[message_content0]message_content1
+    Content with user inputted data should be encoded via base64 as to avoid
+    any issues with message processing
+    """
+    cmd = msg.split('[')
+    if len(cmd) == 0 or cmd.isspace():
+        return
+    else:
+        for x in cmd:  # Empty Package Scanning
+            if len(x) == 0:
+                return
+
+    content = cmd[1].split(']')  # Split content make
+
+    if len(content) == 0 or content.isspace():
+        return  # Invalid Package (Shouldn't happen)
+    else:
+        for x in content:  # Empty Package Scanning
+            if len(x) == 0:
+                return
+
+    # Message Processing
+    cmd = cmd[0]
+    if cmd == 'chat_message' and len(content) == 3:
+        # Another client in the session has sent a message this is the message content
+        """
+        Chat Message Package Content:
+        - user_id 
+        - user_nick
+        - chat message content
+        
+        Example: chat_message[username]message
+        """
+
+        # Attempt message decoding
+        try:
+            user_id = (base64.b16decode(content[0])).decode('utf-8')
+            user_nick = (base64.b16decode(content[1])).decode('utf-8')
+            message_content = (base64.b16decode(content[2])).decode('utf-8')
+
+            # Let the chat message handler take care of the message display
+            game_data.Multiplayer.chat_print_queue.append(
+                game_data.Message(user_id, user_nick, message_content))
+        except Exception:
+            return  # Error Decoding message
+
+    elif cmd == 'movement_update':  # Player Movement Update
+        pass
+    elif cmd == 'enemy_update':  # Enemy Movement Update
+        pass
+    elif cmd == 'full_movement_update':  # Full overwrite of player positions
+        pass
+    elif cmd == 'full_enemy_update':  # Full overwrite of enemy positions
+        pass
+    elif cmd == 'host_designate':  # Server has selected this client to be the host client
+        pass
+    elif cmd == 'host_remove':  # Server has migrated the host role to a different client
+        pass
+
+
 # Multiplayer Connection Backend
 def socket_message(ws, message):  # Socket has received message
-    print('Message')
+    # Send to backend processing function
+    message_process(message)
 
 
 def socket_error(ws, error):  # Socket has encountered error
-    print(error)
+    # Real Fancy Tech
+    if "timed out" in str(error):
+        os.system('cls')
+        script = [ck("Error:", 'red'), ck(' Connection timed out, please correct address and / '
+                                          'or check your internet connection', 'yellow')]
+        center_cursor(len(''.join([x[0] for x in script])))
+        gprint(game_data.MQ(script))
 
 
 def socket_close(ws, close_status_code, close_msg):  # Socket has closed
-    if game_data.multiplayer.socket_initial_connect:
-        game_data.multiplayer.socket_timeout = True
-        game_data.multiplayer.socket_initial_connect = False
+    print(f"Close Code: {close_status_code}  Close Message: {close_msg}")
 
 
 def socket_open(ws):  # Socket has opened
@@ -697,7 +763,6 @@ def socket_open(ws):  # Socket has opened
         script = [ck('Server Connection Successfully Established')]
         lib.center_cursor(len(''.join([x[0] for x in script])))
         lib.gprint(game_data.MQ(script))
-
 
 
 def open_socket(ws_addr):

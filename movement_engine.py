@@ -900,6 +900,16 @@ def move_char():  # Map display script version 2
           f"(Represented by the {Fore.CYAN + 'x' + Style.RESET_ALL})")
     print('\033[?25h', end="")  # Show Cursor
 
+    # Check the chat queue
+    pass
+
+
+# TODO: Implement Chat
+# TODO: Create Chat management script (merge with movement update function to avoid any issues)
+def chat_update(user, message):
+    # Update the messages in the chat
+    pass
+
 
 def init_door():
     # Initiates door and enemy event data / core data
@@ -1130,7 +1140,7 @@ def on_press(key):  # For command processing
             except AttributeError:
                 return  # Entered key was a special key
     except Exception:
-        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+        return
 
 
 # Keyboard Listeners  CLEAN THESE UP AND MERGE
