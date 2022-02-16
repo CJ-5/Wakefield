@@ -251,7 +251,7 @@ class SysData:
 
 class Multiplayer:
     connected = False  # Connection status to server
-    chat_status = False  # Chat management thread / chat server connection status
+    chat_status = True  # Chat management thread / chat server connection status
     host_status = False  # If the server has selected this client as the host client
     session = None
     socket_initial_connect = False  # If the client is initially connecting manually for the first time
@@ -331,11 +331,12 @@ class MapDataCache:
 
 class MapData:
     # General Map Data
-    y = 0
-    x = 0
+    y = 0  # Player y coordinate
+    x = 0  # Player x coordinate
     space_buffer = 3
+    map_display_vertical_offset = 0  # The offset buffer for the map display
     valid_cmd = []  # Which commands are valid in the current situation
-    map_displayed = False
+    map_displayed = False  # Redundant ?
     current_map = None  # Holds the entirety of all current map data
     map_idle = False  # Put map listener into sleep mode without fully killing it
     movement_idle = False

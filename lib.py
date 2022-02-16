@@ -751,8 +751,9 @@ def socket_error(ws, error):  # Socket has encountered error
         gprint(game_data.MQ(script))
 
 
+# TODO: Create Session Close Reason Handler
 def socket_close(ws, close_status_code, close_msg):  # Socket has closed
-    print(f"Close Code: {close_status_code}  Close Message: {close_msg}")
+    pass
 
 
 def socket_open(ws):  # Socket has opened
@@ -766,7 +767,7 @@ def socket_open(ws):  # Socket has opened
 
 
 def open_socket(ws_addr):
-    websocket.enableTrace(True)
+    #  websocket.enableTrace(True)  # Display Raw Request / Response
     game_data.SysData.multiplayer_socket = websocket.WebSocketApp(ws_addr,
                                                                   on_open=socket_open,
                                                                   on_message=socket_message,

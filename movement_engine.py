@@ -871,7 +871,7 @@ def move_char():  # Map display script version 2
             last_colour = game_data.MapData.ici[last_char]
 
         print('\033[?25l', end="")  # Hide Cursor
-        print(f"\x1b[{game_data.MapData.space_buffer + m[0][0][1]}A", end='')
+        print(f"\x1b[{game_data.MapData.space_buffer + m[0][0][1]}A", end='')  # Move the cursor on Y Plane
         print(f"\x1b[{m[0][0][0] * Data.map_spacing}C", end='')
         print(last_colour + last_char + Fore.RESET, end='')
         print(f'\x1b[{game_data.MapData.space_buffer + m[0][0][1]}B', end='\r')  # Reset Cursor Y
@@ -943,8 +943,8 @@ def show_map(map_in):
     # Does not affect any backend MAP data
 
     local_spacing = Data.map_spacing  # Stops code from fetching value from outside class
-    map_out = ""
-    game_data.PlayerData.command_status = True  # Player can enter commands
+    map_out = ""  # Map Output
+    game_data.PlayerData.command_status = False  # Player can enter commands
     for yi, y in enumerate(map_in.map_array):
         cur_row = ""  # Reset the line print out
         for xi, x in enumerate(y):
@@ -1004,7 +1004,7 @@ def show_map(map_in):
                     # No door data, remove door from origin map
                     # This shouldn't happen as the doors' location is automatically initiated by a separate system
                     map_in.map_array[yi][xi] = " "
-                    cur_char = f"{Fore.RED}{'@':<{local_spacing}}{Fore.RESET}"
+                    cur_char = f"{'':<{local_spacing}}"
 
             else:
                 cur_char = f"{cur_char:<{local_spacing}}"
@@ -1014,12 +1014,55 @@ def show_map(map_in):
 
     # Printing
     os.system("cls")
-    print("{:^50}".format(map_in.map_name))
-    print(f"{Fore.RED}{'/':^{local_spacing}}{Fore.RESET}" * len(map_in.map_array[0]))
-    print(map_out, flush=True, end='')
-    print(f"{Fore.RED}{'/':^{local_spacing}}{Fore.RESET}" * len(map_in.map_array[0]))
-    print(f"Your current position is {get_coord(map_in)} "
-          f"(Represented by the {Fore.CYAN + 'x' + Style.RESET_ALL})")
+    print(f"{map_in.map_name:^{(game_data.SysData.max_screen_size[0] // 2)}}")  # Title Print Out
+    print(f"{Fore.RED}{'/':^{local_spacing}}{Fore.RESET}" * len(map_in.map_array[0]))  # Top Bar printout
+    print(map_out, flush=True, end='')  # Map Content Printout
+    print(f"{Fore.RED}{'/':^{local_spacing}}{Fore.RESET}" * len(map_in.map_array[0]))  # Bottom Bar printout
+    print(f"Your current position is {get_coord(map_in)} (Represented by the {Fore.CYAN + 'x' + Style.RESET_ALL})")
+    game_data.MapData.map_display_vertical_offset += 4
+
+    # Print Chat Display
+    """
+    Chat Printing Process:
+    - Length Scaled to the height dimension of the map display
+    - Width Scaled to the remaining space from the edge of the map to the max x coord
+    """
+
+    # x1b[A#  Exit Code for movement
+    if game_data.Multiplayer.chat_status:  # Check if chat service is active
+        _x = ((len(game_data.MapData.current_map.map_array[0]) + 5) * local_spacing)  # Horizontal Offset
+        y_max_pos = len(game_data.MapData.current_map.map_array) + game_data.MapData.map_display_vertical_offset
+
+        print(f'\x1b[{y_max_pos - 1}A', end='')  # Set Cursor to vertical height of chat printout
+
+        # Position to the chat header line
+        print(f'\x1b[{_x}C', end='')
+        print('-' * (game_data.SysData.max_screen_size[0] - _x), end='')
+
+        # Position to the chat Title position
+        print(f'\x1b[1A', end='')
+        print(f'\x1b[{(game_data.SysData.max_screen_size[0] - _x) // 2}D', end='')
+        print('Chat', end='')
+
+        # Print Sides
+
+        # Offset
+        print('\x1b[2B', end='')
+
+        # Print Left Side
+        print(f'\x1b[{((game_data.SysData.max_screen_size[0] - _x) // 2) + 4}D', end='')
+        for x in range(y_max_pos - 2):
+            print('|\x1b[D', end='')
+            if not x == y_max_pos - 3:
+                print("\x1b[B", end='')  # Going Down
+
+        # Print Right Side
+        print(f'{Fore.RED}\x1b[{(game_data.SysData.max_screen_size[0] - _x)}C', end='')
+        for x in range(y_max_pos - 2):
+            print('|', end='')
+            print('\x1b[A', end='')
+
+    game_data.PlayerData.command_status = True
 
 
 def on_release(key):  # For movement processing
