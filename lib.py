@@ -1,25 +1,22 @@
 #  Holds the main functions that operate the backend of the game (e.g battle system)
-import os
-from os import system
-
-import lib
-import movement_engine
-import time
-from colorama import Fore, Style
-import game_data
-import random
-import math
+import base64
 import ctypes
+import dataclasses
+import json
+import math
 import msvcrt
+import os
+import random
 import subprocess
+import time
 from ctypes import wintypes
-from game_data import MQ, InvItem
-import threading
+from os import system
 from threading import Thread
 import websocket
-import _thread
-import base64
-
+from colorama import Fore, Style
+import game_data
+import movement_engine
+from game_data import MQ
 
 
 class Logo:
@@ -762,12 +759,24 @@ def socket_open(ws):  # Socket has opened
         game_data.SysData.multiplayer_socket = ws
         os.system('cls')
         script = [ck('Server Connection Successfully Established')]
-        lib.center_cursor(len(''.join([x[0] for x in script])))
-        lib.gprint(game_data.MQ(script))
+        center_cursor(len(''.join([x[0] for x in script])))
+        gprint(game_data.MQ(script))
+
+
+# More Black Magic
+class EnhancedJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if dataclasses.is_dataclass(o):
+            return dataclasses.asdict(o)
+        return super().default(o)
 
 
 def open_socket(ws_addr):
     #  websocket.enableTrace(True)  # Display Raw Request / Response
+
+    # TODO: Create script for user to input desired room id / create a new room session
+
+
     game_data.SysData.multiplayer_socket = websocket.WebSocketApp(ws_addr,
                                                                   on_open=socket_open,
                                                                   on_message=socket_message,
